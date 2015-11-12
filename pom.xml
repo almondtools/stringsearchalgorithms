@@ -2,7 +2,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.github.almondtools</groupId>
 	<artifactId>stringsandchars</artifactId>
-	<version>0.1.0-SNAPSHOT</version>
+	<version>0.1.0</version>
 	<name>${project.groupId}:${project.artifactId}</name>
 	<description>A library for searching string or chars</description>
 	<url>https://github.com/almondtools/stringsandchars</url>
@@ -24,7 +24,7 @@
 		<connection>scm:git:git@github.com:almondtools/stringsandchars.git</connection>
 		<developerConnection>scm:git:git@github.com:almondtools/stringsandchars.git</developerConnection>
 		<url>git@github.com:almondtools/stringsandchars.git</url>
-		<tag>HEAD</tag>
+		<tag>stringsandchars-0.1.0</tag>
 	</scm>
 	<distributionManagement>
 		<snapshotRepository>
