@@ -1,0 +1,190 @@
+        <!DOCTYPE html>
+      <html>
+                <head>
+                  <meta charset="utf-8"/>
+              <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css"/>
+              <link rel="stylesheet" href="custom.css"/>
+              <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.0.0/styles/default.min.css"/>
+                  <meta name="description" content="A collection of algorithms to search efficiently strings in texts"/>
+  </head>
+            <body>
+                            <nav class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+      <div class="container-fluid">
+                  <div class="navbar-header">
+              <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                  <span class="sr-only">Toggle navigation</span>
+              <span class="icon-bar"></span>
+              <span class="icon-bar"></span>
+              <span class="icon-bar"></span>
+  </button>
+          <a href="download.html" class="navbar-brand">
+    Strings And Chars
+  </a>
+  </div>
+              <div class="collapse navbar-collapse">
+      <ul class="nav navbar-nav">
+              <li class="active">  <a href="index.html">
+    Home
+  </a></li>
+          <li >  <a href="download.html">
+    Get it!
+  </a></li>
+          <li >  <a href="license.html">
+    License
+  </a></li>
+  </ul>
+  </div>
+  </div>
+  </nav>
+                      <div class="jumbotron">
+      <div class="container">
+              <h1>Strings And Chars</h1>
+          <p>A collection of algorithms to search efficiently strings in texts</p>
+          <p>  <a href="download.html" class="btn btn-primary">
+    Get Strings And Chars
+  </a>   <a href="https://github.com/almondtools/stringsandchars" class="btn btn-default">
+    Github
+  </a></p>
+  </div>
+  </div>
+              <div class="container">
+                  <section>
+              <h2>Usage</h2>
+              <div class="row">
+              <div class="col-md-push-8 col-md-4">
+                      <div class="panel panel-default">
+              <div class="panel-heading">
+      <h3 class="panel-title">Available algorithms (single string):</h3>
+  </div>
+          <div class="panel-body">
+                      <ul>
+                          <li>Horspool</li>
+                      <li>ShiftAnd</li>
+                      <li>KnuthMorrisPratt</li>
+                      <li>Sunday</li>
+                      <li>BNDM</li>
+  </ul>
+  </div>
+  </div>
+                  <div class="panel panel-default">
+              <div class="panel-heading">
+      <h3 class="panel-title">Available algorithms (multiple strings):</h3>
+  </div>
+          <div class="panel-body">
+                      <ul>
+                          <li>SetBackwardOracleMatching</li>
+                      <li>AhoCorasick</li>
+                      <li>SetHorspool</li>
+                      <li>WuManber</li>
+  </ul>
+  </div>
+  </div>
+  </div>
+          <div class="col-md-pull-4 col-md-8">
+                  <h3>Searching Strings:</h3>
+              <p>To search a single string:   <ul>
+                      <li>Select a search algorithm, e.g. Horspool</li>
+                  <li>Create a Finder</li>
+                          <div>
+      <pre><code class="java">Horspool stringSearch = new Horspool(&quot;word&quot;);
+CharProvider text = new StringCharProvider(&quot;text with word in it&quot;, 0);
+StringFinder finder = stringSearch.createFinder(text);</code></pre>
+  </div>
+                  <li>Find the next match with:</li>
+                          <div>
+      <pre><code class="java">StringMatch next = finder.findNext();</code></pre>
+  </div>
+                  <li>Find all matches (may overlap):</li>
+                          <div>
+      <pre><code class="java">List&lt;StringMatch&gt; all = finder.findAll();</code></pre>
+  </div>
+  </ul></p>
+              <h3>Restricting to Non-Overlapping Results:</h3>
+              <p>The basic string finder reports all matches, i.e. a match may overlap or subsume another. Of course this is only relevant for
+                algorithms searching multiple strings. To restrict their matches to the longest non-overlapping ones:   <ul>
+                      <li>Select the multi-string search algorithm, e.g. AhoCorasick</li>
+                  <li>Create a Finder</li>
+                          <div>
+      <pre><code class="java">AhoCorasick stringSearch = new AhoCorasick(asList(&quot;word&quot;, &quot;longer word&quot;));
+CharProvider text = new StringCharProvider(&quot;text with longer word and word in it&quot;, 0);
+StringFinder finder = stringSearch.createFinder(text, MatchOption.LONGEST_MATCH, MatchOption.NO_OVERLAP);</code></pre>
+  </div>
+                  <li>Finding matches is the same as above</li>
+  </ul></p>
+  </div>
+  </div>
+  </section>
+              <section>
+              <h2>Choosing the Best Algorithm</h2>
+          <div class="row">
+                  <div class="col-md-8">
+                          <h3>For Searching a Single String</h3>
+      <p>        We compared each single-word algorithm in a benchmark, characterized by   <ul>
+                  <li>pattern size (the number of chars in the pattern)</li>
+              <li>alphabet size (the number of different chars used in the text)</li>
+  </ul>
+        From experimental benchmarks following heuristics could be derived:   <ul>
+                  <li>  <strong>ShiftAnd</strong> for smaller patterns (length <= 16) with small alphabet (<= 4 chars)</li>
+              <li>  <strong>BNDM</strong> for large patterns (length <= 16) with small to mid-sized alphabet (<= 16 chars)</li>
+              <li>  <strong>Horspool/Sunday</strong> for large patterns with large alphabet</li>
+  </ul></p> 
+                      <h3>For Searching Multiple Strings</h3>
+      <p>        We compared each multi-word algorithm in a benchmark, characterized by   <ul>
+                  <li>pattern number (the number of words to search)</li>
+              <li>pattern size (the number of chars in the pattern)</li>
+              <li>alphabet size (the number of different chars used in the text)</li>
+  </ul>
+        From experimental benchmarks following heuristics could be derived:   <ul>
+                  <li>searching for a small pattern number prefers the naive implementation, yet we cannot explain why (benchmark problem?)</li>
+              <li>large patterns are dominated by   <strong>SetBackwardOracleMatching</strong></li>
+              <li>small patterns with small alphabet are dominated by   <strong>AhoCorasick</strong></li>
+              <li>large alphabets are dominated by   <strong>SetHorspool</strong></li>
+              <li>  <strong>WuManber</strong> seems to good for middle-sized pattern number, being competitive between   <strong>SetHorspool</strong> and   <strong>SetBackwardOracleMatching</strong></li>
+  </ul></p> 
+  </div>
+              <div class="col-md-4">
+                              <div class="panel panel-default">
+              <div class="panel-heading">
+    String searching with Java SDK:
+  </div>
+          <div class="panel-body">
+              <p>            The Java SDK method to find strings,       <code class="java">String.indexOf(String)</code>, uses naive string search. This is sufficient if patterns are small and few.
+            Yet this method does not scale for any dimension.</p>
+          <p>            Yet the Java SDK offers a hidden string search in its Regexp package.       <code >java.util.Pattern</code> with a constant pattern (i.e no regex control characters) will create
+                  <code >java.util.Matcher</code>s that use the algorithm of   <strong>Boyer-Moore</strong>. This is very similar to ours   <strong>Horspool</strong> and   <strong>Sunday</strong> - in implementation and performance.</p>
+  </div>
+  </div>
+  </div>
+  </div>
+  </section>
+              <section>
+              <h2>Benchmarks</h2>
+          <div class="row">
+                  <div class="col-md-8">
+                          <p>        To keep track of the performance of each algorithm we created the benchmark project   <a href="https://github.com/almondtools/stringbench/">
+    StringBench
+  </a>.</p>
+      <p>          <strong>StringBench</strong> compares all available algorithms (of   <strong>Strings and Chars</strong> and other libraries) in different scenarios 
+        (differing in number of patterns, size of patterns and size of alphabet).</p>
+      <p>        The benchmark results can be found   <a href="https://github.com/almondtools/stringbench/tree/master/benchmarkresults">
+    here
+  </a>.</p> 
+  </div>
+              <div class="col-md-4">
+                
+  </div>
+  </div>
+  </section>
+              <section>
+              <h2>Authors</h2>
+          <p>  <a href="https://github.com/almondtools">
+    Stefan Mandel
+  </a></p>
+  </section>
+  </div>
+              <script src="https://code.jquery.com/jquery-1.11.3.min.js"></script>
+              <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
+              <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.0.0/highlight.min.js"></script>
+              <script>hljs.initHighlightingOnLoad()</script>
+  </body>
+  </html>
