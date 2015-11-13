@@ -1,10 +1,10 @@
-package com.almondtools.rexlex.stringsearch;
+package com.almondtools.stringsandchars.search;
 
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
-import com.almondtools.rexlex.io.CharProvider;
+import com.almondtools.stringsandchars.io.CharProvider;
 
 public class SetHorspool implements StringSearchAlgorithm {
 

@@ -1,4 +1,5 @@
-package com.almondtools.rexlex.io;
+package com.almondtools.stringsandchars.io;
+
 
 public class ReverseCharProvider implements CharProvider {
 
@@ -75,12 +76,19 @@ public class ReverseCharProvider implements CharProvider {
 	
 	@Override
 	public char[] between(int start, int end) {
-		return chars.between(end, start);
+		char[] between = chars.between(end, start);
+		final int reverseStart = between.length - 1;
+		for(int i = 0; i < between.length / 2; i++) {
+		    char temp = between[i];
+		    between[i] = between[reverseStart - i ];
+		    between[reverseStart - i ] = temp;
+		}
+		return between;
 	}
 
 	@Override
 	public String slice(int start, int end) {
-		return chars.slice(end, start);
+		return new StringBuilder(chars.slice(end, start)).reverse().toString();
 	}
 
 	@Override
@@ -91,6 +99,11 @@ public class ReverseCharProvider implements CharProvider {
 	@Override
 	public boolean changed() {
 		return chars.changed();
+	}
+	
+	@Override
+	public String toString() {
+		return new StringBuilder(chars.toString()).reverse().toString();
 	}
 
 }

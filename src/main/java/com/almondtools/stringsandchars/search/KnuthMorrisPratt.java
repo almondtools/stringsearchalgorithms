@@ -1,9 +1,9 @@
-package com.almondtools.rexlex.stringsearch;
+package com.almondtools.stringsandchars.search;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import com.almondtools.rexlex.io.CharProvider;
+import com.almondtools.stringsandchars.io.CharProvider;
 
 public class KnuthMorrisPratt implements StringSearchAlgorithm {
 

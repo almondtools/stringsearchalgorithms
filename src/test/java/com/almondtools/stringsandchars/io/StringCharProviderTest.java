@@ -1,10 +1,12 @@
-package com.almondtools.rexlex.io;
+package com.almondtools.stringsandchars.io;
 
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 
 import org.junit.Test;
+
+import com.almondtools.stringsandchars.io.StringCharProvider;
 
 
 public class StringCharProviderTest {

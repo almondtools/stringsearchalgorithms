@@ -1,11 +1,10 @@
 StringsAndChars
 ===============
-StringAndChars is a library supporting search of String and Chars together with some tools on String/Char Processing
+StringAndChars is a library supporting search of String and Chars together with some tools on String/Char processing. The core of this library are different string search algorithms.
 
 String Search
 =============
-Rexlex provides a bunch of string search algorithms which could easily be used without the regular expressions. The algorithms can be found in the package 
-`com.almondtools.rexlex.stringsearch`:
+The algorithms for searching strings in large texts can be found in the package `com.almondtools.stringsandchars.search`:
 
 Search one string:
  - Horspool (default)

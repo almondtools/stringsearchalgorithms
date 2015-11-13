@@ -1,4 +1,4 @@
-package com.almondtools.rexlex.stringsearch;
+package com.almondtools.stringsandchars.search;
 
 import static org.hamcrest.Matchers.contains;
 import static org.junit.Assert.assertThat;
@@ -8,8 +8,8 @@ import java.util.List;
 import org.junit.Rule;
 import org.junit.Test;
 
-import com.almondtools.rexlex.io.StringCharProvider;
-import com.almondtools.rexlex.stringsearch.StringSearchRule.SearchFor;
+import com.almondtools.stringsandchars.io.StringCharProvider;
+import com.almondtools.stringsandchars.search.StringSearchRule.SearchFor;
 
 public class StringSearchAlgorithmTest {
 

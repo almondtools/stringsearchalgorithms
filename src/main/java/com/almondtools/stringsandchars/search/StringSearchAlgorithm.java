@@ -1,6 +1,6 @@
-package com.almondtools.rexlex.stringsearch;
+package com.almondtools.stringsandchars.search;
 
-import com.almondtools.rexlex.io.CharProvider;
+import com.almondtools.stringsandchars.io.CharProvider;
 
 public interface StringSearchAlgorithm {
 

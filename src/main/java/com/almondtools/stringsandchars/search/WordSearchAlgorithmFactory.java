@@ -1,4 +1,4 @@
-package com.almondtools.rexlex.stringsearch;
+package com.almondtools.stringsandchars.search;
 
 
 public interface WordSearchAlgorithmFactory {

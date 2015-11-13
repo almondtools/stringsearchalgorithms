@@ -1,4 +1,4 @@
-package com.almondtools.rexlex.stringsearch;
+package com.almondtools.stringsandchars.search;
 
 import static java.util.Arrays.copyOfRange;
 
@@ -9,7 +9,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import com.almondtools.rexlex.io.CharProvider;
+import com.almondtools.stringsandchars.io.CharProvider;
 
 public class SetBackwardOracleMatching implements StringSearchAlgorithm {
 

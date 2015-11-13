@@ -1,4 +1,4 @@
-package com.almondtools.rexlex.io;
+package com.almondtools.stringsandchars.io;
 
 public class StringCharProvider implements CharProvider {
 

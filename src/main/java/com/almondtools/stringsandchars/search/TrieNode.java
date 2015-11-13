@@ -1,16 +1,28 @@
-package com.almondtools.rexlex.stringsearch;
+package com.almondtools.stringsandchars.search;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class TrieRoot implements Trie {
-
+public class TrieNode implements Trie {
+	public char c;
 	private List<TrieNode> nexts;
 	private boolean terminal;
+	private int length;
 
-	public TrieRoot() {
+	public TrieNode(char c, int length, boolean terminal) {
+		this.c = c;
 		this.nexts = new ArrayList<TrieNode>();
-		this.terminal = false;
+		this.length = terminal ? length : -1;
+		this.terminal = terminal;
+	}
+	
+	@Override
+	public int length() {
+		return length;
+	}
+	
+	public char getChar() {
+		return c;
 	}
 	
 	@Override
@@ -22,7 +34,7 @@ public class TrieRoot implements Trie {
 	public List<? extends Trie> getNexts() {
 		return nexts;
 	}
-	
+
 	@Override
 	public boolean isTerminal() {
 		return terminal;
@@ -30,39 +42,21 @@ public class TrieRoot implements Trie {
 	
 	@Override
 	public void setTerminal(int length) {
+		this.length = length;
 		this.terminal = true;
 	}
 
-	@Override
-	public int length() {
-		return 0;
+	public void extend(char[] chars, int i) {
+		extend(chars, i, true);
 	}
 	
-	public void extendReverse(char[] chars) {
-		extendReverse(chars, true);
-	}
-	
-	public void extendReverse(char[] chars, boolean terminate) {
-		extend(revert(chars), terminate);
-	}
-
-	public static char[] revert(char[] chars) {
-		final int ri = chars.length - 1;
-		char[] reversechars = new char[chars.length];
-		for (int i = 0; i < reversechars.length; i++) {
-			reversechars[i] = chars[ri - i];
+	public void extend(char[] chars, int i, boolean terminate) {
+		if (i >= chars.length) {
+			return;
 		}
-		return reversechars;
-	}
-
-	public void extend(char[] chars) {
-		extend(chars, true);
-	}
-	
-	public void extend(char[] chars, boolean terminate) {
-		boolean terminateNode = terminate && chars.length == 1;
-		TrieNode toExtend = findNodeToExtend(chars[0], 1, terminateNode);
-		toExtend.extend(chars, 1, terminate);
+		boolean terminateNode = terminate && i == chars.length - 1;
+		TrieNode toExtend = findNodeToExtend(chars[i], i + 1, terminateNode);
+		toExtend.extend(chars, i + 1, terminate);
 	}
 
 	private TrieNode findNodeToExtend(char current, int length, boolean terminal) {
@@ -88,7 +82,7 @@ public class TrieRoot implements Trie {
 		}
 		return null;
 	}
-	
+
 	@Override
 	public Trie nextNode(char[] chars) {
 		Trie current = this;
@@ -103,12 +97,12 @@ public class TrieRoot implements Trie {
 
 	@Override
 	public <T> void apply(TrieVisitor<T> visitor, T data) {
-		visitor.visitRoot(this, data);
+		visitor.visitNode(this, data);
 	}
-
+	
 	@Override
 	public String toString() {
-		return "--->";
+		return "-" + c + "->";
 	}
 
 }

@@ -1,4 +1,4 @@
-package com.almondtools.rexlex.stringsearch;
+package com.almondtools.stringsandchars.search;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -13,9 +13,9 @@ import org.junit.rules.TestRule;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 
-import com.almondtools.rexlex.io.CharProvider;
+import com.almondtools.stringsandchars.io.CharProvider;
 
-public class StringSearchRule implements TestRule {
+public class MultiStringSearchRule implements TestRule {
 
 	private StringSearchAlgorithm algorithm;
 	
@@ -28,12 +28,12 @@ public class StringSearchRule implements TestRule {
 				if (searchFor == null)  {
 					throw new AssertionError();
 				}
-				String pattern = searchFor.value();
-				List<StringSearchAlgorithm> algorithms = getAlgorithms(pattern);
+				String[] patterns = searchFor.value();
+				List<StringSearchAlgorithm> algorithms = getAlgorithms(patterns);
 				Map<StringSearchAlgorithm, String> failures = new IdentityHashMap<StringSearchAlgorithm, String>();
 				StackTraceElement[] stackTrace = null;
 				for (StringSearchAlgorithm algorithm : algorithms) {
-					StringSearchRule.this.algorithm = algorithm;
+					MultiStringSearchRule.this.algorithm = algorithm;
 					try {
 						base.evaluate();
 					} catch (AssertionError e) {
@@ -65,10 +65,12 @@ public class StringSearchRule implements TestRule {
 		return buffer.toString();
 	}
 
-	private List<StringSearchAlgorithm> getAlgorithms(String pattern) {
+	private List<StringSearchAlgorithm> getAlgorithms(String[] patterns) {
 		return Arrays.asList((StringSearchAlgorithm) 
-			new KnuthMorrisPratt(pattern),
-			new Horspool(pattern)
+			new AhoCorasick(Arrays.asList(patterns)),
+			new SetHorspool(Arrays.asList(patterns)),
+			new SetBackwardOracleMatching(Arrays.asList(patterns)),
+			new WuManber(Arrays.asList(patterns))
 		);
 	}
 
@@ -80,7 +82,7 @@ public class StringSearchRule implements TestRule {
 	@Target({ElementType.METHOD})
 	public @interface SearchFor {
 
-		String value();
+		String[] value();
 	}
 
 }
