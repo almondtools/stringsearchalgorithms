@@ -6,5 +6,5 @@ public interface StringFinder {
 
 	StringMatch findNext();
 	List<StringMatch> findAll();
-	void skipTo(int pos);
+	void skipTo(long pos);
 }

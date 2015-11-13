@@ -120,7 +120,7 @@ public class AhoCorasick implements StringSearchAlgorithm {
 		}
 
 		@Override
-		public void skipTo(int pos) {
+		public void skipTo(long pos) {
 			chars.move(pos);
 		}
 		
@@ -166,7 +166,7 @@ public class AhoCorasick implements StringSearchAlgorithm {
 			}
 		}
 
-		private List<StringMatch> createMatches(Trie current, int end) {
+		private List<StringMatch> createMatches(Trie current, long end) {
 			List<StringMatch> matches = new ArrayList<StringMatch>();
 			matches.add(createMatch(end, current.length()));
 			while (true) {
@@ -183,8 +183,8 @@ public class AhoCorasick implements StringSearchAlgorithm {
 			return matches;
 		}
 
-		private StringMatch createMatch(int end, int len) {
-			int start = end - len;
+		private StringMatch createMatch(long end, int len) {
+			long start = end - len;
 			String s = chars.slice(start, end);
 			return new StringMatch(start, end, s);
 		}

@@ -118,7 +118,7 @@ public class SetHorspool implements StringSearchAlgorithm {
 		}
 
 		@Override
-		public void skipTo(int pos) {
+		public void skipTo(long pos) {
 			chars.move(pos);
 		}
 
@@ -130,7 +130,7 @@ public class SetHorspool implements StringSearchAlgorithm {
 			int lookahead = minLength - 1;
 			while (!chars.finished(lookahead)) {
 				int patternPointer = lookahead;
-				int pos = chars.current();
+				long pos = chars.current();
 				char current = chars.lookahead(patternPointer);
 				TrieNode node = trie.nextNode(current);
 				while (node != null) {
@@ -165,8 +165,8 @@ public class SetHorspool implements StringSearchAlgorithm {
 		}
 
 		private StringMatch createMatch(int patternPointer) {
-			int start = chars.current() + patternPointer;
-			int end = chars.current() + minLength;
+			long start = chars.current() + patternPointer;
+			long end = chars.current() + minLength;
 			String s = chars.slice(start, end);
 			return new StringMatch(start, end, s);
 		}

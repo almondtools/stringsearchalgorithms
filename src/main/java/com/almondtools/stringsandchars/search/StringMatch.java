@@ -2,21 +2,21 @@ package com.almondtools.stringsandchars.search;
 
 public class StringMatch {
 
-	private int start;
-	private int end;
+	private long start;
+	private long end;
 	private String text;
 
-	public StringMatch(int start, int end, String match) {
+	public StringMatch(long start, long end, String match) {
 		this.start = start;
 		this.end = end;
 		this.text = match;
 	}
 
-	public int start() {
+	public long start() {
 		return start;
 	}
 	
-	public int end() {
+	public long end() {
 		return end;
 	}
 	
@@ -31,7 +31,7 @@ public class StringMatch {
 
 	@Override
 	public int hashCode() {
-		return 31 + end * 13 + start * 7 + text.hashCode() * 3;
+		return 31 + (int) end * 13 + (int) start * 7 + text.hashCode() * 3;
 	}
 
 	@Override

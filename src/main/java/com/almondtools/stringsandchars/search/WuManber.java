@@ -167,7 +167,7 @@ public class WuManber implements StringSearchAlgorithm {
 		}
 
 		@Override
-		public void skipTo(int pos) {
+		public void skipTo(long pos) {
 			chars.move(pos);
 		}
 
@@ -178,7 +178,7 @@ public class WuManber implements StringSearchAlgorithm {
 			}
 			int lookahead = minLength - 1;
 			while (!chars.finished(lookahead)) {
-				int pos = chars.current();
+				long pos = chars.current();
 				char[] lastBlock = chars.between(pos + minLength - block, pos + minLength);
 				int shiftKey = shiftHash(lastBlock);
 				int shiftBy = shift[shiftKey];
@@ -222,8 +222,8 @@ public class WuManber implements StringSearchAlgorithm {
 		}
 
 		private StringMatch createMatch(int patternPointer) {
-			int start = chars.current() + patternPointer;
-			int end = chars.current() + minLength;
+			long start = chars.current() + patternPointer;
+			long end = chars.current() + minLength;
 			String s = chars.slice(start, end);
 			return new StringMatch(start, end, s);
 		}

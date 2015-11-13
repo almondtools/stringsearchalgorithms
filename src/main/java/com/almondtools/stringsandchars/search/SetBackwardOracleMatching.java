@@ -131,7 +131,7 @@ public class SetBackwardOracleMatching implements StringSearchAlgorithm {
 		}
 
 		@Override
-		public void skipTo(int pos) {
+		public void skipTo(long pos) {
 			chars.move(pos);
 		}
 
@@ -148,9 +148,9 @@ public class SetBackwardOracleMatching implements StringSearchAlgorithm {
 					current = current.nextNode(chars.lookahead(j));
 					j--;
 				}
-				int currentWindowStart = chars.current();
-				int currentPos = currentWindowStart + j + 1;
-				int currentWindowEnd = currentWindowStart + minLength;
+				long currentWindowStart = chars.current();
+				long currentPos = currentWindowStart + j + 1;
+				long currentWindowEnd = currentWindowStart + minLength;
 				String matchedPrefix = chars.slice(currentPos, currentWindowEnd);
 				if (current != null && j < 0) {
 					List<String> patterns = terminals.get(current);
@@ -160,7 +160,7 @@ public class SetBackwardOracleMatching implements StringSearchAlgorithm {
 						while (iPatterns.hasNext()) {
 							String suffix = iPatterns.next();
 							if (!chars.finished(suffix.length())) {
-								int currentWordEnd = currentWindowEnd + suffix.length();
+								long currentWordEnd = currentWindowEnd + suffix.length();
 								if (chars.slice(currentWindowEnd, currentWordEnd).equals(suffix)) {
 									buffer.add(new StringMatch(currentWindowStart, currentWordEnd, prefix + suffix));
 								}

@@ -18,48 +18,48 @@ public interface CharProvider {
 	 * 
 	 * @return the current position
 	 */
-	int current();
+	long current();
 	
 	/**
 	 * This method moves to the given absolute position.
 	 * 
-	 * The argument of move(int) must be consistent with current(). That means move(current()) must not change the state.
+	 * The argument of move(long) must be consistent with current(). That means move(current()) must not change the state.
 	 * 
 	 * @param i the position to move
 	 * @see current()   
 	 */
-	void move(int i);
+	void move(long i);
 	
 	/**
 	 * This method returns the chars between the given absolute positions.
 	 * 
-	 * The arguments of between(int,int) must be consistent with current(). 
+	 * The arguments of between(long,long) must be consistent with current(). 
 	 * 
 	 * @throws NegativeArrayException if start is after end (which is not necessarily start < end)
 	 * @param start the first position
 	 * @param end the last position (exclusive)
 	 * @see current()   
 	 */
-	char[] between(int start, int end);
+	char[] between(long start, long end);
 
 	/**
 	 * This method returns the String between the given absolute positions.
 	 * 
-	 * The arguments of slice(int,int) must be consistent with current(). 
+	 * The arguments of slice(long,long) must be consistent with current(). 
 	 * 
 	 * @throws NegativeArrayException if start is after end (which is not necessarily start < end)
 	 * @param start the first position
 	 * @param end the last position (exclusive)
 	 * @see current()   
 	 */
-	String slice(int start, int end);
+	String slice(long start, long end);
 
 	void forward(int i);
 	void finish();
 	boolean finished();
 	boolean finished(int i);
 
-	char at(int i);
+	char at(long i);
 
 	void mark();
 	boolean changed();

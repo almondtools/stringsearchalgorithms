@@ -98,35 +98,35 @@ public class ReverseCharProviderTest {
 	@Test
 	public void testCurrent() throws Exception {
 		ReverseCharProvider provider = new ReverseCharProvider(new StringCharProvider("dcba", 2));
-		assertThat(provider.current(), equalTo(2));
+		assertThat(provider.current(), equalTo(2l));
 	}
 	
 	@Test
 	public void testMoveAndCurrent() throws Exception {
 		ReverseCharProvider provider = new ReverseCharProvider(new StringCharProvider("dcba", 2));
 		provider.move(3);
-		assertThat(provider.current(), equalTo(3));
+		assertThat(provider.current(), equalTo(3l));
 	}
 	
 	@Test
 	public void testAtDoesNotConsume() throws Exception {
 		ReverseCharProvider provider = new ReverseCharProvider(new StringCharProvider("dcba", 4));
 		assertThat(provider.at(2), equalTo('b'));
-		assertThat(provider.current(), equalTo(4));
+		assertThat(provider.current(), equalTo(4l));
 	}
 	
 	@Test
 	public void testSliceDoesNotConsume() throws Exception {
 		ReverseCharProvider provider = new ReverseCharProvider(new StringCharProvider("dcba", 4));
 		assertThat(provider.slice(3, 1), equalTo("bc"));
-		assertThat(provider.current(), equalTo(4));
+		assertThat(provider.current(), equalTo(4l));
 	}
 
 	@Test
 	public void testBetweenDoesNotConsume() throws Exception {
 		ReverseCharProvider provider = new ReverseCharProvider(new StringCharProvider("dcba", 4));
 		assertThat(provider.between(3, 1), equalTo(new char[]{'b','c'}));
-		assertThat(provider.current(), equalTo(4));
+		assertThat(provider.current(), equalTo(4l));
 	}
 
 	@Test

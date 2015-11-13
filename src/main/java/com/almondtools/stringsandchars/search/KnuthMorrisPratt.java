@@ -59,7 +59,7 @@ public class KnuthMorrisPratt implements StringSearchAlgorithm {
 		}
 
 		@Override
-		public void skipTo(int pos) {
+		public void skipTo(long pos) {
 			chars.move(pos);
 		}
 
@@ -94,8 +94,8 @@ public class KnuthMorrisPratt implements StringSearchAlgorithm {
 		}
 
 		private StringMatch createMatch(int match) {
-			int end = chars.current();
-			int start = end - match;
+			long end = chars.current();
+			long start = end - match;
 			String s = chars.slice(start, end);
 			return new StringMatch(start, end, s);
 		}

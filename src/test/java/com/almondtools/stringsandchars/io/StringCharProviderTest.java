@@ -98,35 +98,35 @@ public class StringCharProviderTest {
 	@Test
 	public void testCurrent() throws Exception {
 		StringCharProvider provider = new StringCharProvider("abcd", 2);
-		assertThat(provider.current(), equalTo(2));
+		assertThat(provider.current(), equalTo(2l));
 	}
 	
 	@Test
 	public void testMoveAndCurrent() throws Exception {
 		StringCharProvider provider = new StringCharProvider("abcd", 2);
 		provider.move(3);
-		assertThat(provider.current(), equalTo(3));
+		assertThat(provider.current(), equalTo(3l));
 	}
 	
 	@Test
 	public void testAtDoesNotConsume() throws Exception {
 		StringCharProvider provider = new StringCharProvider("abcd", 0);
 		assertThat(provider.at(2), equalTo('c'));
-		assertThat(provider.current(), equalTo(0));
+		assertThat(provider.current(), equalTo(0l));
 	}
 	
 	@Test
 	public void testSliceDoesNotConsume() throws Exception {
 		StringCharProvider provider = new StringCharProvider("abcd", 0);
 		assertThat(provider.slice(1, 3), equalTo("bc"));
-		assertThat(provider.current(), equalTo(0));
+		assertThat(provider.current(), equalTo(0l));
 	}
 
 	@Test
 	public void testBetweenDoesNotConsume() throws Exception {
 		StringCharProvider provider = new StringCharProvider("abcd", 0);
 		assertThat(provider.between(1, 3), equalTo(new char[]{'b','c'}));
-		assertThat(provider.current(), equalTo(0));
+		assertThat(provider.current(), equalTo(0l));
 	}
 
 	@Test

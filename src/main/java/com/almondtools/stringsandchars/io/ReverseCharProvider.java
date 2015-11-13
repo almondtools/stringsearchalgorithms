@@ -40,12 +40,12 @@ public class ReverseCharProvider implements CharProvider {
 	}
 
 	@Override
-	public int current() {
+	public long current() {
 		return chars.current();
 	}
 
 	@Override
-	public void move(int i) {
+	public void move(long i) {
 		chars.move(i);
 	}
 	
@@ -60,7 +60,7 @@ public class ReverseCharProvider implements CharProvider {
 	}
 
 	@Override
-	public char at(int i) {
+	public char at(long i) {
 		return chars.at(i);
 	}
 
@@ -75,7 +75,7 @@ public class ReverseCharProvider implements CharProvider {
 	}
 	
 	@Override
-	public char[] between(int start, int end) {
+	public char[] between(long start, long end) {
 		char[] between = chars.between(end, start);
 		final int reverseStart = between.length - 1;
 		for(int i = 0; i < between.length / 2; i++) {
@@ -87,7 +87,7 @@ public class ReverseCharProvider implements CharProvider {
 	}
 
 	@Override
-	public String slice(int start, int end) {
+	public String slice(long start, long end) {
 		return new StringBuilder(chars.slice(end, start)).reverse().toString();
 	}
 

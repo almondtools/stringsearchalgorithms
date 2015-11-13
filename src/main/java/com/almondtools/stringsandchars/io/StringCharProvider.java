@@ -58,13 +58,13 @@ public class StringCharProvider implements CharProvider {
 	}
 
 	@Override
-	public int current() {
+	public long current() {
 		return pos;
 	}
 
 	@Override
-	public void move(int i) {
-		pos = i;
+	public void move(long i) {
+		pos = (int) i;
 	}
 	
 	@Override
@@ -83,20 +83,20 @@ public class StringCharProvider implements CharProvider {
 	}
 
 	@Override
-	public char at(int i) {
-		return input.charAt(i);
+	public char at(long i) {
+		return input.charAt((int) i);
 	}
 
 	@Override
-	public char[] between(int start, int end) {
-		char[] between = new char[end - start];
-		input.getChars(start, end, between, 0);
+	public char[] between(long start, long end) {
+		char[] between = new char[(int) (end - start)];
+		input.getChars((int) start, (int) end, between, 0);
 		return between;
 	}
 
 	@Override
-	public String slice(int start, int end) {
-		return input.substring(start, end);
+	public String slice(long start, long end) {
+		return input.substring((int) start, (int) end);
 	}
 
 	@Override

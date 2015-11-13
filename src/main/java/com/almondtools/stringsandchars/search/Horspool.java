@@ -78,7 +78,7 @@ public class Horspool implements StringSearchAlgorithm {
 		}
 
 		@Override
-		public void skipTo(int pos) {
+		public void skipTo(long pos) {
 			chars.move(pos);
 		}
 
@@ -122,8 +122,8 @@ public class Horspool implements StringSearchAlgorithm {
 		}
 
 		private StringMatch createMatch() {
-			int start = chars.current();
-			int end = start + patternLength;
+			long start = chars.current();
+			long end = start + patternLength;
 			String s = chars.slice(start, end);
 			return new StringMatch(start, end, s);
 		}
