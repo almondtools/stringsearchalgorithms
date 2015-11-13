@@ -6,8 +6,6 @@ import static org.junit.Assert.assertThat;
 
 import org.junit.Test;
 
-import com.almondtools.stringsandchars.io.StringCharProvider;
-
 
 public class StringCharProviderTest {
 
@@ -145,6 +143,73 @@ public class StringCharProviderTest {
 	public void testToStringAtEnd() throws Exception {
 		StringCharProvider provider = new StringCharProvider("abcd", 4);
 		assertThat(provider.toString(), equalTo("abcd|"));
+	}
+	
+	@Test
+	public void testChangedWithoutChange() throws Exception {
+		StringCharProvider provider = new StringCharProvider("abcd", 2);
+		
+		assertThat(provider.changed(), is(false));
+	}
+
+	@Test
+	public void testChangedWithChange() throws Exception {
+		StringCharProvider provider = new StringCharProvider("abcd", 2);
+		
+		provider.mark();
+		
+		provider.forward(1);
+		
+		assertThat(provider.changed(), is(true));
+	}
+
+	@Test
+	public void testChangedWithTemporaryChange() throws Exception {
+		StringCharProvider provider = new StringCharProvider("abcd", 2);
+		
+		provider.mark();
+		
+		provider.next();
+		provider.prev();
+		
+		assertThat(provider.changed(), is(false));
+	}
+
+	@Test
+	public void testChangedDoubleCall() throws Exception {
+		StringCharProvider provider = new StringCharProvider("abcd", 2);
+		
+		provider.mark();
+		
+		provider.forward(1);
+		provider.changed();
+		
+		assertThat(provider.changed(), is(false));
+	}
+
+	@Test
+	public void testFinish() throws Exception {
+		StringCharProvider provider = new StringCharProvider("abcd", 2);
+		
+		provider.finish();
+		
+		assertThat(provider.finished(), is(true));
+	}
+
+	@Test
+	public void testFinished() throws Exception {
+		StringCharProvider provider = new StringCharProvider("abcd", 2);
+		
+		assertThat(provider.finished(1), is(false));
+		assertThat(provider.finished(2), is(true));
+	}
+
+	@Test
+	public void testFinishedNotChangesState() throws Exception {
+		StringCharProvider provider = new StringCharProvider("abcd", 2);
+		
+		assertThat(provider.finished(2), is(true));
+		assertThat(provider.finished(1), is(false));
 	}
 	
 }

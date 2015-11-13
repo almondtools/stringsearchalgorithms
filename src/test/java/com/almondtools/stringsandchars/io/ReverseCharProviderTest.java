@@ -147,4 +147,71 @@ public class ReverseCharProviderTest {
 		assertThat(provider.toString(), equalTo("abcd|"));
 	}
 	
+	@Test
+	public void testChangedWithoutChange() throws Exception {
+		ReverseCharProvider provider = new ReverseCharProvider(new StringCharProvider("dcba", 2));
+		
+		assertThat(provider.changed(), is(false));
+	}
+
+	@Test
+	public void testChangedWithChange() throws Exception {
+		ReverseCharProvider provider = new ReverseCharProvider(new StringCharProvider("dcba", 2));
+		
+		provider.mark();
+		
+		provider.forward(1);
+		
+		assertThat(provider.changed(), is(true));
+	}
+
+	@Test
+	public void testChangedWithTemporaryChange() throws Exception {
+		ReverseCharProvider provider = new ReverseCharProvider(new StringCharProvider("dcba", 2));
+		
+		provider.mark();
+		
+		provider.next();
+		provider.prev();
+		
+		assertThat(provider.changed(), is(false));
+	}
+
+	@Test
+	public void testChangedDoubleCall() throws Exception {
+		ReverseCharProvider provider = new ReverseCharProvider(new StringCharProvider("dcba", 2));
+		
+		provider.mark();
+		
+		provider.forward(1);
+		provider.changed();
+		
+		assertThat(provider.changed(), is(false));
+	}
+
+	@Test
+	public void testFinish() throws Exception {
+		ReverseCharProvider provider = new ReverseCharProvider(new StringCharProvider("dcba", 2));
+		
+		provider.finish();
+		
+		assertThat(provider.finished(), is(true));
+	}
+
+	@Test
+	public void testFinished() throws Exception {
+		ReverseCharProvider provider = new ReverseCharProvider(new StringCharProvider("dcba", 2));
+		
+		assertThat(provider.finished(1), is(false));
+		assertThat(provider.finished(2), is(true));
+	}
+
+	@Test
+	public void testFinishedNotChangesState() throws Exception {
+		ReverseCharProvider provider = new ReverseCharProvider(new StringCharProvider("dcba", 2));
+		
+		assertThat(provider.finished(2), is(true));
+		assertThat(provider.finished(1), is(false));
+	}
+	
 }
