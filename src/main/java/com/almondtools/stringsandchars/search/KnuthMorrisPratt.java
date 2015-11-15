@@ -5,6 +5,11 @@ import java.util.List;
 
 import com.almondtools.stringsandchars.io.CharProvider;
 
+/**
+ * An implementation of the String Search Algorithm of Knuth-Morris-Pratt.
+ * 
+ * This algorithm takes a single pattern as input and generates a finder which can find this pattern in documents
+ */
 public class KnuthMorrisPratt implements StringSearchAlgorithm {
 
 	private char[] pattern;

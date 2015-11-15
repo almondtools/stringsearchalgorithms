@@ -11,6 +11,11 @@ import java.util.Map;
 
 import com.almondtools.stringsandchars.io.CharProvider;
 
+/**
+ * An implementation of the Set Backward Oracle Matching Algorithm.
+ * 
+ * This algorithm takes a multiple string patterns as input and generates a finder which can find any of these patterns in documents. 
+ */
 public class SetBackwardOracleMatching implements StringSearchAlgorithm {
 
 	private TrieRoot trie;

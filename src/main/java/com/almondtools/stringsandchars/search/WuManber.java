@@ -9,6 +9,11 @@ import java.util.Set;
 
 import com.almondtools.stringsandchars.io.CharProvider;
 
+/**
+ * An implementation of the Wu-Manber Algorithm.
+ * 
+ * This algorithm takes a multiple string patterns as input and generates a finder which can find any of these patterns in documents. 
+ */
 public class WuManber implements StringSearchAlgorithm {
 
 	private static final int SHIFT_SEED = 17;

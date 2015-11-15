@@ -1,11 +1,19 @@
 package com.almondtools.stringsandchars.search;
 
+/**
+ * a string match, that means a textual subsequence of a document matching a specific pattern
+ */
 public class StringMatch {
 
 	private long start;
 	private long end;
 	private String text;
 
+	/**
+	 * @param start the start of the match
+	 * @param end the end of the match
+	 * @param match the matched string
+	 */
 	public StringMatch(long start, long end, String match) {
 		this.start = start;
 		this.end = end;

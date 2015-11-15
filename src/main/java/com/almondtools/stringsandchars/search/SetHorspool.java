@@ -6,6 +6,11 @@ import java.util.List;
 
 import com.almondtools.stringsandchars.io.CharProvider;
 
+/**
+ * An implementation of the Set Horspool Algorithm.
+ * 
+ * This algorithm takes a multiple string patterns as input and generates a finder which can find any of these patterns in documents. 
+ */
 public class SetHorspool implements StringSearchAlgorithm {
 
 	private TrieRoot trie;
