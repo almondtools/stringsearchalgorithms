@@ -50,3 +50,8 @@ Maven Dependency
 	<version>0.2.0</version>
 </dependency>
 ```
+
+Todos
+-----
+- Horspool/SetHorspool's memory consumption should not be linear dependent on the used alphabet size
+- Implement Sundays Algorithm
