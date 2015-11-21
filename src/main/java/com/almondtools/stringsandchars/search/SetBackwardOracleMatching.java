@@ -125,7 +125,7 @@ public class SetBackwardOracleMatching implements StringSearchAlgorithm {
 		return minLength;
 	}
 
-	private class Finder implements StringFinder {
+	private class Finder extends AbstractStringFinder {
 
 		private CharProvider chars;
 		private List<StringMatch> buffer;
@@ -187,19 +187,6 @@ public class SetBackwardOracleMatching implements StringSearchAlgorithm {
 				}
 			}
 			return null;
-		}
-
-		@Override
-		public List<StringMatch> findAll() {
-			List<StringMatch> matches = new ArrayList<StringMatch>();
-			while (true) {
-				StringMatch match = findNext();
-				if (match == null) {
-					return matches;
-				} else {
-					matches.add(match);
-				}
-			}
 		}
 
 	}

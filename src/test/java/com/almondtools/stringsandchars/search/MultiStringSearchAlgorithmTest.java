@@ -54,6 +54,27 @@ public class MultiStringSearchAlgorithmTest {
 	}
 	
 	@Test
+	@SearchFor({"bbcc","ccbb"})
+	public void testPattern4() throws Exception {
+		List<StringMatch> matches = searcher.createSearcher(chars("bbccbbccbb")).findAll();
+		assertThat(matches, contains(
+			new StringMatch(0, 4, "bbcc"),
+			new StringMatch(2, 6, "ccbb"),
+			new StringMatch(4, 8, "bbcc"),
+			new StringMatch(6, 10, "ccbb")));
+	}
+	
+	@Test
+	@SearchFor({"bbcc","ccbb"})
+	public void testPattern5() throws Exception {
+		List<StringMatch> matches = searcher.createSearcher(chars("abccbbccbb")).findAll();
+		assertThat(matches, contains(
+			new StringMatch(2, 6, "ccbb"),
+			new StringMatch(4, 8, "bbcc"),
+			new StringMatch(6, 10, "ccbb")));
+	}
+	
+	@Test
 	@SearchFor({"abc","cd","defghi","gh"})
 	public void testPatternDifferentLengthSubsumingAndOverlapping() throws Exception {
 		List<StringMatch> matches = searcher.createSearcher(chars("abcdghcdefcdefghiabcd")).findAll();
@@ -93,6 +114,89 @@ public class MultiStringSearchAlgorithmTest {
 			new StringMatch(1, 4, "aaa"),
 			new StringMatch(2, 3, "a"),
 			new StringMatch(2, 4, "aa"),
+			new StringMatch(3, 4, "a")));
+	}
+	
+	@Test
+	@SearchFor({"a","b"})
+	public void testOverlappingPattern1() throws Exception {
+		List<StringMatch> matches = searcher.createSearcher(chars("abacacab")).findAllNonOverlapping();
+		assertThat(matches, contains(
+			new StringMatch(0, 1, "a"),
+			new StringMatch(1, 2, "b"),
+			new StringMatch(2, 3, "a"),
+			new StringMatch(4, 5, "a"),
+			new StringMatch(6, 7, "a"),
+			new StringMatch(7, 8, "b")));
+	}
+	
+	@Test
+	@SearchFor({"ab","ac"})
+	public void testOverlappingPattern2() throws Exception {
+		List<StringMatch> matches = searcher.createSearcher(chars("abacacab")).findAllNonOverlapping();
+		assertThat(matches, contains(
+			new StringMatch(0, 2, "ab"),
+			new StringMatch(2, 4, "ac"),
+			new StringMatch(4, 6, "ac"),
+			new StringMatch(6, 8, "ab")));
+	}
+	
+	@Test
+	@SearchFor({"abc","bcd"})
+	public void testOverlappingPattern3() throws Exception {
+		List<StringMatch> matches = searcher.createSearcher(chars("abcacbcdacabcdaabc")).findAllNonOverlapping();
+		assertThat(matches, contains(
+			new StringMatch(0, 3, "abc"),
+			new StringMatch(5, 8, "bcd"),
+			new StringMatch(10, 13, "abc"),
+			new StringMatch(15, 18, "abc")));
+	}
+	
+	@Test
+	@SearchFor({"bbcc","ccbb"})
+	public void testOverlappingPattern4() throws Exception {
+		List<StringMatch> matches = searcher.createSearcher(chars("bbccbbccbb")).findAllNonOverlapping();
+		assertThat(matches, contains(
+			new StringMatch(0, 4, "bbcc"),
+			new StringMatch(4, 8, "bbcc")));
+	}
+	
+	@Test
+	@SearchFor({"bbcc","ccbb"})
+	public void testOverlappingPattern5() throws Exception {
+		List<StringMatch> matches = searcher.createSearcher(chars("abccbbccbb")).findAllNonOverlapping();
+		assertThat(matches, contains(
+			new StringMatch(2, 6, "ccbb"),
+			new StringMatch(6, 10, "ccbb")));
+	}
+	
+	@Test
+	@SearchFor({"abc","cd","defghi","gh"})
+	public void testOverlappingPatternDifferentLengthSubsumingAndOverlapping() throws Exception {
+		List<StringMatch> matches = searcher.createSearcher(chars("abcdghcdefcdefghiabcd")).findAllNonOverlapping();
+		assertThat(matches, containsInAnyOrder(
+			new StringMatch(0, 3, "abc"),
+			new StringMatch(4, 6, "gh"),
+			new StringMatch(6, 8, "cd"),
+			new StringMatch(10, 12, "cd"),
+			new StringMatch(14, 16, "gh"),
+			new StringMatch(17, 20, "abc")));
+	}
+	
+	@Test
+	@SearchFor({"abcd","ab","bc","cd"})
+	public void testOverlappingSubsumingPatterns1() throws Exception {
+		List<StringMatch> matches = searcher.createSearcher(chars("abcd")).findAllNonOverlapping();
+		assertThat(matches, containsInAnyOrder(
+			new StringMatch(0, 4, "abcd")));
+	}
+	
+	@Test
+	@SearchFor({"aaa","aa","a"})
+	public void testOverlappingSubsumingPatterns2() throws Exception {
+		List<StringMatch> matches = searcher.createSearcher(chars("aaaa")).findAllNonOverlapping();
+		assertThat(matches, containsInAnyOrder(
+			new StringMatch(0, 3, "aaa"),
 			new StringMatch(3, 4, "a")));
 	}
 	

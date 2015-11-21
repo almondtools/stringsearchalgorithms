@@ -112,7 +112,7 @@ public class AhoCorasick implements StringSearchAlgorithm {
 		return support;
 	}
 
-	private class Finder implements StringFinder {
+	private class Finder extends AbstractStringFinder {
 
 		private CharProvider chars;
 		private Trie current;
@@ -156,19 +156,6 @@ public class AhoCorasick implements StringSearchAlgorithm {
 				}
 			}
 			return null;
-		}
-
-		@Override
-		public List<StringMatch> findAll() {
-			List<StringMatch> matches = new ArrayList<StringMatch>();
-			while (true) {
-				StringMatch match = findNext();
-				if (match == null) {
-					return matches;
-				} else {
-					matches.add(match);
-				}
-			}
 		}
 
 		private List<StringMatch> createMatches(Trie current, long end) {

@@ -1,8 +1,5 @@
 package com.almondtools.stringsandchars.search;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import com.almondtools.stringsandchars.io.CharProvider;
 
 /**
@@ -53,7 +50,7 @@ public class KnuthMorrisPratt implements StringSearchAlgorithm {
 		return new Finder(chars);
 	}
 
-	private class Finder implements StringFinder {
+	private class Finder extends AbstractStringFinder {
 
 		private CharProvider chars;
 		private int patternPointer;
@@ -83,19 +80,6 @@ public class KnuthMorrisPratt implements StringSearchAlgorithm {
 				}
 			}
 			return null;
-		}
-
-		@Override
-		public List<StringMatch> findAll() {
-			List<StringMatch> matches = new ArrayList<StringMatch>();
-			while (true) {
-				StringMatch match = findNext();
-				if (match == null) {
-					return matches;
-				} else {
-					matches.add(match);
-				}
-			}
 		}
 
 		private StringMatch createMatch(int match) {

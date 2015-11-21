@@ -13,9 +13,13 @@ public interface StringFinder {
 	 */
 	StringMatch findNext();
 	/**
-	 * @return all matches in the given document
+	 * @return all matches in the given document, including the overlapping matches
 	 */
 	List<StringMatch> findAll();
+	/**
+	 * @return all matches in the given document, where the matching resumes at the end at the previous found match (non-overlapping)
+	 */
+	List<StringMatch> findAllNonOverlapping();
 	/**
 	 * skips the document to a specific position (ignoring any match before this position)
 	 * @param pos the new position to start with
