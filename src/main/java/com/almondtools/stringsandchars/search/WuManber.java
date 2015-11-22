@@ -125,7 +125,11 @@ public class WuManber implements StringSearchAlgorithm {
 		for (char c : block) {
 			result = SHIFT_SEED * result + c;
 		}
-		return result % SHIFT_SIZE;
+		int hash = result % SHIFT_SIZE;
+		if (hash < 0) {
+			hash += SHIFT_SIZE;
+		}
+		return hash;
 	}
 
 	private static TrieRoot[] computeHash(List<char[]> charpatterns, int block) {
@@ -148,7 +152,11 @@ public class WuManber implements StringSearchAlgorithm {
 		for (char c : block) {
 			result = HASH_SEED * result + c;
 		}
-		return result % HASH_SIZE;
+		int hash = result % HASH_SIZE;
+		if (hash < 0) {
+			hash += HASH_SIZE;
+		}
+		return hash;
 	}
 
 	@Override
@@ -190,17 +198,19 @@ public class WuManber implements StringSearchAlgorithm {
 				if (shiftBy == 0) {
 					int hashkey = hashHash(lastBlock);
 					Trie node = hash[hashkey];
-					int patternPointer = lookahead;
-					node = node.nextNode(chars.lookahead(patternPointer));
-					while (node != null) {
-						if (node.isTerminal()) {
-							buffer.add(createMatch(patternPointer));
-						}
-						patternPointer--;
-						if (pos + patternPointer < 0) {
-							break;
-						}
+					if (node != null) {
+						int patternPointer = lookahead;
 						node = node.nextNode(chars.lookahead(patternPointer));
+						while (node != null) {
+							if (node.isTerminal()) {
+								buffer.add(createMatch(patternPointer));
+							}
+							patternPointer--;
+							if (pos + patternPointer < 0) {
+								break;
+							}
+							node = node.nextNode(chars.lookahead(patternPointer));
+						}
 					}
 					chars.next();
 					if (!buffer.isEmpty()) {
