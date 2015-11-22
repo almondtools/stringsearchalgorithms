@@ -26,7 +26,7 @@ public interface CharProvider {
 	 * The argument of move(long) must be consistent with current(). That means move(current()) must not change the state.
 	 * 
 	 * @param i the position to move
-	 * @see current()   
+	 * @see #current()   
 	 */
 	void move(long i);
 	
@@ -35,10 +35,11 @@ public interface CharProvider {
 	 * 
 	 * The arguments of between(long,long) must be consistent with current(). 
 	 * 
-	 * @throws NegativeArrayException if start is after end (which is not necessarily start < end)
+	 * @throws NegativeArraySizeException if start is after end (which is not necessarily start &lt; end)
 	 * @param start the first position
 	 * @param end the last position (exclusive)
-	 * @see current()   
+	 * @return the chars between start and end
+	 * @see #current()   
 	 */
 	char[] between(long start, long end);
 
@@ -47,10 +48,11 @@ public interface CharProvider {
 	 * 
 	 * The arguments of slice(long,long) must be consistent with current(). 
 	 * 
-	 * @throws NegativeArrayException if start is after end (which is not necessarily start < end)
+	 * @throws NegativeArraySizeException if start is after end (which is not necessarily start &lt; end)
 	 * @param start the first position
 	 * @param end the last position (exclusive)
-	 * @see current()   
+	 * @return the String between start and end
+	 * @see #current()   
 	 */
 	String slice(long start, long end);
 
