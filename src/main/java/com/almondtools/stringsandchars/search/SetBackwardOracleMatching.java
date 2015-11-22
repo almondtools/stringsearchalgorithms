@@ -8,6 +8,7 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Queue;
 
 import com.almondtools.stringsandchars.io.CharProvider;
 
@@ -58,44 +59,41 @@ public class SetBackwardOracleMatching implements StringSearchAlgorithm {
 	}
 
 	private static void computeOracle(TrieRoot trie, int length) {
-		final Map<Trie, Trie> oracle = new IdentityHashMap<Trie, Trie>();
-		final Trie init = trie;
+		Map<Trie, Trie> oracle = new IdentityHashMap<Trie, Trie>();
+		Trie init = trie;
 		oracle.put(init, null);
-		trie.apply(new TrieVisitor<Trie>() {
+		Queue<TrieWithParent> worklist = new LinkedList<TrieWithParent>();
+		worklist.add(new TrieWithParent(trie, null));
+		while (!worklist.isEmpty()) {
+			TrieWithParent current = worklist.remove();
+			List<TrieWithParent> nexts = process(current, oracle, init);
+			worklist.addAll(nexts);
+		}
+	}
 
-			@Override
-			public void visitRoot(TrieRoot trie, Trie parent) {
-				visit(trie, parent);
+	private static List<TrieWithParent> process(TrieWithParent current, Map<Trie, Trie> oracle, Trie init) {
+		Trie trie = current.trie;
+		Trie parent = current.parent;
+		List<TrieWithParent> nexts = new ArrayList<TrieWithParent>();
+		for (Trie next : trie.getNexts()) {
+			nexts.add(new TrieWithParent(next, trie));
+		}
+		if (parent != null && trie instanceof TrieNode) {
+			TrieNode node = (TrieNode) trie;
+			char c = node.getChar();
+			Trie down = oracle.get(parent);
+			while (down != null && down.nextNode(c) == null) {
+				down.addNext(node);
+				down = oracle.get(down);
 			}
-
-			@Override
-			public void visitNode(TrieNode trie, Trie parent) {
-				visit(trie, parent);
+			if (down != null) {
+				Trie next = down.nextNode(c);
+				oracle.put(trie, next);
+			} else {
+				oracle.put(trie, init);
 			}
-
-			private void visit(Trie trie, Trie parent) {
-				List<? extends Trie> nexts = new ArrayList<Trie>(trie.getNexts());
-				if (parent != null && trie instanceof TrieNode) {
-					TrieNode node = (TrieNode) trie;
-					char c = node.getChar();
-					Trie down = oracle.get(parent);
-					while (down != null && down.nextNode(c) == null) {
-						down.addNext(node);
-						down = oracle.get(down);
-					}
-					if (down != null) {
-						Trie next = down.nextNode(c);
-						oracle.put(trie, next);
-					} else {
-						oracle.put(trie, init);
-					}
-				}
-				for (Trie next : nexts) {
-					next.apply(this, trie);
-				}
-			}
-
-		}, null);
+		}
+		return nexts;
 	}
 
 	private Map<Trie, List<String>> computeTerminals(TrieRoot trie, List<char[]> patterns, int minLength) {
@@ -124,7 +122,7 @@ public class SetBackwardOracleMatching implements StringSearchAlgorithm {
 	public int getPatternLength() {
 		return minLength;
 	}
-
+	
 	private class Finder extends AbstractStringFinder {
 
 		private CharProvider chars;
@@ -189,6 +187,18 @@ public class SetBackwardOracleMatching implements StringSearchAlgorithm {
 			return null;
 		}
 
+	}
+
+	private static class TrieWithParent {
+
+		public Trie trie;
+		public Trie parent;
+
+		public TrieWithParent(Trie trie, Trie parent) {
+			this.trie = trie;
+			this.parent = parent;
+		}
+		
 	}
 
 	public static class Factory implements MultiWordSearchAlgorithmFactory {
