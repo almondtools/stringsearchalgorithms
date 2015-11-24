@@ -14,18 +14,20 @@ import com.almondtools.stringsandchars.io.CharProvider;
 public class SetHorspool implements StringSearchAlgorithm {
 
 	private TrieRoot trie;
-	private char minChar;
-	private char maxChar;
 	private int minLength;
-	private int[] characterShift;
+	private CharShift charShift;
 
 	public SetHorspool(List<String> patterns) {
 		List<char[]> charpatterns = toCharArray(patterns);
 		this.trie = computeTrie(charpatterns);
-		this.maxChar = computeMaxChar(charpatterns);
-		this.minChar = computeMinChar(charpatterns);
 		this.minLength = minLength(charpatterns);
-		this.characterShift = computeCharacterShift(charpatterns, minLength, minChar, maxChar);
+		this.charShift = computeCharacterShift(charpatterns, minLength);
+	}
+
+	private CharShift computeCharacterShift(List<char[]> charpatterns, int minLength) {
+		char minChar = computeMinChar(charpatterns);
+		char maxChar = computeMaxChar(charpatterns);
+		return new QuickShift(charpatterns, minLength, minChar, maxChar);
 	}
 
 	private int minLength(List<char[]> patterns) {
@@ -78,30 +80,6 @@ public class SetHorspool implements StringSearchAlgorithm {
 		return trie;
 	}
 
-	private static int[] computeCharacterShift(List<char[]> patterns, int minLength, char min, char max) {
-		int[] characters = new int[max - min + 1];
-		for (int i = 0; i < characters.length; i++) {
-			characters[i] = minLength;
-		}
-		for (char[] pattern : patterns) {
-			for (int i = 0; i < pattern.length - 1; i++) {
-				characters[pattern[i] - min] = min(characters[pattern[i] - min], pattern.length - i - 1);
-			}
-		}
-		return characters;
-	}
-
-	private static int min(int i, int j) {
-		return i < j ? i : j;
-	}
-
-	private int getShift(char c) {
-		if (c < minChar || c > maxChar) {
-			return minLength;
-		}
-		return characterShift[c - minChar];
-	}
-
 	@Override
 	public StringFinder createFinder(CharProvider chars) {
 		return new Finder(chars);
@@ -148,7 +126,7 @@ public class SetHorspool implements StringSearchAlgorithm {
 					}
 					node = node.nextNode(chars.lookahead(patternPointer));
 				}
-				chars.forward(getShift(current));
+				chars.forward(charShift.getShift(current));
 				if (!buffer.isEmpty()) {
 					return buffer.remove(0);
 				}
@@ -171,6 +149,49 @@ public class SetHorspool implements StringSearchAlgorithm {
 			return new SetHorspool(patterns);
 		}
 
+	}
+	
+	private static class QuickShift implements CharShift {
+		
+		private char minChar;
+		private char maxChar;
+		private int[] characterShift;
+		private int defaultShift;
+		
+		public QuickShift(List<char[]> charpatterns, int minLength, char minChar, char maxChar) {
+			this.minChar = minChar;
+			this.maxChar = maxChar;
+			this.characterShift = computeCharacterShift(charpatterns, minLength, minChar, maxChar);
+			this.defaultShift = minLength;
+		}
+
+		private static int[] computeCharacterShift(List<char[]> patterns, int minLength, char min, char max) {
+			int[] characters = new int[max - min + 1];
+			for (int i = 0; i < characters.length; i++) {
+				characters[i] = minLength;
+			}
+			for (char[] pattern : patterns) {
+				for (int i = 0; i < pattern.length - 1; i++) {
+					characters[pattern[i] - min] = min(characters[pattern[i] - min], pattern.length - i - 1);
+				}
+			}
+			return characters;
+		}
+
+		private static int min(int i, int j) {
+			return i < j ? i : j;
+		}
+
+		@Override
+		public int getShift(char c) {
+			if (c < minChar || c > maxChar) {
+				return defaultShift;
+			}
+			return characterShift[c - minChar];
+		}
+
+		
+		
 	}
 
 }

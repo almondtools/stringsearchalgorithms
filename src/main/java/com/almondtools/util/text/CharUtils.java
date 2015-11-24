@@ -28,4 +28,24 @@ public class CharUtils {
 		return (char) (c - 1);
 	}
 
+	public static char computeMinChar(char[] pattern) {
+		char min = Character.MAX_VALUE;
+		for (int i = 0; i < pattern.length; i++) {
+			if (pattern[i] < min) {
+				min = pattern[i];
+			}
+		}
+		return min;
+	}
+
+	public static char computeMaxChar(char[] pattern) {
+		char max = Character.MIN_VALUE;
+		for (int i = 0; i < pattern.length; i++) {
+			if (pattern[i] > max) {
+				max = pattern[i];
+			}
+		}
+		return max;
+	}
+
 }

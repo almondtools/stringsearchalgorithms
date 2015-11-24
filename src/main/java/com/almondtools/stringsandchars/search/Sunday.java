@@ -1,5 +1,8 @@
 package com.almondtools.stringsandchars.search;
 
+import static com.almondtools.util.text.CharUtils.computeMaxChar;
+import static com.almondtools.util.text.CharUtils.computeMinChar;
+
 import com.almondtools.stringsandchars.io.CharProvider;
 
 /**
@@ -11,54 +14,18 @@ public class Sunday implements StringSearchAlgorithm {
 
 	private char[] pattern;
 	private int patternLength;
-	private int[] characterShift;
-	private char minChar;
-	private char maxChar;
+	private CharShift charShift;
 
 	public Sunday(String pattern) {
 		this.pattern = pattern.toCharArray();
 		this.patternLength = this.pattern.length;
-		this.minChar = computeMinChar(this.pattern);
-		this.maxChar = computeMaxChar(this.pattern);
-		this.characterShift = computeCharacterShift(this.pattern, this.minChar, this.maxChar);
+		this.charShift = computeShift(this.pattern);
 	}
 
-	private char computeMinChar(char[] pattern) {
-		char min = Character.MAX_VALUE;
-		for (int i = 0; i < pattern.length; i++) {
-			if (pattern[i] < min) {
-				min = pattern[i];
-			}
-		}
-		return min;
-	}
-
-	private char computeMaxChar(char[] pattern) {
-		char max = Character.MIN_VALUE;
-		for (int i = 0; i < pattern.length; i++) {
-			if (pattern[i] > max) {
-				max = pattern[i];
-			}
-		}
-		return max;
-	}
-
-	private int[] computeCharacterShift(char[] pattern, char min, char max) {
-		int[] characters = new int[max - min + 1];
-		for (int i = 0; i < characters.length; i++) {
-			characters[i] = pattern.length;
-		}
-		for (int i = 0; i < pattern.length; i++) {
-			characters[pattern[i] - min] = pattern.length - i - 1;
-		}
-		return characters;
-	}
-
-	private int getShift(char c) {
-		if (c < minChar || c > maxChar) {
-			return patternLength;
-		}
-		return characterShift[c - minChar];
+	private static CharShift computeShift(char[] pattern) {
+		char minChar = computeMinChar(pattern);
+		char maxChar = computeMaxChar(pattern);
+		return new QuickShift(pattern, minChar, maxChar);
 	}
 
 	@Override
@@ -96,7 +63,7 @@ public class Sunday implements StringSearchAlgorithm {
 						if (pattern[patternPointer] != chars.lookahead(patternPointer)) {
 							if (!chars.finished(patternPointer + 1)) {
 								char afterNextChar = chars.lookahead(patternPointer + 1);
-								chars.forward(getShift(afterNextChar) + 1);
+								chars.forward(charShift.getShift(afterNextChar));
 							} else {
 								chars.finish();
 							}
@@ -107,7 +74,7 @@ public class Sunday implements StringSearchAlgorithm {
 						StringMatch match = createMatch();
 						if (!chars.finished(patternPointer + 1)) {
 							char afterNextChar = chars.lookahead(patternPointer + 1);
-							chars.forward(getShift(afterNextChar) + 1);
+							chars.forward(charShift.getShift(afterNextChar));
 						} else {
 							chars.finish();
 						}
@@ -116,7 +83,7 @@ public class Sunday implements StringSearchAlgorithm {
 				} else {
 					if (!chars.finished(patternPointer + 1)) {
 						char afterNextChar = chars.lookahead(patternPointer + 1);
-						chars.forward(getShift(afterNextChar) + 1);
+						chars.forward(charShift.getShift(afterNextChar));
 					} else {
 						chars.finish();
 					}
@@ -138,6 +105,41 @@ public class Sunday implements StringSearchAlgorithm {
 		@Override
 		public StringSearchAlgorithm of(String pattern) {
 			return new Sunday(pattern);
+		}
+
+	}
+
+	private static class QuickShift implements CharShift {
+
+		private char minChar;
+		private char maxChar;
+		private int[] characterShift;
+		private int defaultShift;
+
+		public QuickShift(char[] pattern, char minChar, char maxChar) {
+			this.minChar = minChar;
+			this.maxChar = maxChar;
+			this.characterShift = computeCharacterShift(pattern, this.minChar, this.maxChar);
+			this.defaultShift = pattern.length + 1;
+		}
+
+		private int[] computeCharacterShift(char[] pattern, char min, char max) {
+			int[] characters = new int[max - min + 1];
+			for (int i = 0; i < characters.length; i++) {
+				characters[i] = pattern.length + 1;
+			}
+			for (int i = 0; i < pattern.length; i++) {
+				characters[pattern[i] - min] = pattern.length - i;
+			}
+			return characters;
+		}
+
+		@Override
+		public int getShift(char c) {
+			if (c < minChar || c > maxChar) {
+				return defaultShift;
+			}
+			return characterShift[c - minChar];
 		}
 
 	}
