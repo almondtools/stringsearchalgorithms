@@ -9,12 +9,10 @@ The Java SDK proposes two approaches to search for strings efficiently:
 * `String.indexOf(...)` and `String.lastIndexOf(...)`
 * `Pattern.compile()` together with `Matcher.find`
 
-*Search for one word in one text*: `String.indexOf` is fine for small patterns but it uses the naive implementation causing a runtime of O(m*n) (where m is the pattern length and n is the length of the text to search in). `Pattern.compile/Matcher.find` with constant strings uses a variant of the boyer-moore-string-matching algorithm, which has sublinear runtime. So the search for a single pattern could be done efficiently with the Java SDK. The best algorithms in StringsAndChars are faster, but the performance boost is only small.
+*Search for one word in one text*: `String.indexOf` is fine for small patterns but it uses the naive string matching implementation. `Pattern.compile/Matcher.find` with constant strings uses a variant of the Boyer-Moore string-matching algorithm, which is more efficient. Performance gain beyond Boyer-Moore is limited (some StringsAndChars algorithms perform better, but the basic runtime characteristics are comparable). So for single string search StringsAndChars is an alternative, but no more. 
 
-*Search for multiple words in one text*: `String.indexOf` and `Pattern.compile/Matcher.find` both switch to naive string search causing a runtime of O(m*n) (where m is the sum of all pattern lengths and n is the length of the text to search in).
+*Search for multiple words in one text*: `String.indexOf` and `Pattern.compile/Matcher.find` both switch to naive string matching. The runtime of the different StringsAndChars algorithms perform better than this. The overall performance of the algorithms is dependent on  pattern size and alphabet size (each algorithm has its own preferred region of application). 
 
-This means: As long as string matching occurs only sometimes and affects only small patterns and small texts,  there is no need to use more efficient algorithm. The algorithms in StringsAndChars are meant for string matching that is done often where the texts are probably very long.
-       
 
 String Search
 =============
