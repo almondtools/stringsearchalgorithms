@@ -3,6 +3,8 @@ package com.almondtools.stringsandchars.search;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.SortedMap;
+import java.util.TreeMap;
 
 import com.almondtools.stringsandchars.io.CharProvider;
 
@@ -27,7 +29,11 @@ public class SetHorspool implements StringSearchAlgorithm {
 	private CharShift computeCharacterShift(List<char[]> charpatterns, int minLength) {
 		char minChar = computeMinChar(charpatterns);
 		char maxChar = computeMaxChar(charpatterns);
-		return new QuickShift(charpatterns, minLength, minChar, maxChar);
+		if (maxChar - minChar < 256 || maxChar - minChar < minLength * 2) {
+			return new QuickShift(charpatterns, minLength, minChar, maxChar);
+		} else {
+			return new SmartShift(charpatterns, minLength, minChar, maxChar);
+		}
 	}
 
 	private int minLength(List<char[]> patterns) {
@@ -189,9 +195,40 @@ public class SetHorspool implements StringSearchAlgorithm {
 			}
 			return characterShift[c - minChar];
 		}
+		
+	}
 
+	private static class SmartShift implements CharShift {
 		
+		private SparseIntArray characterShift;
 		
+		public SmartShift(List<char[]> charpatterns, int minLength, char minChar, char maxChar) {
+			this.characterShift = computeCharacterShift(charpatterns, minLength, minChar, maxChar);
+		}
+
+		private static SparseIntArray computeCharacterShift(List<char[]> patterns, int minLength, char min, char max) {
+			SortedMap<Integer, Integer> shift = new TreeMap<>();
+			for (char[] pattern : patterns) {
+				for (int i = 0; i < pattern.length - 1; i++) {
+					Integer value = shift.get((int) pattern[i]);
+					if (value == null) {
+						value = minLength;
+					}
+					shift.put((int) pattern[i], min(value, pattern.length - i - 1));
+				}
+			}
+			return new SparseIntArray(shift, minLength);
+		}
+
+		private static int min(int i, int j) {
+			return i < j ? i : j;
+		}
+
+		@Override
+		public int getShift(char c) {
+			return characterShift.get(c);
+		}
+
 	}
 
 }

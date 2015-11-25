@@ -74,6 +74,15 @@ public class StringSearchAlgorithmTest {
 	}
 	
 	@Test
+	@SearchFor("a\u0262ba")
+	public void testPatternLargeAlphabet() throws Exception {
+		List<StringMatch> matches = searcher.createSearcher(chars("xxxaaaa\u0262ba\u0262baaxxx")).findAll();
+		assertThat(matches, contains(
+			new StringMatch(6, 10, "a\u0262ba"),
+			new StringMatch(9, 13, "a\u0262ba")));
+	}
+	
+	@Test
 	@SearchFor("a")
 	public void testNonOverlappingPattern1() throws Exception {
 		List<StringMatch> matches = searcher.createSearcher(chars("abababab")).findAllNonOverlapping();

@@ -200,6 +200,15 @@ public class MultiStringSearchAlgorithmTest {
 			new StringMatch(3, 4, "a")));
 	}
 	
+	@Test
+	@SearchFor({"aa\u0262ba", "a\u0262baa"})
+	public void testPatternLargeAlphabet() throws Exception {
+		List<StringMatch> matches = searcher.createSearcher(chars("xxxaaaa\u0262ba\u0262baaxxx")).findAll();
+		assertThat(matches, contains(
+			new StringMatch(5, 10, "aa\u0262ba"),
+			new StringMatch(9, 14, "a\u0262baa")));
+	}
+	
 	private StringCharProvider chars(String input) {
 		return new StringCharProvider(input,0);
 	}

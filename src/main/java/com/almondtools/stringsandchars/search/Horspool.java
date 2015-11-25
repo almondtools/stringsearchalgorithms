@@ -3,6 +3,9 @@ package com.almondtools.stringsandchars.search;
 import static com.almondtools.util.text.CharUtils.computeMaxChar;
 import static com.almondtools.util.text.CharUtils.computeMinChar;
 
+import java.util.SortedMap;
+import java.util.TreeMap;
+
 import com.almondtools.stringsandchars.io.CharProvider;
 
 /**
@@ -25,7 +28,11 @@ public class Horspool implements StringSearchAlgorithm {
 	private static CharShift computeShift(char[] pattern) {
 		char minChar = computeMinChar(pattern);
 		char maxChar = computeMaxChar(pattern);
-		return new QuickShift(pattern, minChar, maxChar);
+		if (maxChar - minChar < 256 || maxChar - minChar < pattern.length * 2) {
+			return new QuickShift(pattern, minChar, maxChar);
+		} else {
+			return new SmartShift(pattern, minChar, maxChar);
+		}
 	}
 
 	@Override
@@ -125,6 +132,29 @@ public class Horspool implements StringSearchAlgorithm {
 				return defaultShift;
 			}
 			return characterShift[c - minChar];
+		}
+
+	}
+
+	private static class SmartShift implements CharShift {
+
+		private SparseIntArray characterShift;
+
+		public SmartShift(char[] pattern, char minChar, char maxChar) {
+			this.characterShift = computeCharacterShift(pattern, minChar, maxChar);
+		}
+
+		private SparseIntArray computeCharacterShift(char[] pattern, char min, char max) {
+			SortedMap<Integer, Integer> shift = new TreeMap<>();
+			for (int i = 0; i < pattern.length - 1; i++) {
+				shift.put((int) pattern[i], pattern.length - i - 1);
+			}
+			return new SparseIntArray(shift, pattern.length);
+		}
+
+		@Override
+		public int getShift(char c) {
+			return characterShift.get(c);
 		}
 
 	}

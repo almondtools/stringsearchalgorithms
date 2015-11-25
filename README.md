@@ -78,5 +78,4 @@ Maven Dependency
 
 Todos
 -----
-- Horspool/Sunday/SetHorspool's memory consumption should not be linear dependent on the used alphabet size
 - Implement BNDM to compete in smaller alphabet regions
