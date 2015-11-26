@@ -25,15 +25,15 @@ String Matching
 The string matching algorithms can be found in the package `com.almondtools.stringsandchars.search`:
 
 Search one string:
- - Horspool (default)
- - KnuthMorrisPratt
- - Sunday
+ - Boyer-Moore-Horspool or Horspool (`Horspool`, default)
+ - Knuth-Morris-Pratt (`KnuthMorrisPratt`)
+ - Sunday (`Sunday`, default)
 
 Search multiple strings:
- - SetBackwardOracleMatching (default)
- - AhoCorasick
- - SetHorspool
- - WuManber
+ - Set-Backward-Oracle-Matching (`SetBackwardOracleMatching`, default)
+ - Aho-Corasick (`AhoCorasick`)
+ - Set-Horspool (`SetHorspool`)
+ - Wu-Manber (`WuManber`)
 
 Now first initialize the Algorithm with the pattern:
 
