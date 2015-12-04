@@ -83,6 +83,22 @@ public class StringSearchAlgorithmTest {
 	}
 	
 	@Test
+	@SearchFor("aaaa aaaa bbbb bbbb aaaa aaaa bbbb bbbb aaaa aaaa bbbb bbbb aaaa aaaa bbbb bbbb")
+	public void testPatternLargeSize() throws Exception {
+		List<StringMatch> matches = searcher.createSearcher(chars("xxx aaaa aaaa bbbb bbbb aaaa aaaa bbbb bbbb aaaa aaaa bbbb bbbb aaaa aaaa bbbb bbbb xxx")).findAll();
+		assertThat(matches, contains(
+			new StringMatch(4, 83, "aaaa aaaa bbbb bbbb aaaa aaaa bbbb bbbb aaaa aaaa bbbb bbbb aaaa aaaa bbbb bbbb")));
+	}
+	
+	@Test
+	@SearchFor("axxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\u0262xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxb")
+	public void testPatternLargeSizeAndAlphabet() throws Exception {
+		List<StringMatch> matches = searcher.createSearcher(chars("xxx axxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\u0262xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxb xxx")).findAll();
+		assertThat(matches, contains(
+			new StringMatch(4, 83, "axxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\u0262xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxb")));
+	}
+	
+	@Test
 	@SearchFor("a")
 	public void testNonOverlappingPattern1() throws Exception {
 		List<StringMatch> matches = searcher.createSearcher(chars("abababab")).findAllNonOverlapping();

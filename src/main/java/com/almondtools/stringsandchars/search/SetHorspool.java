@@ -3,8 +3,6 @@ package com.almondtools.stringsandchars.search;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.SortedMap;
-import java.util.TreeMap;
 
 import com.almondtools.stringsandchars.io.CharProvider;
 
@@ -200,24 +198,21 @@ public class SetHorspool implements StringSearchAlgorithm {
 
 	private static class SmartShift implements CharShift {
 		
-		private SparseIntArray characterShift;
+		private CharIntMap characterShift;
 		
 		public SmartShift(List<char[]> charpatterns, int minLength, char minChar, char maxChar) {
 			this.characterShift = computeCharacterShift(charpatterns, minLength, minChar, maxChar);
 		}
 
-		private static SparseIntArray computeCharacterShift(List<char[]> patterns, int minLength, char min, char max) {
-			SortedMap<Integer, Integer> shift = new TreeMap<>();
+		private static CharIntMap computeCharacterShift(List<char[]> patterns, int minLength, char min, char max) {
+			CharIntMap.Builder mapBuilder = new CharIntMap.Builder(minLength);
 			for (char[] pattern : patterns) {
 				for (int i = 0; i < pattern.length - 1; i++) {
-					Integer value = shift.get((int) pattern[i]);
-					if (value == null) {
-						value = minLength;
-					}
-					shift.put((int) pattern[i], min(value, pattern.length - i - 1));
+					int value = mapBuilder.get(pattern[i]);
+					mapBuilder.put(pattern[i], min(value, pattern.length - i - 1));
 				}
 			}
-			return new SparseIntArray(shift, minLength);
+			return mapBuilder.build();
 		}
 
 		private static int min(int i, int j) {

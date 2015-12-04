@@ -3,9 +3,6 @@ package com.almondtools.stringsandchars.search;
 import static com.almondtools.util.text.CharUtils.computeMaxChar;
 import static com.almondtools.util.text.CharUtils.computeMinChar;
 
-import java.util.SortedMap;
-import java.util.TreeMap;
-
 import com.almondtools.stringsandchars.io.CharProvider;
 
 /**
@@ -153,18 +150,18 @@ public class Sunday implements StringSearchAlgorithm {
 
 	private static class SmartShift implements CharShift {
 
-		private SparseIntArray characterShift;
+		private CharIntMap characterShift;
 
 		public SmartShift(char[] pattern, char minChar, char maxChar) {
 			this.characterShift = computeCharacterShift(pattern, minChar, maxChar);
 		}
 
-		private SparseIntArray computeCharacterShift(char[] pattern, char min, char max) {
-			SortedMap<Integer, Integer> shift = new TreeMap<>();
+		private CharIntMap computeCharacterShift(char[] pattern, char min, char max) {
+			CharIntMap.Builder mapBuilder = new CharIntMap.Builder(pattern.length);
 			for (int i = 0; i < pattern.length; i++) {
-				shift.put((int) pattern[i], pattern.length - i);
+				mapBuilder.put(pattern[i], pattern.length - i);
 			}
-			return new SparseIntArray(shift, pattern.length);
+			return mapBuilder.build();
 		}
 
 		@Override

@@ -67,6 +67,7 @@ public class StringSearchRule implements TestRule {
 
 	private List<StringSearchAlgorithm> getAlgorithms(String pattern) {
 		return Arrays.asList((StringSearchAlgorithm) 
+			new ShiftAnd(pattern),
 			new KnuthMorrisPratt(pattern),
 			new Horspool(pattern),
 			new Sunday(pattern)
