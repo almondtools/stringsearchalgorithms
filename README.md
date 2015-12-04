@@ -26,6 +26,7 @@ The string matching algorithms can be found in the package `com.almondtools.stri
 
 Search one string:
  - Boyer-Moore-Horspool or Horspool (`Horspool`, default)
+ - Shift-And (`ShiftAnd`)
  - Knuth-Morris-Pratt (`KnuthMorrisPratt`)
  - Sunday (`Sunday`, default)
 
@@ -78,4 +79,5 @@ Maven Dependency
 
 Todos
 -----
-- Implement BNDM to compete in smaller alphabet regions
+- Implement BNDM
+- Extended String Matching
