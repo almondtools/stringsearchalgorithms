@@ -70,7 +70,8 @@ public class StringSearchRule implements TestRule {
 			new ShiftAnd(pattern),
 			new KnuthMorrisPratt(pattern),
 			new Horspool(pattern),
-			new Sunday(pattern)
+			new Sunday(pattern),
+			new BNDM(pattern)
 		);
 	}
 

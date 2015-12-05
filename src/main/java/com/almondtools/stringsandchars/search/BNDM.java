@@ -2,6 +2,7 @@ package com.almondtools.stringsandchars.search;
 
 import static com.almondtools.util.text.CharUtils.computeMaxChar;
 import static com.almondtools.util.text.CharUtils.computeMinChar;
+import static java.util.Arrays.fill;
 
 import com.almondtools.stringsandchars.io.CharProvider;
 
@@ -10,12 +11,12 @@ import com.almondtools.stringsandchars.io.CharProvider;
  * 
  * This algorithm takes a single pattern as input and generates a finder which can find this pattern in documents
  */
-public class ShiftAnd implements StringSearchAlgorithm {
+public class BNDM implements StringSearchAlgorithm {
 
 	private int patternLength;
 	private BitMapStates states;
 
-	public ShiftAnd(String pattern) {
+	public BNDM(String pattern) {
 		this.patternLength = pattern.length();
 		this.states = computeStates(pattern.toCharArray());
 	}
@@ -56,11 +57,13 @@ public class ShiftAnd implements StringSearchAlgorithm {
 
 		private long state;
 		private long finalstate;
+		private long activeStates;
 		private CharProvider chars;
 
 		public LongFinder(CharProvider chars) {
-			this.state = 0;
+			this.state = activeStates;
 			this.finalstate = 1l << (patternLength - 1);
+			this.activeStates = (finalstate - 1) | finalstate;
 			this.chars = chars;
 		}
 
@@ -71,22 +74,34 @@ public class ShiftAnd implements StringSearchAlgorithm {
 
 		@Override
 		public StringMatch findNext() {
-			while (!chars.finished()) {
-				char nextChar = chars.next();
-				long bits = states.single(nextChar);
-
-				state = (state << 1 | 1l) & bits;
-
-				if ((state & finalstate) != 0l) {
-					return createMatch();
+			while (!chars.finished(patternLength - 1)) {
+				state = activeStates;
+				int j = patternLength - 1;
+				int last = patternLength;
+				while (state != 0l) {
+					char currentChar = chars.lookahead(j);
+					long single = states.single(currentChar);
+					state &= single;
+					if ((state & finalstate) != 0l) {
+						if (j > 0) {
+							last = j;
+						} else {
+							StringMatch createMatch = createMatch();
+							chars.forward(last);
+							return createMatch;
+						}
+					}
+					j--;
+					state = (state << 1) & activeStates;
 				}
+				chars.forward(last);
 			}
 			return null;
 		}
 
 		private StringMatch createMatch() {
-			long end = chars.current();
-			long start = end - patternLength;
+			long start = chars.current();
+			long end = start + patternLength;
 			String s = chars.slice(start, end);
 			return new StringMatch(start, end, s);
 		}
@@ -97,12 +112,21 @@ public class ShiftAnd implements StringSearchAlgorithm {
 
 		private long[] state;
 		private long finalstate;
+		private long activeStates;
 		private CharProvider chars;
 
 		public MultiLongFinder(CharProvider chars) {
-			this.state = new long[((patternLength - 1) / 64) + 1];
+			this.state = initial(patternLength);
 			this.finalstate = 1 << ((patternLength - 1) % 64);
+			this.activeStates = (finalstate - 1) | finalstate;
 			this.chars = chars;
+		}
+
+		private long[] initial(int patternLength) {
+			long[] initial = new long[((patternLength - 1) / 64) + 1];
+			fill(initial, -1l);
+			initial[0] = activeStates;
+			return initial;
 		}
 
 		@Override
@@ -112,31 +136,60 @@ public class ShiftAnd implements StringSearchAlgorithm {
 
 		@Override
 		public StringMatch findNext() {
-			while (!chars.finished()) {
-				char nextChar = chars.next();
-				long[] bits = states.all(nextChar);
-
-				state = next(state, bits);
-
-				if ((state[0] & finalstate) != 0l) {
-					return createMatch();
+			while (!chars.finished(patternLength - 1)) {
+				state = initial(patternLength);
+				int j = patternLength - 1;
+				int last = patternLength;
+				while (zero(state)) {
+					char currentChar = chars.lookahead(j);
+					long[] all = states.all(currentChar);
+					state = join(state, all);
+					if ((state[0] & finalstate) != 0l) {
+						if (j > 0) {
+							last = j;
+						} else {
+							StringMatch createMatch = createMatch();
+							chars.forward(last);
+							return createMatch;
+						}
+					}
+					j--;
+					state = next(state);
 				}
+				chars.forward(last);
 			}
 			return null;
 		}
 
-		private long[] next(long[] state, long bits[]) {
+		private long[] next(long[] state) {
 			for (int i = 0; i < state.length; i++) {
 				int j = i + 1;
-				long leastBit = j < state.length ? state[j] >>> 63 : 1l;
-				state[i] = (state[i] << 1 | leastBit) & bits[i];
+				long leastBit = j < state.length ? state[j] >>> 63 : 0l;
+				state[i] = (state[i] << 1 | leastBit);
+			}
+			state[0] &= activeStates;
+			return state;
+		}
+
+		private boolean zero(long[] state) {
+			for (int i = 0; i < state.length; i++) {
+				if (state[i] != 0l) {
+					return true;
+				}
+			}
+			return false;
+		}
+
+		private long[] join(long[] state, long[] bits) {
+			for (int i = 0; i < state.length; i++) {
+				state[i] = state[i] & bits[i];
 			}
 			return state;
 		}
 
 		private StringMatch createMatch() {
-			long end = chars.current();
-			long start = end - patternLength;
+			long start = chars.current();
+			long end = start + patternLength;
 			String s = chars.slice(start, end);
 			return new StringMatch(start, end, s);
 		}
@@ -147,7 +200,7 @@ public class ShiftAnd implements StringSearchAlgorithm {
 
 		@Override
 		public StringSearchAlgorithm of(String pattern) {
-			return new ShiftAnd(pattern);
+			return new BNDM(pattern);
 		}
 
 	}
@@ -180,9 +233,10 @@ public class ShiftAnd implements StringSearchAlgorithm {
 
 		private static long[] computeStates(char[] pattern, char min, char max) {
 			long[] characters = new long[max - min + 1];
-			for (int i = 0; i < pattern.length; i++) {
+			for (int i = 0; i < pattern.length; i++) {   
 				char c = pattern[i];
-				characters[c - min] |= 1l << i;
+				int j = pattern.length - i - 1;
+				characters[c - min] |= 1l << j;
 			}
 			return characters;
 		}
@@ -209,7 +263,8 @@ public class ShiftAnd implements StringSearchAlgorithm {
 			CharLongMap.Builder mapBuilder = new CharLongMap.Builder(0);
 			for (int i = 0; i < pattern.length; i++) {
 				char c = pattern[i];
-				long newState = mapBuilder.get(c) | 1l << i;
+				int j = pattern.length - i - 1;
+				long newState = mapBuilder.get(c) | (1l << j);
 				mapBuilder.put(c, newState);
 			}
 			return mapBuilder.build();
@@ -261,8 +316,9 @@ public class ShiftAnd implements StringSearchAlgorithm {
 			}
 			for (int i = 0; i < pattern.length; i++) {
 				char c = pattern[i];
-				int slot = ((pattern.length - 1) / 64) - i / 64;
-				int offset = i % 64;
+				int j = pattern.length - i - 1;
+				int slot = ((pattern.length - 1) / 64) - j / 64;
+				int offset = j % 64;
 				characters[c - min][slot] |= 1l << offset;
 			}
 			return characters;
@@ -291,8 +347,9 @@ public class ShiftAnd implements StringSearchAlgorithm {
 			CharLongArrayMap.Builder mapBuilder = new CharLongArrayMap.Builder(zero);
 			for (int i = 0; i < pattern.length; i++) {
 				char c = pattern[i];
-				int slot = ((pattern.length - 1) / 64) - i / 64;
-				int offset = i % 64;
+				int j = pattern.length - i - 1;
+				int slot = ((pattern.length - 1) / 64) - j / 64;
+				int offset = j % 64;
 				long[] newState = mapBuilder.get(c);
 				if (newState == zero) {
 					newState = computeZero(pattern.length);
