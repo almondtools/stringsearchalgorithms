@@ -13,38 +13,28 @@ import com.almondtools.stringsandchars.io.CharProvider;
 public class ShiftAnd implements StringSearchAlgorithm {
 
 	private int patternLength;
-	private LongStates longMap;
-	private LongArrayStates bitsetMap;
+	private BitMapStates states;
 
 	public ShiftAnd(String pattern) {
 		this.patternLength = pattern.length();
-		this.longMap = computeLongMap(pattern.toCharArray());
-		this.bitsetMap = computeBitSetMap(pattern.toCharArray());
+		this.states = computeStates(pattern.toCharArray());
 	}
 
-	private static LongStates computeLongMap(char[] pattern) {
-		if (pattern.length > 64) {
-			return null;
-		}
+	private static BitMapStates computeStates(char[] pattern) {
 		char minChar = computeMinChar(pattern);
 		char maxChar = computeMaxChar(pattern);
 		if (maxChar - minChar < 256 || maxChar - minChar < pattern.length * 2) {
-			return new QuickCharLong(pattern, minChar, maxChar);
+			if (pattern.length > 64) {
+				return new QuickMultiLongStates(pattern, minChar, maxChar);
+			} else {
+				return new QuickSingleLongStates(pattern, minChar, maxChar);
+			}
 		} else {
-			return new SmartCharLong(pattern, minChar, maxChar);
-		}
-	}
-
-	private static LongArrayStates computeBitSetMap(char[] pattern) {
-		if (pattern.length <= 64) {
-			return null;
-		}
-		char minChar = computeMinChar(pattern);
-		char maxChar = computeMaxChar(pattern);
-		if (maxChar - minChar < 256 || maxChar - minChar < pattern.length * 2) {
-			return new QuickCharLongArray(pattern, minChar, maxChar);
-		} else {
-			return new SmartCharLongArray(pattern, minChar, maxChar);
+			if (pattern.length > 64) {
+				return new SmartMultiLongStates(pattern, minChar, maxChar);
+			} else {
+				return new SmartSingleLongStates(pattern, minChar, maxChar);
+			}
 		}
 	}
 
@@ -55,10 +45,10 @@ public class ShiftAnd implements StringSearchAlgorithm {
 
 	@Override
 	public StringFinder createFinder(CharProvider chars) {
-		if (longMap != null) {
+		if (states.supportsSingle()) {
 			return new LongFinder(chars);
 		} else {
-			return new BitSetFinder(chars);
+			return new MultiLongFinder(chars);
 		}
 	}
 
@@ -83,7 +73,7 @@ public class ShiftAnd implements StringSearchAlgorithm {
 		public StringMatch findNext() {
 			while (!chars.finished()) {
 				char nextChar = chars.next();
-				long bits = longMap.get(nextChar);
+				long bits = states.single(nextChar);
 
 				state = (state << 1 | 1l) & bits;
 
@@ -102,13 +92,13 @@ public class ShiftAnd implements StringSearchAlgorithm {
 		}
 	}
 
-	private class BitSetFinder extends AbstractStringFinder {
+	private class MultiLongFinder extends AbstractStringFinder {
 
 		private long[] state;
 		private long finalstate;
 		private CharProvider chars;
 
-		public BitSetFinder(CharProvider chars) {
+		public MultiLongFinder(CharProvider chars) {
 			this.state = new long[((patternLength - 1) / 64) + 1];
 			this.finalstate = 1 << ((patternLength - 1) % 64);
 			this.chars = chars;
@@ -123,7 +113,7 @@ public class ShiftAnd implements StringSearchAlgorithm {
 		public StringMatch findNext() {
 			while (!chars.finished()) {
 				char nextChar = chars.next();
-				long[] bits = bitsetMap.get(nextChar);
+				long[] bits = states.all(nextChar);
 
 				state = next(state, bits);
 
@@ -161,13 +151,27 @@ public class ShiftAnd implements StringSearchAlgorithm {
 
 	}
 
-	private static class QuickCharLong implements LongStates {
+	private static abstract class SingleLongBitMapStates implements BitMapStates {
+
+		@Override
+		public boolean supportsSingle() {
+			return true;
+		}
+
+		@Override
+		public long[] all(char c) {
+			return new long[] { single(c) };
+		}
+
+	}
+
+	private static class QuickSingleLongStates extends SingleLongBitMapStates {
 
 		private char minChar;
 		private char maxChar;
 		private long[] characters;
 
-		public QuickCharLong(char[] pattern, char minChar, char maxChar) {
+		public QuickSingleLongStates(char[] pattern, char minChar, char maxChar) {
 			this.minChar = minChar;
 			this.maxChar = maxChar;
 			this.characters = computeBitMap(pattern, this.minChar, this.maxChar);
@@ -183,7 +187,7 @@ public class ShiftAnd implements StringSearchAlgorithm {
 		}
 
 		@Override
-		public long get(char c) {
+		public long single(char c) {
 			if (c < minChar || c > maxChar) {
 				return 0l;
 			}
@@ -192,11 +196,11 @@ public class ShiftAnd implements StringSearchAlgorithm {
 
 	}
 
-	private static class SmartCharLong implements LongStates {
+	private static class SmartSingleLongStates extends SingleLongBitMapStates {
 
 		private CharLongMap states;
 
-		public SmartCharLong(char[] pattern, char minChar, char maxChar) {
+		public SmartSingleLongStates(char[] pattern, char minChar, char maxChar) {
 			this.states = computeStates(pattern, minChar, maxChar);
 		}
 
@@ -211,20 +215,38 @@ public class ShiftAnd implements StringSearchAlgorithm {
 		}
 
 		@Override
-		public long get(char c) {
+		public long single(char c) {
 			return states.get(c);
 		}
 
 	}
 
-	private static class QuickCharLongArray implements LongArrayStates {
+	private static abstract class MultiLongBitMapStates implements BitMapStates {
+
+		public static long[] computeZero(int length) {
+			return new long[((length - 1) / 64) + 1];
+		}
+
+		@Override
+		public boolean supportsSingle() {
+			return false;
+		}
+		
+		@Override
+		public long single(char c) {
+			throw new UnsupportedOperationException();
+		}
+
+	}
+
+	private static class QuickMultiLongStates extends MultiLongBitMapStates {
 
 		private char minChar;
 		private char maxChar;
 		private long[][] characters;
 		private long[] zero;
 
-		public QuickCharLongArray(char[] pattern, char minChar, char maxChar) {
+		public QuickMultiLongStates(char[] pattern, char minChar, char maxChar) {
 			this.minChar = minChar;
 			this.maxChar = maxChar;
 			this.characters = computeBitMap(pattern, this.minChar, this.maxChar);
@@ -245,12 +267,8 @@ public class ShiftAnd implements StringSearchAlgorithm {
 			return characters;
 		}
 
-		private static long[] computeZero(int length) {
-			return new long[((length - 1) / 64) + 1];
-		}
-
 		@Override
-		public long[] get(char c) {
+		public long[] all(char c) {
 			if (c < minChar || c > maxChar) {
 				return zero;
 			}
@@ -259,11 +277,11 @@ public class ShiftAnd implements StringSearchAlgorithm {
 
 	}
 
-	private static class SmartCharLongArray implements LongArrayStates {
-		
+	private static class SmartMultiLongStates extends MultiLongBitMapStates {
+
 		private CharLongArrayMap states;
 
-		public SmartCharLongArray(char[] pattern, char minChar, char maxChar) {
+		public SmartMultiLongStates(char[] pattern, char minChar, char maxChar) {
 			this.states = computeStates(pattern, minChar, maxChar);
 		}
 
@@ -284,15 +302,11 @@ public class ShiftAnd implements StringSearchAlgorithm {
 			return mapBuilder.build();
 		}
 
-		private static long[] computeZero(int length) {
-			return new long[((length - 1) / 64) + 1];
-		}
-
 		@Override
-		public long[] get(char c) {
+		public long[] all(char c) {
 			return states.get(c);
 		}
-		
+
 	}
-	
+
 }
