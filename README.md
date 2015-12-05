@@ -28,7 +28,8 @@ Search one string:
  - Boyer-Moore-Horspool or Horspool (`Horspool`, default)
  - Shift-And (`ShiftAnd`)
  - Knuth-Morris-Pratt (`KnuthMorrisPratt`)
- - Sunday (`Sunday`, default)
+ - Sunday (`Sunday`)
+ - BNDM (`BNDM`)
 
 Search multiple strings:
  - Set-Backward-Oracle-Matching (`SetBackwardOracleMatching`, default)
@@ -73,11 +74,10 @@ Maven Dependency
 <dependency>
 	<groupId>com.github.almondtools</groupId>
 	<artifactId>stringsandchars</artifactId>
-	<version>0.2.4</version>
+	<version>0.2.5</version>
 </dependency>
 ```
 
 Todos
 -----
-- Implement BNDM
 - Extended String Matching
