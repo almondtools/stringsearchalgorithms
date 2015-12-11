@@ -1,6 +1,13 @@
 StringsAndChars
 ===============
-StringAndChars is a library for string matching algorithms.
+StringAndChars is a library for exact string matching algorithms (maybe later also approximate or complex string matching algorithms). 
+
+Features
+--------
+- support for unlimited pattern length in all algorithms
+- all algorithms are tested with a series of search scenarios making them robust and scalable 
+- the `CharProvider` interface enables to read in strings but also in buffered or streamed texts
+- the `StringFinder` interface enables to iterate over matches and to find all matches (with  or without overlapping matches)
 
 String Matching with Java SDK API
 ---------------------------------
@@ -18,6 +25,8 @@ Conclusion
 The problem of searching one string in a large texts can be done efficiently with the Java SDK API. It is a bit tricky to find out that the regex API covers an efficient string matching algorithm for single strings and that the default string search with `indexOf` does not.
 
 The problem of searching multiple strings in large texts is not properly covered by the Java SDK API. StringsAndChars provides miscellaneous algorithms to solve this problem. Which algorithm is best depends on the alphabet size and the average pattern size.
+
+You can get a hint what algorithms perform best in which scenario by looking at [stringbench](https://github.com/almondtools/stringbench) 
 
 
 String Matching
