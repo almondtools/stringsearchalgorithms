@@ -162,8 +162,8 @@ public class SetBackwardOracleMatching implements StringSearchAlgorithm {
 					if (prefix.equals(matchedPrefix)) {
 						while (iPatterns.hasNext()) {
 							String suffix = iPatterns.next();
-							if (!chars.finished(suffix.length())) {
-								long currentWordEnd = currentWindowEnd + suffix.length();
+							long currentWordEnd = currentWindowEnd + suffix.length();
+							if (!chars.finished((int) (currentWordEnd - currentWindowStart - 1))) {
 								if (chars.slice(currentWindowEnd, currentWordEnd).equals(suffix)) {
 									buffer.add(new StringMatch(currentWindowStart, currentWordEnd, prefix + suffix));
 								}
