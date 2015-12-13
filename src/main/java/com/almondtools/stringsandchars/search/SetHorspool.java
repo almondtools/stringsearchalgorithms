@@ -13,7 +13,7 @@ import com.almondtools.stringsandchars.io.CharProvider;
  */
 public class SetHorspool implements StringSearchAlgorithm {
 
-	private TrieNode trie;
+	private TrieNode<Void> trie;
 	private int minLength;
 	private CharShift charShift;
 
@@ -76,8 +76,8 @@ public class SetHorspool implements StringSearchAlgorithm {
 		return charpatterns;
 	}
 
-	private static TrieNode computeTrie(List<char[]> charpatterns) {
-		TrieNode trie = new TrieNode();
+	private static TrieNode<Void> computeTrie(List<char[]> charpatterns) {
+		TrieNode<Void> trie = new TrieNode<>();
 		for (char[] pattern : charpatterns) {
 			trie.extendReverse(pattern);
 		}
@@ -101,7 +101,7 @@ public class SetHorspool implements StringSearchAlgorithm {
 
 		public Finder(CharProvider chars) {
 			this.chars = chars;
-			this.buffer = new LinkedList<StringMatch>();
+			this.buffer = new LinkedList<>();
 		}
 
 		@Override
@@ -119,7 +119,7 @@ public class SetHorspool implements StringSearchAlgorithm {
 				int patternPointer = lookahead;
 				long pos = chars.current();
 				char current = chars.lookahead(patternPointer);
-				TrieNode node = trie.nextNode(current);
+				TrieNode<Void> node = trie.nextNode(current);
 				while (node != null) {
 					String match = node.getMatch();
 					if (match != null) {

@@ -12,7 +12,7 @@ public abstract class AbstractStringFinder implements StringFinder {
 
 	@Override
 	public List<StringMatch> findAll() {
-		List<StringMatch> matches = new ArrayList<StringMatch>();
+		List<StringMatch> matches = new ArrayList<>();
 		while (true) {
 			StringMatch match = findNext();
 			if (match == null) {
@@ -25,13 +25,13 @@ public abstract class AbstractStringFinder implements StringFinder {
 	
 	@Override
 	public List<StringMatch> findAllNonOverlapping() {
-		List<StringMatch> matches = new ArrayList<StringMatch>();
+		List<StringMatch> matches = new ArrayList<>();
 		next: while (true) {
 			StringMatch match = findNext();
 			if (match == null) {
 				return matches;
 			} else {
-				List<StringMatch> backup = new LinkedList<StringMatch>();
+				List<StringMatch> backup = new LinkedList<>();
 				while (!matches.isEmpty()) {
 					int lastIndex = matches.size() - 1;
 					StringMatch last = matches.get(lastIndex);

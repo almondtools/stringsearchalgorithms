@@ -4,29 +4,30 @@ import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-public class TrieNode {
+public class TrieNode<T> {
 
-	private Map<Character, TrieNode> nexts;
-	private TrieNode fallback;
+	private Map<Character, TrieNode<T>> nexts;
+	private TrieNode<T> fallback;
 	private String match;
+	private T attached;
 
 	public TrieNode() {
 		this.nexts = new LinkedHashMap<>();
 	}
 	
-	public void addNext(char c, TrieNode node) {
+	public void addNext(char c, TrieNode<T> node) {
 		nexts.put(c, node);
 	}
 	
-	public Map<Character, TrieNode> getNexts() {
+	public Map<Character, TrieNode<T>> getNexts() {
 		return nexts;
 	}
 
-	public void addFallback(TrieNode fallback) {
+	public void addFallback(TrieNode<T> fallback) {
 		this.fallback = fallback;
 	}
 	
-	public TrieNode getFallback() {
+	public TrieNode<T> getFallback() {
 		return fallback;
 	}
 	
@@ -37,14 +38,22 @@ public class TrieNode {
 	public void setMatch(String match) {
 		this.match = match;
 	}
-
-	public TrieNode extendReverse(char[] chars) {
-		TrieNode node = extendReverse(chars, 0);
+	
+	public T getAttached() {
+		return attached;
+	}
+	
+	public void setAttached(T attached) {
+		this.attached = attached;
+	}
+	
+	public TrieNode<T> extendReverse(char[] chars) {
+		TrieNode<T> node = extendReverse(chars, 0);
 		node.setMatch(new String(chars));
 		return node;
 	}
 
-	public TrieNode extendReverse(char[] chars, int i) {
+	public TrieNode<T> extendReverse(char[] chars, int i) {
 		return extend(revert(chars), i);
 	}
 
@@ -57,36 +66,36 @@ public class TrieNode {
 		return reversechars;
 	}
 
-	public TrieNode extend(char[] chars) {
-		TrieNode node = extend(chars, 0);
+	public TrieNode<T> extend(char[] chars) {
+		TrieNode<T> node = extend(chars, 0);
 		node.setMatch(new String(chars));
 		return node;
 	}	
 
-	public TrieNode extend(char[] chars, int i) {
+	public TrieNode<T> extend(char[] chars, int i) {
 		if (i >= chars.length) {
 			return this;
 		}
-		TrieNode toExtend = findNodeToExtend(Arrays.copyOf(chars, i + 1));
+		TrieNode<T> toExtend = findNodeToExtend(Arrays.copyOf(chars, i + 1));
 		return toExtend.extend(chars, i + 1);
 	}
 
-	private TrieNode findNodeToExtend(char[] chars) {
+	private TrieNode<T> findNodeToExtend(char[] chars) {
 		char current = chars[chars.length - 1];
-		TrieNode node = nexts.get(current);
+		TrieNode<T> node = nexts.get(current);
 		if (node == null) {
-			node = new TrieNode();
+			node = new TrieNode<>();
 			nexts.put(current, node);
 		}
 		return node;
 	}
 
-	public TrieNode nextNode(char c) {
+	public TrieNode<T> nextNode(char c) {
 		return nexts.get(c);
 	}
 
-	public TrieNode nextNode(char[] chars) {
-		TrieNode current = this;
+	public TrieNode<T> nextNode(char[] chars) {
+		TrieNode<T> current = this;
 		for (char c : chars) {
 			current = current.nextNode(c);
 			if (current == null) {

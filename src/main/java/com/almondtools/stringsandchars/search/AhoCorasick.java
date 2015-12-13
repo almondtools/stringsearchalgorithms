@@ -15,7 +15,7 @@ import com.almondtools.stringsandchars.io.CharProvider;
  */
 public class AhoCorasick implements StringSearchAlgorithm {
 
-	private TrieNode trie;
+	private TrieNode<Void> trie;
 	private int minLength;
 	
 	public AhoCorasick(List<String> patterns) {
@@ -42,8 +42,8 @@ public class AhoCorasick implements StringSearchAlgorithm {
 		return charpatterns;
 	}
 
-	private static TrieNode computeTrie(List<char[]> charpatterns) {
-		TrieNode trie = new TrieNode();
+	private static TrieNode<Void> computeTrie(List<char[]> charpatterns) {
+		TrieNode<Void> trie = new TrieNode<>();
 		for (char[] pattern : charpatterns) {
 			trie.extend(pattern);
 		}
@@ -60,13 +60,13 @@ public class AhoCorasick implements StringSearchAlgorithm {
 		return minLength;
 	}
 
-	private static TrieNode computeSupportTransition(TrieNode trie) {
-		Queue<TrieNode> worklist = new LinkedList<TrieNode>();
+	private static TrieNode<Void> computeSupportTransition(TrieNode<Void> trie) {
+		Queue<TrieNode<Void>> worklist = new LinkedList<>();
 		worklist.add(trie);
 		while (!worklist.isEmpty()) {
-			TrieNode current = worklist.remove();
-			for (Map.Entry<Character, TrieNode> next : current.getNexts().entrySet()) {
-				TrieNode nextTrie = next.getValue();
+			TrieNode<Void> current = worklist.remove();
+			for (Map.Entry<Character, TrieNode<Void>> next : current.getNexts().entrySet()) {
+				TrieNode<Void> nextTrie = next.getValue();
 				computeSupport(current, next.getKey(), nextTrie, trie);
 				worklist.add(nextTrie);
 			}
@@ -74,14 +74,14 @@ public class AhoCorasick implements StringSearchAlgorithm {
 		return trie;
 	}
 
-	private static void computeSupport(TrieNode parent, char c, TrieNode trie, TrieNode init) {
+	private static void computeSupport(TrieNode<Void> parent, char c, TrieNode<Void> trie, TrieNode<Void> init) {
 		if (parent != null && trie instanceof TrieNode) {
-			TrieNode down = parent.getFallback();
+			TrieNode<Void> down = parent.getFallback();
 			while (down != null && down.nextNode(c) == null) {
 				down = down.getFallback();
 			}
 			if (down != null) {
-				TrieNode next = down.nextNode(c);
+				TrieNode<Void> next = down.nextNode(c);
 				trie.addFallback(next);
 				String nextMatch = next.getMatch();
 				if (nextMatch != null && trie.getMatch() == null) {
@@ -96,13 +96,13 @@ public class AhoCorasick implements StringSearchAlgorithm {
 	private class Finder extends AbstractStringFinder {
 
 		private CharProvider chars;
-		private TrieNode current;
+		private TrieNode<Void> current;
 		private List<StringMatch> buffer;
 
 		public Finder(CharProvider chars) {
 			this.chars = chars;
 			this.current = trie;
-			this.buffer = new LinkedList<StringMatch>();
+			this.buffer = new LinkedList<>();
 		}
 
 		@Override
@@ -117,9 +117,9 @@ public class AhoCorasick implements StringSearchAlgorithm {
 			}
 			while (!chars.finished()) {
 				char c = chars.next();
-				TrieNode next = current.nextNode(c);
+				TrieNode<Void> next = current.nextNode(c);
 				while(next == null) {
-					TrieNode nextcurrent= current.getFallback();
+					TrieNode<Void> nextcurrent= current.getFallback();
 					if (nextcurrent == null) {
 						break;
 					}
@@ -139,8 +139,8 @@ public class AhoCorasick implements StringSearchAlgorithm {
 			return null;
 		}
 
-		private List<StringMatch> createMatches(TrieNode current, long end) {
-			List<StringMatch> matches = new ArrayList<StringMatch>();
+		private List<StringMatch> createMatches(TrieNode<Void> current, long end) {
+			List<StringMatch> matches = new ArrayList<>();
 			while (current != null) {
 				String currentMatch = current.getMatch();
 				if (currentMatch != null) {

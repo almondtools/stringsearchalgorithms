@@ -26,7 +26,7 @@ public class WuManber implements StringSearchAlgorithm {
 	private int minLength;
 	private int block;
 	private int[] shift;
-	private TrieNode[] hash;
+	private TrieNode<Void>[] hash;
 
 	public WuManber(List<String> patterns) {
 		List<char[]> charpatterns = toCharArray(patterns);
@@ -94,8 +94,8 @@ public class WuManber implements StringSearchAlgorithm {
 		for (int i = 0; i < shift.length; i++) {
 			shift[i] = minLength - block + 1;
 		}
-		List<String> patternStrings = new ArrayList<String>();
-		Set<String> blocks = new HashSet<String>();
+		List<String> patternStrings = new ArrayList<>();
+		Set<String> blocks = new HashSet<>();
 		for (char[] pattern : patterns) {
 			patternStrings.add(new String(pattern));
 			for (int i = 0; i < pattern.length + 1 - block; i++) {
@@ -132,14 +132,15 @@ public class WuManber implements StringSearchAlgorithm {
 		return hash;
 	}
 
-	private static TrieNode[] computeHash(List<char[]> charpatterns, int block) {
-		TrieNode[] hash = new TrieNode[HASH_SIZE];
+	@SuppressWarnings("unchecked")
+	private static TrieNode<Void>[] computeHash(List<char[]> charpatterns, int block) {
+		TrieNode<Void>[] hash = new TrieNode[HASH_SIZE];
 		for (char[] pattern : charpatterns) {
 			char[] lastBlock = Arrays.copyOfRange(pattern, pattern.length - block, pattern.length);
 			int hashKey = hashHash(lastBlock);
-			TrieNode trie = hash[hashKey];
+			TrieNode<Void> trie = hash[hashKey];
 			if (trie == null) {
-				trie = new TrieNode();
+				trie = new TrieNode<>();
 				hash[hashKey] = trie;
 			}
 			trie.extendReverse(pattern);
@@ -176,7 +177,7 @@ public class WuManber implements StringSearchAlgorithm {
 
 		public Finder(CharProvider chars) {
 			this.chars = chars;
-			this.buffer = new LinkedList<StringMatch>();
+			this.buffer = new LinkedList<>();
 		}
 
 		@Override
@@ -197,7 +198,7 @@ public class WuManber implements StringSearchAlgorithm {
 				int shiftBy = shift[shiftKey];
 				if (shiftBy == 0) {
 					int hashkey = hashHash(lastBlock);
-					TrieNode node = hash[hashkey];
+					TrieNode<Void> node = hash[hashkey];
 					if (node != null) {
 						int patternPointer = lookahead;
 						node = node.nextNode(chars.lookahead(patternPointer));
