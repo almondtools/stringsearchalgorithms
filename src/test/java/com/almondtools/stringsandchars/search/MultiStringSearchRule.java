@@ -69,8 +69,8 @@ public class MultiStringSearchRule implements TestRule {
 		return Arrays.asList((StringSearchAlgorithm) 
 			new AhoCorasick(Arrays.asList(patterns)),
 			new SetHorspool(Arrays.asList(patterns)),
-			new SetBackwardOracleMatching(Arrays.asList(patterns)),
-			new WuManber(Arrays.asList(patterns))
+			new WuManber(Arrays.asList(patterns)),
+			new SetBackwardOracleMatching(Arrays.asList(patterns))
 		);
 	}
 

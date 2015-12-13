@@ -1,10 +1,10 @@
 package com.almondtools.stringsandchars.search;
 
 import java.util.ArrayList;
-import java.util.IdentityHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Queue;
 
 import com.almondtools.stringsandchars.io.CharProvider;
 
@@ -15,15 +15,13 @@ import com.almondtools.stringsandchars.io.CharProvider;
  */
 public class AhoCorasick implements StringSearchAlgorithm {
 
-	private TrieRoot trie;
+	private TrieNode trie;
 	private int minLength;
-	private Map<Trie,Trie> support;
 	
 	public AhoCorasick(List<String> patterns) {
 		List<char[]> charpatterns = toCharArray(patterns);
 		this.trie = computeTrie(charpatterns);
 		this.minLength = minLength(charpatterns);
-		this.support = computeSupportTransition(trie);
 	}
 
 	private int minLength(List<char[]> patterns) {
@@ -44,12 +42,12 @@ public class AhoCorasick implements StringSearchAlgorithm {
 		return charpatterns;
 	}
 
-	private static TrieRoot computeTrie(List<char[]> charpatterns) {
-		TrieRoot trie = new TrieRoot();
+	private static TrieNode computeTrie(List<char[]> charpatterns) {
+		TrieNode trie = new TrieNode();
 		for (char[] pattern : charpatterns) {
 			trie.extend(pattern);
 		}
-		return trie;
+		return computeSupportTransition(trie);
 	}
 
 	@Override
@@ -62,60 +60,43 @@ public class AhoCorasick implements StringSearchAlgorithm {
 		return minLength;
 	}
 
-	private static Map<Trie, Trie> computeSupportTransition(TrieRoot trie) {
-		final Map<Trie, Trie> support = new IdentityHashMap<Trie, Trie>();
-		final Trie init = trie;
-		support.put(init, null);
-		TrieVisitor<Trie> visitor = new TrieVisitor<Trie>() {
-
-			@Override
-			public void visitRoot(TrieRoot trie, Trie parent) {
-				visit(trie, parent);
-			}
-
-			@Override
-			public void visitNode(TrieNode trie, Trie parent) {
-				visit(trie, parent);
-			}
-
-			private void visit(Trie trie, Trie parent) {
-				if (parent != null && trie instanceof TrieNode) {
-					char c = ((TrieNode) trie).getChar();
-					Trie down = support.get(parent);
-					while (down != null && down.nextNode(c) == null) {
-						down = support.get(down);
-					}
-					if (down != null) {
-						Trie next = down.nextNode(c);
-						support.put(trie, next);
-						if (next.isTerminal() && !trie.isTerminal()) {
-							trie.setTerminal(next.length());
-						}
-					} else {
-						support.put(trie, init);
-					}
-				}
-			}
-			
-		};
-		final List<TrieTrie> worklist = new LinkedList<TrieTrie>();
-		worklist.add(new TrieTrie(init, null));
+	private static TrieNode computeSupportTransition(TrieNode trie) {
+		Queue<TrieNode> worklist = new LinkedList<TrieNode>();
+		worklist.add(trie);
 		while (!worklist.isEmpty()) {
-			TrieTrie current = worklist.remove(0);
-			Trie currentTrie = current.getTrie();
-			Trie currentParent = current.getParent();
-			for (Trie next : currentTrie.getNexts()) {
-				worklist.add(new TrieTrie(next, currentTrie));
+			TrieNode current = worklist.remove();
+			for (Map.Entry<Character, TrieNode> next : current.getNexts().entrySet()) {
+				TrieNode nextTrie = next.getValue();
+				computeSupport(current, next.getKey(), nextTrie, trie);
+				worklist.add(nextTrie);
 			}
-			currentTrie.apply(visitor, currentParent);
 		}
-		return support;
+		return trie;
+	}
+
+	private static void computeSupport(TrieNode parent, char c, TrieNode trie, TrieNode init) {
+		if (parent != null && trie instanceof TrieNode) {
+			TrieNode down = parent.getFallback();
+			while (down != null && down.nextNode(c) == null) {
+				down = down.getFallback();
+			}
+			if (down != null) {
+				TrieNode next = down.nextNode(c);
+				trie.addFallback(next);
+				String nextMatch = next.getMatch();
+				if (nextMatch != null && trie.getMatch() == null) {
+					trie.setMatch(nextMatch);
+				}
+			} else {
+				trie.addFallback(init);
+			}
+		}
 	}
 
 	private class Finder extends AbstractStringFinder {
 
 		private CharProvider chars;
-		private Trie current;
+		private TrieNode current;
 		private List<StringMatch> buffer;
 
 		public Finder(CharProvider chars) {
@@ -136,9 +117,9 @@ public class AhoCorasick implements StringSearchAlgorithm {
 			}
 			while (!chars.finished()) {
 				char c = chars.next();
-				Trie next = current.nextNode(c);
+				TrieNode next = current.nextNode(c);
 				while(next == null) {
-					Trie nextcurrent= support.get(current);
+					TrieNode nextcurrent= current.getFallback();
 					if (nextcurrent == null) {
 						break;
 					}
@@ -150,7 +131,7 @@ public class AhoCorasick implements StringSearchAlgorithm {
 				} else {
 					current = trie;
 				}
-				if (current.isTerminal()) {
+				if (current.getMatch() != null) {
 					buffer = createMatches(current, chars.current());
 					return buffer.remove(0);
 				}
@@ -158,26 +139,23 @@ public class AhoCorasick implements StringSearchAlgorithm {
 			return null;
 		}
 
-		private List<StringMatch> createMatches(Trie current, long end) {
+		private List<StringMatch> createMatches(TrieNode current, long end) {
 			List<StringMatch> matches = new ArrayList<StringMatch>();
-			matches.add(createMatch(end, current.length()));
-			while (true) {
-				current = support.get(current);
-				if (current == null)  {
-					break;
-				} else if (current.isTerminal()) {
-					StringMatch nextMatch = createMatch(end, current.length());
+			while (current != null) {
+				String currentMatch = current.getMatch();
+				if (currentMatch != null) {
+					StringMatch nextMatch = createMatch(end, currentMatch);
 					if (!matches.contains(nextMatch)) {
 						matches.add(nextMatch);
 					}
 				}
+				current = current.getFallback();
 			}
 			return matches;
 		}
 
-		private StringMatch createMatch(long end, int len) {
-			long start = end - len;
-			String s = chars.slice(start, end);
+		private StringMatch createMatch(long end, String s) {
+			long start = end - s.length();
 			return new StringMatch(start, end, s);
 		}
 

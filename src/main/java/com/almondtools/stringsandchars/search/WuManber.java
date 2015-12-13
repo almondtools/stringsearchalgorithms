@@ -26,7 +26,7 @@ public class WuManber implements StringSearchAlgorithm {
 	private int minLength;
 	private int block;
 	private int[] shift;
-	private TrieRoot[] hash;
+	private TrieNode[] hash;
 
 	public WuManber(List<String> patterns) {
 		List<char[]> charpatterns = toCharArray(patterns);
@@ -132,14 +132,14 @@ public class WuManber implements StringSearchAlgorithm {
 		return hash;
 	}
 
-	private static TrieRoot[] computeHash(List<char[]> charpatterns, int block) {
-		TrieRoot[] hash = new TrieRoot[HASH_SIZE];
+	private static TrieNode[] computeHash(List<char[]> charpatterns, int block) {
+		TrieNode[] hash = new TrieNode[HASH_SIZE];
 		for (char[] pattern : charpatterns) {
 			char[] lastBlock = Arrays.copyOfRange(pattern, pattern.length - block, pattern.length);
 			int hashKey = hashHash(lastBlock);
-			TrieRoot trie = hash[hashKey];
+			TrieNode trie = hash[hashKey];
 			if (trie == null) {
-				trie = new TrieRoot();
+				trie = new TrieNode();
 				hash[hashKey] = trie;
 			}
 			trie.extendReverse(pattern);
@@ -197,13 +197,14 @@ public class WuManber implements StringSearchAlgorithm {
 				int shiftBy = shift[shiftKey];
 				if (shiftBy == 0) {
 					int hashkey = hashHash(lastBlock);
-					Trie node = hash[hashkey];
+					TrieNode node = hash[hashkey];
 					if (node != null) {
 						int patternPointer = lookahead;
 						node = node.nextNode(chars.lookahead(patternPointer));
 						while (node != null) {
-							if (node.isTerminal()) {
-								buffer.add(createMatch(patternPointer));
+							String match = node.getMatch();
+							if (match != null) {
+								buffer.add(createMatch(patternPointer, match));
 							}
 							patternPointer--;
 							if (pos + patternPointer < 0) {
@@ -223,10 +224,9 @@ public class WuManber implements StringSearchAlgorithm {
 			return null;
 		}
 
-		private StringMatch createMatch(int patternPointer) {
+		private StringMatch createMatch(int patternPointer, String s) {
 			long start = chars.current() + patternPointer;
 			long end = chars.current() + minLength;
-			String s = chars.slice(start, end);
 			return new StringMatch(start, end, s);
 		}
 	}

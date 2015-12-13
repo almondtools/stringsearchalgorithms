@@ -1,91 +1,92 @@
 package com.almondtools.stringsandchars.search;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Arrays;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
-public class TrieNode implements Trie {
-	public char c;
-	private List<TrieNode> nexts;
-	private boolean terminal;
-	private int length;
+public class TrieNode {
 
-	public TrieNode(char c, int length, boolean terminal) {
-		this.c = c;
-		this.nexts = new ArrayList<TrieNode>();
-		this.length = terminal ? length : -1;
-		this.terminal = terminal;
+	private Map<Character, TrieNode> nexts;
+	private TrieNode fallback;
+	private String match;
+
+	public TrieNode() {
+		this.nexts = new LinkedHashMap<>();
 	}
 	
-	@Override
-	public int length() {
-		return length;
+	public void addNext(char c, TrieNode node) {
+		nexts.put(c, node);
 	}
 	
-	public char getChar() {
-		return c;
-	}
-	
-	@Override
-	public void addNext(TrieNode node) {
-		nexts.add(node);
-	}
-	
-	@Override
-	public List<? extends Trie> getNexts() {
+	public Map<Character, TrieNode> getNexts() {
 		return nexts;
 	}
 
-	@Override
-	public boolean isTerminal() {
-		return terminal;
+	public void addFallback(TrieNode fallback) {
+		this.fallback = fallback;
 	}
 	
-	@Override
-	public void setTerminal(int length) {
-		this.length = length;
-		this.terminal = true;
-	}
-
-	public void extend(char[] chars, int i) {
-		extend(chars, i, true);
+	public TrieNode getFallback() {
+		return fallback;
 	}
 	
-	public void extend(char[] chars, int i, boolean terminate) {
-		if (i >= chars.length) {
-			return;
-		}
-		boolean terminateNode = terminate && i == chars.length - 1;
-		TrieNode toExtend = findNodeToExtend(chars[i], i + 1, terminateNode);
-		toExtend.extend(chars, i + 1, terminate);
+	public String getMatch() {
+		return match;
 	}
 
-	private TrieNode findNodeToExtend(char current, int length, boolean terminal) {
-		for (TrieNode node : nexts) {
-			if (node.c == current) {
-				if (terminal) {
-					node.setTerminal(length);
-				}
-				return node;
-			}
-		}
-		TrieNode node = new TrieNode(current, length, terminal);
-		nexts.add(node);
+	public void setMatch(String match) {
+		this.match = match;
+	}
+
+	public TrieNode extendReverse(char[] chars) {
+		TrieNode node = extendReverse(chars, 0);
+		node.setMatch(new String(chars));
 		return node;
 	}
 
-	@Override
-	public TrieNode nextNode(char c) {
-		for (TrieNode node : nexts) {
-			if (node.c == c) {
-				return node;
-			}
-		}
-		return null;
+	public TrieNode extendReverse(char[] chars, int i) {
+		return extend(revert(chars), i);
 	}
 
-	@Override
-	public Trie nextNode(char[] chars) {
-		Trie current = this;
+	public static char[] revert(char[] chars) {
+		final int ri = chars.length - 1;
+		char[] reversechars = new char[chars.length];
+		for (int i = 0; i < reversechars.length; i++) {
+			reversechars[i] = chars[ri - i];
+		}
+		return reversechars;
+	}
+
+	public TrieNode extend(char[] chars) {
+		TrieNode node = extend(chars, 0);
+		node.setMatch(new String(chars));
+		return node;
+	}	
+
+	public TrieNode extend(char[] chars, int i) {
+		if (i >= chars.length) {
+			return this;
+		}
+		TrieNode toExtend = findNodeToExtend(Arrays.copyOf(chars, i + 1));
+		return toExtend.extend(chars, i + 1);
+	}
+
+	private TrieNode findNodeToExtend(char[] chars) {
+		char current = chars[chars.length - 1];
+		TrieNode node = nexts.get(current);
+		if (node == null) {
+			node = new TrieNode();
+			nexts.put(current, node);
+		}
+		return node;
+	}
+
+	public TrieNode nextNode(char c) {
+		return nexts.get(c);
+	}
+
+	public TrieNode nextNode(char[] chars) {
+		TrieNode current = this;
 		for (char c : chars) {
 			current = current.nextNode(c);
 			if (current == null) {
@@ -96,13 +97,12 @@ public class TrieNode implements Trie {
 	}
 
 	@Override
-	public <T> void apply(TrieVisitor<T> visitor, T data) {
-		visitor.visitNode(this, data);
-	}
-	
-	@Override
 	public String toString() {
-		return "-" + c + "->";
+		if (match != null) {
+			return '[' + match + ']';
+		} else {
+			return "[]";
+		}
 	}
 
 }
