@@ -280,15 +280,15 @@ public class ShiftAnd implements StringSearchAlgorithm {
 
 	private static class SmartMultiLongStates extends MultiLongBitMapStates {
 
-		private CharLongArrayMap states;
+		private CharObjectMap<long[]> states;
 
 		public SmartMultiLongStates(char[] pattern, char minChar, char maxChar) {
 			this.states = computeStates(pattern, minChar, maxChar);
 		}
 
-		private static CharLongArrayMap computeStates(char[] pattern, char min, char max) {
+		private static CharObjectMap<long[]> computeStates(char[] pattern, char min, char max) {
 			long[] zero = computeZero(pattern.length);
-			CharLongArrayMap.Builder mapBuilder = new CharLongArrayMap.Builder(zero);
+			CharObjectMap.Builder<long[]> mapBuilder = new CharObjectMap.Builder<>(zero);
 			for (int i = 0; i < pattern.length; i++) {
 				char c = pattern[i];
 				int slot = ((pattern.length - 1) / 64) - i / 64;

@@ -3,19 +3,19 @@ package com.almondtools.stringsandchars.search;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
-public class CharLongArrayMap {
+public class CharObjectMap<T> {
 
 	private char[] keys;
-	private long[][] values;
-	private long[] defaultValue;
+	private T[] values;
+	private T defaultValue;
 
-	public CharLongArrayMap(SortedMap<Character, long[]> map, long[] defaultValue) {
+	public CharObjectMap(SortedMap<Character, T> map, T defaultValue) {
 		this.keys = createKeys(map);
 		this.values = createValues(map);
 		this.defaultValue = defaultValue;
 	}
 
-	public static char[] createKeys(SortedMap<Character, long[]> map) {
+	public static char[] createKeys(SortedMap<Character, ?> map) {
 		char[] array = new char[map.size()];
 		int i = 0;
 		for (Character key : map.keySet()) {
@@ -25,17 +25,18 @@ public class CharLongArrayMap {
 		return array;
 	}
 
-	public static long[][] createValues(SortedMap<Character, long[]> map) {
-		long[][] array = new long[map.size()][];
+	@SuppressWarnings("unchecked")
+	public static <T> T[] createValues(SortedMap<Character, T> map) {
+		T[] array = (T[]) new Object[map.size()];
 		int i = 0;
-		for (long[] value : map.values()) {
+		for (T value : map.values()) {
 			array[i] = value;
 			i++;
 		}
 		return array;
 	}
 
-	public long[] get(char i) {
+	public T get(char i) {
 		int leftI = 0;
 		int rightI = keys.length - 1;
 		char leftKey = keys[leftI];
@@ -67,22 +68,22 @@ public class CharLongArrayMap {
 		}
 	}
 
-	public static class Builder {
+	public static class Builder<T> {
 
-		private long[] defaultValue;
-		private SortedMap<Character, long[]> entries;
+		private T defaultValue;
+		private SortedMap<Character, T> entries;
 
-		public Builder(long[] defaultValue) {
+		public Builder(T defaultValue) {
 			this.defaultValue = defaultValue;
-			this.entries = new TreeMap<Character, long[]>();
+			this.entries = new TreeMap<Character, T>();
 		}
 
-		public CharLongArrayMap build() {
-			return new CharLongArrayMap(entries, defaultValue);
+		public CharObjectMap<T> build() {
+			return new CharObjectMap<>(entries, defaultValue);
 		}
 
-		public long[] get(char key) {
-			long[] result = entries.get(key);
+		public T get(char key) {
+			T result = entries.get(key);
 			if (result == null) {
 				return defaultValue;
 			} else {
@@ -90,7 +91,7 @@ public class CharLongArrayMap {
 			}
 		}
 
-		public void put(char key, long[] value) {
+		public void put(char key, T value) {
 			entries.put(key, value);
 		}
 
