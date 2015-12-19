@@ -212,7 +212,7 @@ public class SetHorspool implements StringSearchAlgorithm {
 					mapBuilder.put(pattern[i], min(value, pattern.length - i - 1));
 				}
 			}
-			return mapBuilder.build();
+			return mapBuilder.perfectMinimal();
 		}
 
 		private static int min(int i, int j) {

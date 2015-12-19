@@ -161,7 +161,7 @@ public class Sunday implements StringSearchAlgorithm {
 			for (int i = 0; i < pattern.length; i++) {
 				mapBuilder.put(pattern[i], pattern.length - i);
 			}
-			return mapBuilder.build();
+			return mapBuilder.perfectMinimal();
 		}
 
 		@Override

@@ -146,7 +146,7 @@ public class Horspool implements StringSearchAlgorithm {
 			for (int i = 0; i < pattern.length - 1; i++) {
 				mapBuilder.put(pattern[i], pattern.length - i - 1);
 			}
-			return mapBuilder.build();
+			return mapBuilder.perfectMinimal();
 		}
 
 		@Override

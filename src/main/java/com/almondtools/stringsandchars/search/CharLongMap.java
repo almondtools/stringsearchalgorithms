@@ -1,99 +1,83 @@
 package com.almondtools.stringsandchars.search;
 
-import java.util.SortedMap;
-import java.util.TreeMap;
+import java.util.Map;
 
 public class CharLongMap {
 
+	private HashFunction h;
 	private char[] keys;
 	private long[] values;
 	private long defaultValue;
 
-	public CharLongMap(SortedMap<Character, Long> map, long defaultValue) {
-		this.keys = createKeys(map);
-		this.values = createValues(map);
+	public CharLongMap(HashFunction h, Map<Character, Long> map, Long defaultValue) {
+		this.h = h;
 		this.defaultValue = defaultValue;
+		computeKeysAndValues(map);
 	}
 
-	public static char[] createKeys(SortedMap<Character, Long> map) {
-		char[] array = new char[map.size()];
-		int i = 0;
-		for (Character key : map.keySet()) {
-			array[i] = key;
-			i++;
+	private void computeKeysAndValues(Map<Character, Long> map) {
+		int len = map.size();
+		keys = new char[len];
+		values = new long[len];
+		for (Map.Entry<Character, Long> entry : map.entrySet()) {
+			char key = entry.getKey();
+			long value = entry.getValue();
+			
+			int i = h.hash(key);
+			
+			keys[i] = key;
+			values[i] = value;
 		}
-		return array;
 	}
 
-	public static long[] createValues(SortedMap<Character, Long> map) {
-		long[] array = new long[map.size()];
-		int i = 0;
-		for (Long value : map.values()) {
-			array[i] = value;
-			i++;
-		}
-		return array;
-	}
-
-	public long get(char i) {
-		int leftI = 0;
-		int rightI = keys.length - 1;
-		char leftKey = keys[leftI];
-		char rightKey = keys[rightI];
-		if (i < leftKey || i > rightKey) {
+	public long get(char value) {
+		int i = h.hash(value);
+		if (keys[i] == value) {
+			return values[i];
+		} else {
 			return defaultValue;
-		} else if (leftKey == i) {
-			return values[leftI];
-		} else if (rightKey == i) {
-			return values[rightI];
-		}
-		while (true) {
-			if (leftKey == rightKey) {
-				return defaultValue;
-			}
-			int midI = (leftI + rightI) >> 1;
-			char midKey = keys[midI];
-			if (midKey == i) {
-				return values[midI];
-			} else if (midKey < i && midKey > leftKey) {
-				leftI = midI;
-				leftKey = midKey;
-			} else if (midKey > i && midKey < rightKey) {
-				rightI = midI;
-				rightKey = midKey;
-			} else {
-				return defaultValue;
-			}
 		}
 	}
+	
+	public long getDefaultValue() {
+		return defaultValue;
+	}
 
-	public static class Builder {
+	public static class Builder extends MinimalPerfectMapBuilder<Character, Long> {
 
-		private int defaultValue;
-		private SortedMap<Character, Long> entries;
-
-		public Builder(int defaultValue) {
-			this.defaultValue = defaultValue;
-			this.entries = new TreeMap<Character, Long>();
+		public Builder(Long defaultValue) {
+			super(defaultValue);
 		}
 
-		public CharLongMap build() {
-			return new CharLongMap(entries, defaultValue);
+		public CharLongMap perfectMinimal() {
+			try {
+				computeFunctions(100, 1.15);
+				return new CharLongMap(getH(), getEntries(), getDefaultValue());
+			} catch (HashBuildException e) {
+				return new Fallback(getEntries(), getDefaultValue());
+			}
 		}
 
+	}
+	
+	private static class Fallback extends CharLongMap {
+
+		private Map<Character, Long> map;
+
+		public Fallback(Map<Character, Long> map, Long defaultValue) {
+			super(new HashFunction(new int[]{0}, 0, 0), map, defaultValue);
+			this.map = map;
+		}
+		
+		@Override
 		public long get(char key) {
-			Long result = entries.get(key);
-			if (result == null) {
-				return defaultValue;
+			Long value = map.get(key);
+			if (value == null) {
+				return getDefaultValue();
 			} else {
-				return result;
+				return value;
 			}
 		}
-
-		public void put(char key, long value) {
-			entries.put(key, value);
-		}
-
+		
 	}
-
 }
