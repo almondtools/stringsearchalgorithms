@@ -14,11 +14,11 @@ public class TrieNode<T> {
 	public TrieNode() {
 		this.nexts = new LinkedHashMap<>();
 	}
-	
+
 	public void addNext(char c, TrieNode<T> node) {
 		nexts.put(c, node);
 	}
-	
+
 	public Map<Character, TrieNode<T>> getNexts() {
 		return nexts;
 	}
@@ -26,11 +26,11 @@ public class TrieNode<T> {
 	public void addFallback(TrieNode<T> fallback) {
 		this.fallback = fallback;
 	}
-	
+
 	public TrieNode<T> getFallback() {
 		return fallback;
 	}
-	
+
 	public String getMatch() {
 		return match;
 	}
@@ -38,15 +38,15 @@ public class TrieNode<T> {
 	public void setMatch(String match) {
 		this.match = match;
 	}
-	
+
 	public T getAttached() {
 		return attached;
 	}
-	
+
 	public void setAttached(T attached) {
 		this.attached = attached;
 	}
-	
+
 	public TrieNode<T> extendReverse(char[] chars) {
 		TrieNode<T> node = extendReverse(chars, 0);
 		node.setMatch(new String(chars));
@@ -70,7 +70,7 @@ public class TrieNode<T> {
 		TrieNode<T> node = extend(chars, 0);
 		node.setMatch(new String(chars));
 		return node;
-	}	
+	}
 
 	public TrieNode<T> extend(char[] chars, int i) {
 		if (i >= chars.length) {

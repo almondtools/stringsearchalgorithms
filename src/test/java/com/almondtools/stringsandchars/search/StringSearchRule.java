@@ -75,8 +75,8 @@ public class StringSearchRule implements TestRule {
 		);
 	}
 
-	public StringFinder createSearcher(CharProvider chars) {
-		return algorithm.createFinder(chars);
+	public StringFinder createSearcher(CharProvider chars, StringFinderOption... options) {
+		return algorithm.createFinder(chars, options);
 	}
 	
 	@Retention(RetentionPolicy.RUNTIME)

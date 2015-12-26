@@ -1,10 +1,19 @@
 package com.almondtools.stringsandchars.search;
 
+import static com.almondtools.stringsandchars.search.MatchOption.LONGEST_MATCH;
+import static com.almondtools.util.text.CharUtils.computeMaxChar;
+import static com.almondtools.util.text.CharUtils.computeMinChar;
+import static com.almondtools.util.text.CharUtils.maxLength;
+import static com.almondtools.util.text.CharUtils.minLength;
+import static com.almondtools.util.text.StringUtils.toCharArray;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
-import java.util.LinkedList;
+import java.util.Iterator;
 import java.util.List;
+import java.util.PriorityQueue;
+import java.util.Queue;
 import java.util.Set;
 
 import com.almondtools.stringsandchars.io.CharProvider;
@@ -24,6 +33,7 @@ public class WuManber implements StringSearchAlgorithm {
 	private char minChar;
 	private char maxChar;
 	private int minLength;
+	private int maxLength;
 	private int block;
 	private int[] shift;
 	private TrieNode<Void>[] hash;
@@ -33,51 +43,10 @@ public class WuManber implements StringSearchAlgorithm {
 		this.maxChar = computeMaxChar(charpatterns);
 		this.minChar = computeMinChar(charpatterns);
 		this.minLength = minLength(charpatterns);
+		this.maxLength = maxLength(charpatterns);
 		this.block = blockSize(minLength, minChar, maxChar, charpatterns.size());
 		this.shift = computeShift(charpatterns, block, minLength);
 		this.hash = computeHash(charpatterns, block);
-	}
-
-	private int minLength(List<char[]> patterns) {
-		int len = Integer.MAX_VALUE;
-		for (char[] pattern : patterns) {
-			if (pattern.length < len) {
-				len = pattern.length;
-			}
-		}
-		return len;
-	}
-
-	private static char computeMinChar(List<char[]> patterns) {
-		char min = Character.MAX_VALUE;
-		for (char[] pattern : patterns) {
-			for (int i = 0; i < pattern.length; i++) {
-				if (pattern[i] < min) {
-					min = pattern[i];
-				}
-			}
-		}
-		return min;
-	}
-
-	private static char computeMaxChar(List<char[]> patterns) {
-		char max = Character.MIN_VALUE;
-		for (char[] pattern : patterns) {
-			for (int i = 0; i < pattern.length; i++) {
-				if (pattern[i] > max) {
-					max = pattern[i];
-				}
-			}
-		}
-		return max;
-	}
-
-	private List<char[]> toCharArray(List<String> patterns) {
-		List<char[]> charpatterns = new ArrayList<char[]>(patterns.size());
-		for (String pattern : patterns) {
-			charpatterns.add(pattern.toCharArray());
-		}
-		return charpatterns;
 	}
 
 	private static int blockSize(int minLength, char minChar, char maxChar, int patterns) {
@@ -161,8 +130,12 @@ public class WuManber implements StringSearchAlgorithm {
 	}
 
 	@Override
-	public StringFinder createFinder(CharProvider chars) {
-		return new Finder(chars);
+	public StringFinder createFinder(CharProvider chars, StringFinderOption... options) {
+		if (LONGEST_MATCH.in(options)) {
+			return new LongestMatchFinder(chars, options);
+		} else {
+			return new NextMatchFinder(chars, options);
+		}
 	}
 
 	@Override
@@ -170,25 +143,50 @@ public class WuManber implements StringSearchAlgorithm {
 		return minLength;
 	}
 
-	private class Finder extends AbstractStringFinder {
+	private abstract class Finder extends AbstractStringFinder {
 
-		private CharProvider chars;
-		private List<StringMatch> buffer;
+		protected CharProvider chars;
+		protected Queue<StringMatch> buffer;
 
-		public Finder(CharProvider chars) {
+		public Finder(CharProvider chars, StringFinderOption... options) {
+			super(options);
 			this.chars = chars;
-			this.buffer = new LinkedList<>();
+			this.buffer = new PriorityQueue<>();
 		}
 
 		@Override
 		public void skipTo(long pos) {
-			chars.move(pos);
+			long last = pos;
+			Iterator<StringMatch> bufferIterator = buffer.iterator();
+			while (bufferIterator.hasNext()) {
+				StringMatch next = bufferIterator.next();
+				if (next.start() < pos) {
+					bufferIterator.remove();
+				} else if (next.end() > last) {
+					last = next.end();
+				}
+			}
+			chars.move(last);
+		}
+
+		protected StringMatch createMatch(int patternPointer, String s) {
+			long start = chars.current() + patternPointer;
+			long end = chars.current() + minLength;
+			return new StringMatch(start, end, s);
+		}
+
+	}
+
+	private class NextMatchFinder extends Finder {
+
+		public NextMatchFinder(CharProvider chars, StringFinderOption... options) {
+			super(chars, options);
 		}
 
 		@Override
 		public StringMatch findNext() {
 			if (!buffer.isEmpty()) {
-				return buffer.remove(0);
+				return buffer.remove();
 			}
 			int lookahead = minLength - 1;
 			while (!chars.finished(lookahead)) {
@@ -216,7 +214,7 @@ public class WuManber implements StringSearchAlgorithm {
 					}
 					chars.next();
 					if (!buffer.isEmpty()) {
-						return buffer.remove(0);
+						return buffer.remove();
 					}
 				} else {
 					chars.forward(shiftBy);
@@ -225,11 +223,92 @@ public class WuManber implements StringSearchAlgorithm {
 			return null;
 		}
 
-		private StringMatch createMatch(int patternPointer, String s) {
-			long start = chars.current() + patternPointer;
-			long end = chars.current() + minLength;
-			return new StringMatch(start, end, s);
+	}
+
+	private class LongestMatchFinder extends Finder {
+
+		public LongestMatchFinder(CharProvider chars, StringFinderOption... options) {
+			super(chars, options);
 		}
+
+		@Override
+		public StringMatch findNext() {
+			long lastStart = lastStartFromBuffer();
+			int lookahead = minLength - 1;
+			while (!chars.finished(lookahead)) {
+				long pos = chars.current();
+				char[] lastBlock = chars.between(pos + minLength - block, pos + minLength);
+				int shiftKey = shiftHash(lastBlock);
+				int shiftBy = shift[shiftKey];
+				if (shiftBy == 0) {
+					int hashkey = hashHash(lastBlock);
+					TrieNode<Void> node = hash[hashkey];
+					if (node != null) {
+						int patternPointer = lookahead;
+						node = node.nextNode(chars.lookahead(patternPointer));
+						while (node != null) {
+							String match = node.getMatch();
+							if (match != null) {
+								StringMatch stringMatch = createMatch(patternPointer, match);
+								lastStart = stringMatch.start();
+								buffer.add(stringMatch);
+							}
+							patternPointer--;
+							if (pos + patternPointer < 0) {
+								break;
+							}
+							node = node.nextNode(chars.lookahead(patternPointer));
+						}
+					}
+					chars.next();
+					if (bufferContainsLongestMatch(lastStart)) {
+						break;
+					}
+				} else {
+					chars.forward(shiftBy);
+				}
+			}
+			if (buffer.isEmpty()) {
+				return null;
+			} else {
+				return longestMatchFromBuffer();
+			}
+		}
+
+		public boolean bufferContainsLongestMatch(long lastStart) {
+			return !buffer.isEmpty()
+				&& chars.current() - lastStart - 1 > maxLength - minLength;
+		}
+
+		private long lastStartFromBuffer() {
+			long start = Long.MAX_VALUE;
+			Iterator<StringMatch> bufferIterator = buffer.iterator();
+			while (bufferIterator.hasNext()) {
+				StringMatch next = bufferIterator.next();
+				if (next.start() < start) {
+					start = next.start();
+				}
+			}
+			if (start == Long.MAX_VALUE) {
+				return -1;
+			} else {
+				return start;
+			}
+		}
+
+		private StringMatch longestMatchFromBuffer() {
+			StringMatch match = buffer.remove();
+			while (!buffer.isEmpty()) {
+				StringMatch nextMatch = buffer.peek();
+				if (nextMatch.start() == match.start()) {
+					match = buffer.remove();
+				} else {
+					break;
+				}
+			}
+			return match;
+		}
+
 	}
 
 	public static class Factory implements MultiWordSearchAlgorithmFactory {

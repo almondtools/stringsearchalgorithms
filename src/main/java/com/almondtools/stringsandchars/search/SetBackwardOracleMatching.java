@@ -1,5 +1,7 @@
 package com.almondtools.stringsandchars.search;
 
+import static com.almondtools.util.text.CharUtils.minLength;
+import static com.almondtools.util.text.StringUtils.toCharArray;
 import static java.util.Arrays.copyOfRange;
 
 import java.util.ArrayList;
@@ -28,24 +30,6 @@ public class SetBackwardOracleMatching implements StringSearchAlgorithm {
 		this.trie = computeTrie(charpatterns, minLength);
 	}
 
-	private int minLength(List<char[]> patterns) {
-		int len = Integer.MAX_VALUE;
-		for (char[] pattern : patterns) {
-			if (pattern.length < len) {
-				len = pattern.length;
-			}
-		}
-		return len;
-	}
-
-	private List<char[]> toCharArray(List<String> patterns) {
-		List<char[]> charpatterns = new ArrayList<char[]>(patterns.size());
-		for (String pattern : patterns) {
-			charpatterns.add(pattern.toCharArray());
-		}
-		return charpatterns;
-	}
-
 	private static TrieNode<List<String>> computeTrie(List<char[]> charpatterns, int length) {
 		TrieNode<List<String>> trie = new TrieNode<>();
 		for (char[] pattern : charpatterns) {
@@ -56,12 +40,12 @@ public class SetBackwardOracleMatching implements StringSearchAlgorithm {
 				node.setMatch(new String(prefix));
 			}
 		}
-		computeOracle(trie, length);
+		computeOracle(trie);
 		computeTerminals(trie, charpatterns, length);
 		return trie;
 	}
 
-	private static void computeOracle(TrieNode<List<String>> trie, int length) {
+	private static void computeOracle(TrieNode<List<String>> trie) {
 		Map<TrieNode<List<String>>, TrieNode<List<String>>> oracle = new IdentityHashMap<>();
 		TrieNode<List<String>> init = trie;
 		oracle.put(init, null);
@@ -113,8 +97,8 @@ public class SetBackwardOracleMatching implements StringSearchAlgorithm {
 	}
 
 	@Override
-	public StringFinder createFinder(CharProvider chars) {
-		return new Finder(chars);
+	public StringFinder createFinder(CharProvider chars, StringFinderOption... options) {
+		return new Finder(chars, options);
 	}
 
 	@Override
@@ -127,7 +111,8 @@ public class SetBackwardOracleMatching implements StringSearchAlgorithm {
 		private CharProvider chars;
 		private List<StringMatch> buffer;
 
-		public Finder(CharProvider chars) {
+		public Finder(CharProvider chars, StringFinderOption... options) {
+			super(options);
 			this.chars = chars;
 			this.buffer = new LinkedList<>();
 		}
@@ -135,6 +120,7 @@ public class SetBackwardOracleMatching implements StringSearchAlgorithm {
 		@Override
 		public void skipTo(long pos) {
 			chars.move(pos);
+			buffer.clear();
 		}
 
 		@Override
@@ -164,7 +150,7 @@ public class SetBackwardOracleMatching implements StringSearchAlgorithm {
 							long currentWordEnd = currentWindowEnd + suffix.length();
 							if (!chars.finished((int) (currentWordEnd - currentWindowStart - 1))) {
 								if (chars.slice(currentWindowEnd, currentWordEnd).equals(suffix)) {
-									buffer.add(new StringMatch(currentWindowStart, currentWordEnd, prefix + suffix));
+									buffer.add(createMatch(currentWindowStart, currentWordEnd, prefix + suffix));
 								}
 							}
 						}
@@ -184,6 +170,10 @@ public class SetBackwardOracleMatching implements StringSearchAlgorithm {
 				}
 			}
 			return null;
+		}
+
+		public StringMatch createMatch(long start, long end, String match) {
+			return new StringMatch(start, end, match);
 		}
 
 	}

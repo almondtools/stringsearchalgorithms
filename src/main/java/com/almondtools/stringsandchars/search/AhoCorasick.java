@@ -1,9 +1,14 @@
 package com.almondtools.stringsandchars.search;
 
+import static com.almondtools.stringsandchars.search.MatchOption.LONGEST_MATCH;
+import static com.almondtools.util.text.CharUtils.minLength;
+import static com.almondtools.util.text.StringUtils.toCharArray;
+
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.PriorityQueue;
 import java.util.Queue;
 
 import com.almondtools.stringsandchars.io.CharProvider;
@@ -17,29 +22,11 @@ public class AhoCorasick implements StringSearchAlgorithm {
 
 	private TrieNode<Void> trie;
 	private int minLength;
-	
+
 	public AhoCorasick(List<String> patterns) {
 		List<char[]> charpatterns = toCharArray(patterns);
 		this.trie = computeTrie(charpatterns);
 		this.minLength = minLength(charpatterns);
-	}
-
-	private int minLength(List<char[]> patterns) {
-		int len = Integer.MAX_VALUE;
-		for (char[] pattern : patterns) {
-			if (pattern.length < len) {
-				len = pattern.length;
-			}
-		}
-		return len;
-	}
-
-	private List<char[]> toCharArray(List<String> patterns) {
-		List<char[]> charpatterns = new ArrayList<char[]>(patterns.size());
-		for (String pattern : patterns) {
-			charpatterns.add(pattern.toCharArray());
-		}
-		return charpatterns;
 	}
 
 	private static TrieNode<Void> computeTrie(List<char[]> charpatterns) {
@@ -51,8 +38,12 @@ public class AhoCorasick implements StringSearchAlgorithm {
 	}
 
 	@Override
-	public StringFinder createFinder(CharProvider chars) {
-		return new Finder(chars);
+	public StringFinder createFinder(CharProvider chars, StringFinderOption... options) {
+		if (LONGEST_MATCH.in(options)) {
+			return new LongestMatchFinder(chars, options);
+		} else {
+			return new NextMatchFinder(chars, options);
+		}
 	}
 
 	@Override
@@ -93,53 +84,26 @@ public class AhoCorasick implements StringSearchAlgorithm {
 		}
 	}
 
-	private class Finder extends AbstractStringFinder {
+	private abstract class Finder extends AbstractStringFinder {
+		protected CharProvider chars;
+		protected TrieNode<Void> current;
+		protected Queue<StringMatch> buffer;
 
-		private CharProvider chars;
-		private TrieNode<Void> current;
-		private List<StringMatch> buffer;
-
-		public Finder(CharProvider chars) {
+		public Finder(CharProvider chars, StringFinderOption... options) {
+			super(options);
 			this.chars = chars;
 			this.current = trie;
-			this.buffer = new LinkedList<>();
+			this.buffer = new PriorityQueue<>();
 		}
 
 		@Override
 		public void skipTo(long pos) {
 			chars.move(pos);
-		}
-		
-		@Override
-		public StringMatch findNext() {
-			if (!buffer.isEmpty()) {
-				return buffer.remove(0);
-			}
-			while (!chars.finished()) {
-				char c = chars.next();
-				TrieNode<Void> next = current.nextNode(c);
-				while(next == null) {
-					TrieNode<Void> nextcurrent= current.getFallback();
-					if (nextcurrent == null) {
-						break;
-					}
-					current = nextcurrent;
-					next = current.nextNode(c);
-				}
-				if (next != null) {
-					current = next;
-				} else {
-					current = trie;
-				}
-				if (current.getMatch() != null) {
-					buffer = createMatches(current, chars.current());
-					return buffer.remove(0);
-				}
-			}
-			return null;
+			current = trie;
+			buffer.clear();
 		}
 
-		private List<StringMatch> createMatches(TrieNode<Void> current, long end) {
+		protected List<StringMatch> createMatches(TrieNode<Void> current, long end) {
 			List<StringMatch> matches = new ArrayList<>();
 			while (current != null) {
 				String currentMatch = current.getMatch();
@@ -154,9 +118,99 @@ public class AhoCorasick implements StringSearchAlgorithm {
 			return matches;
 		}
 
-		private StringMatch createMatch(long end, String s) {
+		protected StringMatch createMatch(long end, String s) {
 			long start = end - s.length();
 			return new StringMatch(start, end, s);
+		}
+
+	}
+
+	private class NextMatchFinder extends Finder {
+
+		public NextMatchFinder(CharProvider chars, StringFinderOption... options) {
+			super(chars, options);
+		}
+
+		@Override
+		public StringMatch findNext() {
+			if (!buffer.isEmpty()) {
+				return buffer.remove();
+			}
+			while (!chars.finished()) {
+				char c = chars.next();
+				TrieNode<Void> next = current.nextNode(c);
+				while (next == null) {
+					TrieNode<Void> nextcurrent = current.getFallback();
+					if (nextcurrent == null) {
+						break;
+					}
+					current = nextcurrent;
+					next = current.nextNode(c);
+				}
+				if (next != null) {
+					current = next;
+				} else {
+					current = trie;
+				}
+				if (current.getMatch() != null) {
+					buffer.addAll(createMatches(current, chars.current()));
+					return buffer.remove();
+				}
+			}
+			return null;
+		}
+
+	}
+
+	private class LongestMatchFinder extends Finder {
+
+		public LongestMatchFinder(CharProvider chars, StringFinderOption... options) {
+			super(chars, options);
+		}
+
+		@Override
+		public StringMatch findNext() {
+			if (!buffer.isEmpty()) {
+				return buffer.remove();
+			}
+			while (!chars.finished()) {
+				char c = chars.next();
+				TrieNode<Void> next = current.nextNode(c);
+				if (next == null && !buffer.isEmpty()) {
+					chars.prev();
+					break;
+				}
+				while (next == null) {
+					TrieNode<Void> nextcurrent = current.getFallback();
+					if (nextcurrent == null) {
+						break;
+					}
+					current = nextcurrent;
+					next = current.nextNode(c);
+				}
+				if (next != null) {
+					current = next;
+				} else {
+					current = trie;
+				}
+				if (current.getMatch() != null) {
+					buffer.addAll(createMatches(current, chars.current()));
+				}
+			}
+			if (buffer.isEmpty()) {
+				return null;
+			} else {
+				StringMatch match = buffer.remove();
+				while (!buffer.isEmpty()) {
+					StringMatch nextMatch = buffer.peek();
+					if (nextMatch.start() == match.start()) {
+						match = buffer.remove();
+					} else {
+						break;
+					}
+				}
+				return match;
+			}
 		}
 
 	}

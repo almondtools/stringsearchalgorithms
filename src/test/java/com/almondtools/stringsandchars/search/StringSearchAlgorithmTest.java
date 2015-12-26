@@ -1,5 +1,7 @@
 package com.almondtools.stringsandchars.search;
 
+import static com.almondtools.stringsandchars.search.MatchOption.LONGEST_MATCH;
+import static com.almondtools.stringsandchars.search.MatchOption.NO_OVERLAP;
 import static org.hamcrest.Matchers.contains;
 import static org.junit.Assert.assertThat;
 
@@ -101,7 +103,7 @@ public class StringSearchAlgorithmTest {
 	@Test
 	@SearchFor("a")
 	public void testNonOverlappingPattern1() throws Exception {
-		List<StringMatch> matches = searcher.createSearcher(chars("abababab")).findAllNonOverlapping();
+		List<StringMatch> matches = searcher.createSearcher(chars("abababab"), LONGEST_MATCH, NO_OVERLAP).findAll();
 		assertThat(matches, contains(
 			new StringMatch(0, 1, "a"),
 			new StringMatch(2, 3, "a"),
@@ -112,7 +114,7 @@ public class StringSearchAlgorithmTest {
 	@Test
 	@SearchFor("abc")
 	public void testNonOverlappingPattern2() throws Exception {
-		List<StringMatch> matches = searcher.createSearcher(chars("abcababcab")).findAllNonOverlapping();
+		List<StringMatch> matches = searcher.createSearcher(chars("abcababcab"), LONGEST_MATCH, NO_OVERLAP).findAll();
 		assertThat(matches, contains(
 			new StringMatch(0, 3, "abc"),
 			new StringMatch(5, 8, "abc")));
@@ -121,7 +123,7 @@ public class StringSearchAlgorithmTest {
 	@Test
 	@SearchFor("abcabd")
 	public void testNonOverlappingPattern3() throws Exception {
-		List<StringMatch> matches = searcher.createSearcher(chars("abcabcabcabdabcabcabd")).findAllNonOverlapping();
+		List<StringMatch> matches = searcher.createSearcher(chars("abcabcabcabdabcabcabd"), LONGEST_MATCH, NO_OVERLAP).findAll();
 		assertThat(matches, contains(
 			new StringMatch(6, 12, "abcabd"),
 			new StringMatch(15, 21, "abcabd")));
@@ -130,7 +132,7 @@ public class StringSearchAlgorithmTest {
 	@Test
 	@SearchFor("abcab")
 	public void testNonOverlappingPattern4() throws Exception {
-		List<StringMatch> matches = searcher.createSearcher(chars("xxxabcabcabcxxx")).findAllNonOverlapping();
+		List<StringMatch> matches = searcher.createSearcher(chars("xxxabcabcabcxxx"), LONGEST_MATCH, NO_OVERLAP).findAll();
 		assertThat(matches, contains(
 			new StringMatch(3, 8, "abcab")));
 	}
@@ -138,7 +140,7 @@ public class StringSearchAlgorithmTest {
 	@Test
 	@SearchFor("abcab")
 	public void testNonOverlappingPattern5() throws Exception {
-		List<StringMatch> matches = searcher.createSearcher(chars("xxxabcabcabcabxxx")).findAllNonOverlapping();
+		List<StringMatch> matches = searcher.createSearcher(chars("xxxabcabcabcabxxx"), LONGEST_MATCH, NO_OVERLAP).findAll();
 		assertThat(matches, contains(
 			new StringMatch(3, 8, "abcab"),
 			new StringMatch(9, 14, "abcab")));
@@ -147,7 +149,7 @@ public class StringSearchAlgorithmTest {
 	@Test
 	@SearchFor("ab")
 	public void testNonOverlappingPattern6() throws Exception {
-		List<StringMatch> matches = searcher.createSearcher(chars("xxxaaaababaaxxx")).findAllNonOverlapping();
+		List<StringMatch> matches = searcher.createSearcher(chars("xxxaaaababaaxxx"), LONGEST_MATCH, NO_OVERLAP).findAll();
 		assertThat(matches, contains(
 			new StringMatch(6, 8, "ab"),
 			new StringMatch(8, 10, "ab")));

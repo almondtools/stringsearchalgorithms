@@ -23,13 +23,17 @@ public class Sunday implements StringSearchAlgorithm {
 	}
 
 	private static CharShift computeShift(char[] pattern) {
+		if (isCompactRange(pattern)) {
+			return new QuickShift(pattern);
+		} else {
+			return new SmartShift(pattern);
+		}
+	}
+
+	public static boolean isCompactRange(char[] pattern) {
 		char minChar = computeMinChar(pattern);
 		char maxChar = computeMaxChar(pattern);
-		if (maxChar - minChar < 256 || maxChar - minChar < pattern.length * 2) {
-			return new QuickShift(pattern, minChar, maxChar);
-		} else {
-			return new SmartShift(pattern, minChar, maxChar);
-		}
+		return maxChar - minChar < 256 || maxChar - minChar < pattern.length * 2;
 	}
 
 	@Override
@@ -38,15 +42,16 @@ public class Sunday implements StringSearchAlgorithm {
 	}
 
 	@Override
-	public StringFinder createFinder(CharProvider chars) {
-		return new Finder(chars);
+	public StringFinder createFinder(CharProvider chars, StringFinderOption... options) {
+		return new Finder(chars, options);
 	}
 
 	private class Finder extends AbstractStringFinder {
 
 		private CharProvider chars;
 
-		public Finder(CharProvider chars) {
+		public Finder(CharProvider chars, StringFinderOption... options) {
+			super(options);
 			this.chars = chars;
 		}
 
@@ -120,14 +125,14 @@ public class Sunday implements StringSearchAlgorithm {
 		private int[] characterShift;
 		private int defaultShift;
 
-		public QuickShift(char[] pattern, char minChar, char maxChar) {
-			this.minChar = minChar;
-			this.maxChar = maxChar;
+		public QuickShift(char[] pattern) {
+			this.minChar = computeMinChar(pattern);
+			this.maxChar = computeMaxChar(pattern);
 			this.characterShift = computeCharacterShift(pattern, this.minChar, this.maxChar);
 			this.defaultShift = pattern.length + 1;
 		}
 
-		private int[] computeCharacterShift(char[] pattern, char min, char max) {
+		private static int[] computeCharacterShift(char[] pattern, char min, char max) {
 			int[] characters = new int[max - min + 1];
 			for (int i = 0; i < characters.length; i++) {
 				characters[i] = pattern.length + 1;
@@ -152,11 +157,11 @@ public class Sunday implements StringSearchAlgorithm {
 
 		private CharIntMap characterShift;
 
-		public SmartShift(char[] pattern, char minChar, char maxChar) {
-			this.characterShift = computeCharacterShift(pattern, minChar, maxChar);
+		public SmartShift(char[] pattern) {
+			this.characterShift = computeCharacterShift(pattern);
 		}
 
-		private CharIntMap computeCharacterShift(char[] pattern, char min, char max) {
+		private static CharIntMap computeCharacterShift(char[] pattern) {
 			CharIntMap.Builder mapBuilder = new CharIntMap.Builder(pattern.length);
 			for (int i = 0; i < pattern.length; i++) {
 				mapBuilder.put(pattern[i], pattern.length - i);

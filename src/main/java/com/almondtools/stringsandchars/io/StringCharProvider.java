@@ -43,8 +43,7 @@ public class StringCharProvider implements CharProvider {
 	@Override
 	public char prev() {
 		pos--;
-		char c = input.charAt(pos);
-		return c;
+		return input.charAt(pos);
 	}
 
 	@Override

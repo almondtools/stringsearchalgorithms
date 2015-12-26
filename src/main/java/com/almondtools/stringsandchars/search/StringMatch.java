@@ -1,9 +1,10 @@
 package com.almondtools.stringsandchars.search;
 
+
 /**
  * a string match, that means a textual subsequence of a document matching a specific pattern
  */
-public class StringMatch {
+public class StringMatch implements Comparable<StringMatch> {
 
 	private long start;
 	private long end;
@@ -23,15 +24,28 @@ public class StringMatch {
 	public long start() {
 		return start;
 	}
-	
+
 	public long end() {
 		return end;
 	}
-	
+
 	public String text() {
 		return text;
 	}
-	
+
+	@Override
+	public int compareTo(StringMatch o) {
+		long start = this.start - o.start;
+		if (start != 0) {
+			return start < 0 ? -1 : 1;
+		}
+		long end = this.end - o.end;
+		if (end != 0) {
+			return end < 0 ? -1 : 1;
+		}
+		return 0;
+	}
+
 	@Override
 	public String toString() {
 		return start + ":" + end + "(" + text + ")";

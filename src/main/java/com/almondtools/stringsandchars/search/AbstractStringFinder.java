@@ -1,11 +1,18 @@
 package com.almondtools.stringsandchars.search;
 
+import static com.almondtools.stringsandchars.search.MatchOption.NO_OVERLAP;
+
 import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
 
 public abstract class AbstractStringFinder implements StringFinder {
 
+	private boolean nonOverlap;
+	
+	public AbstractStringFinder(StringFinderOption... options) {
+		nonOverlap = NO_OVERLAP.in(options);
+	}
+	
 	public abstract StringMatch findNext();
 
 	public abstract void skipTo(long pos);
@@ -19,34 +26,11 @@ public abstract class AbstractStringFinder implements StringFinder {
 				return matches;
 			} else {
 				matches.add(match);
+				if (nonOverlap) {
+					skipTo(match.end());
+				}
 			}
 		}
 	}
 	
-	@Override
-	public List<StringMatch> findAllNonOverlapping() {
-		List<StringMatch> matches = new ArrayList<>();
-		next: while (true) {
-			StringMatch match = findNext();
-			if (match == null) {
-				return matches;
-			} else {
-				List<StringMatch> backup = new LinkedList<>();
-				while (!matches.isEmpty()) {
-					int lastIndex = matches.size() - 1;
-					StringMatch last = matches.get(lastIndex);
-					if (last.start() >= match.start() && last.end() <= match.end()) {
-						backup.add(matches.remove(lastIndex));
-					} else if (last.end() > match.start()){
-						matches.addAll(backup);
-						continue next;
-					} else {
-						break;
-					}
-				}
-				matches.add(match);
-			}
-		}
-	}
-
 }

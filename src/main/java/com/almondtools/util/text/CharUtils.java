@@ -1,10 +1,12 @@
 package com.almondtools.util.text;
 
+import java.util.List;
+
 public class CharUtils {
 
-    public static boolean isAsciiPrintable(char ch) {
-        return ch >= 32 && ch < 127;
-    }
+	public static boolean isAsciiPrintable(char ch) {
+		return ch >= 32 && ch < 127;
+	}
 
 	public static String charToString(char ch) {
 		if (isAsciiPrintable(ch)) {
@@ -38,6 +40,18 @@ public class CharUtils {
 		return min;
 	}
 
+	public static char computeMinChar(List<char[]> patterns) {
+		char min = Character.MAX_VALUE;
+		for (char[] pattern : patterns) {
+			for (int i = 0; i < pattern.length; i++) {
+				if (pattern[i] < min) {
+					min = pattern[i];
+				}
+			}
+		}
+		return min;
+	}
+
 	public static char computeMaxChar(char[] pattern) {
 		char max = Character.MIN_VALUE;
 		for (int i = 0; i < pattern.length; i++) {
@@ -46,6 +60,38 @@ public class CharUtils {
 			}
 		}
 		return max;
+	}
+
+	public static char computeMaxChar(List<char[]> patterns) {
+		char max = Character.MIN_VALUE;
+		for (char[] pattern : patterns) {
+			for (int i = 0; i < pattern.length; i++) {
+				if (pattern[i] > max) {
+					max = pattern[i];
+				}
+			}
+		}
+		return max;
+	}
+
+	public static int minLength(List<char[]> patterns) {
+		int len = Integer.MAX_VALUE;
+		for (char[] pattern : patterns) {
+			if (pattern.length < len) {
+				len = pattern.length;
+			}
+		}
+		return len;
+	}
+
+	public static int maxLength(List<char[]> patterns) {
+		int len = Integer.MIN_VALUE;
+		for (char[] pattern : patterns) {
+			if (pattern.length > len) {
+				len = pattern.length;
+			}
+		}
+		return len;
 	}
 
 }

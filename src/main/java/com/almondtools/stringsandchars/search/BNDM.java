@@ -22,21 +22,25 @@ public class BNDM implements StringSearchAlgorithm {
 	}
 
 	private static BitMapStates computeStates(char[] pattern) {
-		char minChar = computeMinChar(pattern);
-		char maxChar = computeMaxChar(pattern);
-		if (maxChar - minChar < 256 || maxChar - minChar < pattern.length * 2) {
+		if (isCompactRange(pattern)) {
 			if (pattern.length > 64) {
-				return new QuickMultiLongStates(pattern, minChar, maxChar);
+				return new QuickMultiLongStates(pattern);
 			} else {
-				return new QuickSingleLongStates(pattern, minChar, maxChar);
+				return new QuickSingleLongStates(pattern);
 			}
 		} else {
 			if (pattern.length > 64) {
-				return new SmartMultiLongStates(pattern, minChar, maxChar);
+				return new SmartMultiLongStates(pattern);
 			} else {
-				return new SmartSingleLongStates(pattern, minChar, maxChar);
+				return new SmartSingleLongStates(pattern);
 			}
 		}
+	}
+
+	private static boolean isCompactRange(char[] pattern) {
+		char minChar = computeMinChar(pattern);
+		char maxChar = computeMaxChar(pattern);
+		return maxChar - minChar < 256 || maxChar - minChar < pattern.length * 2;
 	}
 
 	@Override
@@ -45,31 +49,50 @@ public class BNDM implements StringSearchAlgorithm {
 	}
 
 	@Override
-	public StringFinder createFinder(CharProvider chars) {
+	public StringFinder createFinder(CharProvider chars, StringFinderOption... options) {
 		if (states.supportsSingle()) {
-			return new LongFinder(chars);
+			return new LongFinder(chars, options);
 		} else {
-			return new MultiLongFinder(chars);
+			return new MultiLongFinder(chars, options);
 		}
 	}
 
-	private class LongFinder extends AbstractStringFinder {
+	private abstract class Finder extends AbstractStringFinder {
+		
+		protected final long finalstate;
+		protected final long activeStates;
 
-		private long state;
-		private long finalstate;
-		private long activeStates;
-		private CharProvider chars;
+		protected CharProvider chars;
 
-		public LongFinder(CharProvider chars) {
-			this.state = activeStates;
-			this.finalstate = 1l << (patternLength - 1);
+		public Finder(CharProvider chars, StringFinderOption... options) {
+			super(options);
+			this.finalstate = 1l << ((patternLength - 1) % 64); 
 			this.activeStates = (finalstate - 1) | finalstate;
 			this.chars = chars;
+		}
+
+		protected StringMatch createMatch() {
+			long start = chars.current();
+			long end = start + patternLength;
+			String s = chars.slice(start, end);
+			return new StringMatch(start, end, s);
+		}
+
+	}
+	
+	private class LongFinder extends Finder {
+
+		private long state;
+
+		public LongFinder(CharProvider chars, StringFinderOption... options) {
+			super(chars, options);
+			this.state = activeStates;
 		}
 
 		@Override
 		public void skipTo(long pos) {
 			chars.move(pos);
+			state = activeStates;
 		}
 
 		@Override
@@ -78,11 +101,11 @@ public class BNDM implements StringSearchAlgorithm {
 				state = activeStates;
 				int j = patternLength - 1;
 				int last = patternLength;
-				while (state != 0l) {
+				while (state != 0l) { 
 					char currentChar = chars.lookahead(j);
 					long single = states.single(currentChar);
 					state &= single;
-					if ((state & finalstate) != 0l) {
+					if ((state & finalstate) != 0l) { 
 						if (j > 0) {
 							last = j;
 						} else {
@@ -99,39 +122,31 @@ public class BNDM implements StringSearchAlgorithm {
 			return null;
 		}
 
-		private StringMatch createMatch() {
-			long start = chars.current();
-			long end = start + patternLength;
-			String s = chars.slice(start, end);
-			return new StringMatch(start, end, s);
-		}
-
 	}
 
-	private class MultiLongFinder extends AbstractStringFinder {
+	private class MultiLongFinder extends Finder {
 
 		private long[] state;
-		private long finalstate;
-		private long activeStates;
-		private CharProvider chars;
 
-		public MultiLongFinder(CharProvider chars) {
+		public MultiLongFinder(CharProvider chars, StringFinderOption... options) {
+			super(chars, options);
 			this.state = initial(patternLength);
-			this.finalstate = 1 << ((patternLength - 1) % 64);
-			this.activeStates = (finalstate - 1) | finalstate;
-			this.chars = chars;
 		}
 
 		private long[] initial(int patternLength) {
-			long[] initial = new long[((patternLength - 1) / 64) + 1];
-			fill(initial, -1l);
-			initial[0] = activeStates;
-			return initial;
+			return init(new long[((patternLength - 1) / 64) + 1]);
+		}
+
+		private long[] init(long[] state) {
+			fill(state, -1l); 
+			state[0] = activeStates;
+			return state;
 		}
 
 		@Override
 		public void skipTo(long pos) {
 			chars.move(pos);
+			init(state);
 		}
 
 		@Override
@@ -144,7 +159,7 @@ public class BNDM implements StringSearchAlgorithm {
 					char currentChar = chars.lookahead(j);
 					long[] all = states.all(currentChar);
 					state = join(state, all);
-					if ((state[0] & finalstate) != 0l) {
+					if ((state[0] & finalstate) != 0l) { 
 						if (j > 0) {
 							last = j;
 						} else {
@@ -164,8 +179,8 @@ public class BNDM implements StringSearchAlgorithm {
 		private long[] next(long[] state) {
 			for (int i = 0; i < state.length; i++) {
 				int j = i + 1;
-				long leastBit = j < state.length ? state[j] >>> 63 : 0l;
-				state[i] = (state[i] << 1 | leastBit);
+				long leastBit = j < state.length ? state[j] >>> 63 : 0l; 
+				state[i] = state[i] << 1 | leastBit;
 			}
 			state[0] &= activeStates;
 			return state;
@@ -173,7 +188,7 @@ public class BNDM implements StringSearchAlgorithm {
 
 		private boolean zero(long[] state) {
 			for (int i = 0; i < state.length; i++) {
-				if (state[i] != 0l) {
+				if (state[i] != 0l) { 
 					return true;
 				}
 			}
@@ -187,13 +202,6 @@ public class BNDM implements StringSearchAlgorithm {
 			return state;
 		}
 
-		private StringMatch createMatch() {
-			long start = chars.current();
-			long end = start + patternLength;
-			String s = chars.slice(start, end);
-			return new StringMatch(start, end, s);
-		}
-
 	}
 
 	public static class Factory implements WordSearchAlgorithmFactory {
@@ -205,7 +213,7 @@ public class BNDM implements StringSearchAlgorithm {
 
 	}
 
-	private static abstract class SingleLongBitMapStates implements BitMapStates {
+	private abstract static class SingleLongBitMapStates implements BitMapStates {
 
 		@Override
 		public boolean supportsSingle() {
@@ -225,18 +233,18 @@ public class BNDM implements StringSearchAlgorithm {
 		private char maxChar;
 		private long[] characters;
 
-		public QuickSingleLongStates(char[] pattern, char minChar, char maxChar) {
-			this.minChar = minChar;
-			this.maxChar = maxChar;
+		public QuickSingleLongStates(char[] pattern) {
+			this.minChar = computeMinChar(pattern);
+			this.maxChar = computeMaxChar(pattern);
 			this.characters = computeStates(pattern, this.minChar, this.maxChar);
 		}
 
 		private static long[] computeStates(char[] pattern, char min, char max) {
 			long[] characters = new long[max - min + 1];
-			for (int i = 0; i < pattern.length; i++) {   
+			for (int i = 0; i < pattern.length; i++) {
 				char c = pattern[i];
 				int j = pattern.length - i - 1;
-				characters[c - min] |= 1l << j;
+				characters[c - min] |= 1l << j; 
 			}
 			return characters;
 		}
@@ -244,7 +252,7 @@ public class BNDM implements StringSearchAlgorithm {
 		@Override
 		public long single(char c) {
 			if (c < minChar || c > maxChar) {
-				return 0l;
+				return 0l; 
 			}
 			return characters[c - minChar];
 		}
@@ -255,16 +263,16 @@ public class BNDM implements StringSearchAlgorithm {
 
 		private CharLongMap states;
 
-		public SmartSingleLongStates(char[] pattern, char minChar, char maxChar) {
-			this.states = computeStates(pattern, minChar, maxChar);
+		public SmartSingleLongStates(char[] pattern) {
+			this.states = computeStates(pattern);
 		}
 
-		private static CharLongMap computeStates(char[] pattern, char min, char max) {
-			CharLongMap.Builder mapBuilder = new CharLongMap.Builder(0l);
+		private static CharLongMap computeStates(char[] pattern) {
+			CharLongMap.Builder mapBuilder = new CharLongMap.Builder(0l); 
 			for (int i = 0; i < pattern.length; i++) {
 				char c = pattern[i];
 				int j = pattern.length - i - 1;
-				long newState = mapBuilder.get(c) | (1l << j);
+				long newState = mapBuilder.get(c) | (1l << j); 
 				mapBuilder.put(c, newState);
 			}
 			return mapBuilder.perfectMinimal();
@@ -277,7 +285,7 @@ public class BNDM implements StringSearchAlgorithm {
 
 	}
 
-	private static abstract class MultiLongBitMapStates implements BitMapStates {
+	private abstract static class MultiLongBitMapStates implements BitMapStates {
 
 		public static long[] computeZero(int length) {
 			return new long[((length - 1) / 64) + 1];
@@ -287,7 +295,7 @@ public class BNDM implements StringSearchAlgorithm {
 		public boolean supportsSingle() {
 			return false;
 		}
-		
+
 		@Override
 		public long single(char c) {
 			throw new UnsupportedOperationException();
@@ -302,9 +310,9 @@ public class BNDM implements StringSearchAlgorithm {
 		private long[][] characters;
 		private long[] zero;
 
-		public QuickMultiLongStates(char[] pattern, char minChar, char maxChar) {
-			this.minChar = minChar;
-			this.maxChar = maxChar;
+		public QuickMultiLongStates(char[] pattern) {
+			this.minChar = computeMinChar(pattern);
+			this.maxChar = computeMaxChar(pattern);
 			this.characters = computeStates(pattern, this.minChar, this.maxChar);
 			this.zero = computeZero(pattern.length);
 		}
@@ -319,7 +327,7 @@ public class BNDM implements StringSearchAlgorithm {
 				int j = pattern.length - i - 1;
 				int slot = ((pattern.length - 1) / 64) - j / 64;
 				int offset = j % 64;
-				characters[c - min][slot] |= 1l << offset;
+				characters[c - min][slot] |= 1l << offset; 
 			}
 			return characters;
 		}
@@ -338,11 +346,11 @@ public class BNDM implements StringSearchAlgorithm {
 
 		private CharObjectMap<long[]> states;
 
-		public SmartMultiLongStates(char[] pattern, char minChar, char maxChar) {
-			this.states = computeStates(pattern, minChar, maxChar);
+		public SmartMultiLongStates(char[] pattern) {
+			this.states = computeStates(pattern);
 		}
 
-		private static CharObjectMap<long[]> computeStates(char[] pattern, char min, char max) {
+		private static CharObjectMap<long[]> computeStates(char[] pattern) {
 			long[] zero = computeZero(pattern.length);
 			CharObjectMap.Builder<long[]> mapBuilder = new CharObjectMap.Builder<>(zero);
 			for (int i = 0; i < pattern.length; i++) {
@@ -354,7 +362,7 @@ public class BNDM implements StringSearchAlgorithm {
 				if (newState == zero) {
 					newState = computeZero(pattern.length);
 				}
-				newState[slot] |= 1l << offset;
+				newState[slot] |= 1l << offset; 
 				mapBuilder.put(c, newState);
 			}
 			return mapBuilder.perfectMinimal();

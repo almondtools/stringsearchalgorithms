@@ -9,17 +9,13 @@ import java.util.List;
 public interface StringFinder {
 
 	/**
-	 * @return the next match in the given document
+	 * @return the next match in the given document, the order of the matches is determined by the specific implementation
 	 */
 	StringMatch findNext();
 	/**
-	 * @return all matches in the given document, including the overlapping matches
+	 * @return all matches in the given document, dependent on the specific implementation some matches may be skipped
 	 */
 	List<StringMatch> findAll();
-	/**
-	 * @return all matches in the given document, where the matching resumes at the end at the previous found match (non-overlapping)
-	 */
-	List<StringMatch> findAllNonOverlapping();
 	/**
 	 * skips the document to a specific position (ignoring any match before this position)
 	 * @param pos the new position to start with

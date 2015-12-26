@@ -46,8 +46,8 @@ public class KnuthMorrisPratt implements StringSearchAlgorithm {
 	}
 
 	@Override
-	public StringFinder createFinder(CharProvider chars) {
-		return new Finder(chars);
+	public StringFinder createFinder(CharProvider chars, StringFinderOption... options) {
+		return new Finder(chars, options);
 	}
 
 	private class Finder extends AbstractStringFinder {
@@ -55,7 +55,8 @@ public class KnuthMorrisPratt implements StringSearchAlgorithm {
 		private CharProvider chars;
 		private int patternPointer;
 
-		public Finder(CharProvider chars) {
+		public Finder(CharProvider chars, StringFinderOption... options) {
+			super(options);
 			this.chars = chars;
 			this.patternPointer = 0;
 		}
@@ -63,6 +64,7 @@ public class KnuthMorrisPratt implements StringSearchAlgorithm {
 		@Override
 		public void skipTo(long pos) {
 			chars.move(pos);
+			patternPointer = 0;
 		}
 
 		@Override
