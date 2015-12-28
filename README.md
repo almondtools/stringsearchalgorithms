@@ -1,4 +1,4 @@
-StringsAndChars
+[StringsAndChars](http://almondtools.github.io/stringsandchars/)
 ===============
 StringAndChars is a library for exact string matching algorithms (maybe later also approximate or complex string matching algorithms).
 
