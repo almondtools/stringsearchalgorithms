@@ -6,7 +6,7 @@ import static com.almondtools.util.text.CharUtils.computeMinChar;
 import com.almondtools.stringsandchars.io.CharProvider;
 
 /**
- * An implementation of the String Search Algorithm of Horspool (or Boyer-Moore-Horpool).
+ * An implementation of the String Search Algorithm of Horspool.
  * 
  * This algorithm takes a single pattern as input and generates a finder which can find this pattern in documents
  */

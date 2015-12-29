@@ -71,7 +71,8 @@ public class StringSearchRule implements TestRule {
 			new KnuthMorrisPratt(pattern),
 			new Horspool(pattern),
 			new Sunday(pattern),
-			new BNDM(pattern)
+			new BNDM(pattern),
+			new BOM(pattern)
 		);
 	}
 

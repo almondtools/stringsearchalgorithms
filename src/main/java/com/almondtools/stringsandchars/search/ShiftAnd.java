@@ -7,7 +7,7 @@ import static java.util.Arrays.fill;
 import com.almondtools.stringsandchars.io.CharProvider;
 
 /**
- * An implementation of the String Search Algorithm of Shift-And (or Baeza-Yates–Gonnet).
+ * An implementation of the String Search Algorithm Shift-And (or Baeza-Yates–Gonnet).
  * 
  * This algorithm takes a single pattern as input and generates a finder which can find this pattern in documents
  */
