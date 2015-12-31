@@ -51,7 +51,9 @@ public class WuManber implements StringSearchAlgorithm {
 
 	private static int blockSize(int minLength, char minChar, char maxChar, int patterns) {
 		int optSize = (int) Math.ceil(Math.log(2 * minLength * patterns) / Math.log(maxChar - minChar));
-		if (optSize > minLength) {
+		if (optSize <= 0) {
+			return 1;
+		} else if (optSize > minLength) {
 			return minLength;
 		} else {
 			return optSize;
@@ -250,7 +252,9 @@ public class WuManber implements StringSearchAlgorithm {
 							String match = node.getMatch();
 							if (match != null) {
 								StringMatch stringMatch = createMatch(patternPointer, match);
-								lastStart = stringMatch.start();
+								if (lastStart < 0) {
+									lastStart = stringMatch.start();
+								}
 								buffer.add(stringMatch);
 							}
 							patternPointer--;
