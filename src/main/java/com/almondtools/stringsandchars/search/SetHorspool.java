@@ -160,7 +160,9 @@ public class SetHorspool implements StringSearchAlgorithm {
 					String match = node.getMatch();
 					if (match != null) {
 						StringMatch stringMatch = createMatch(patternPointer, match);
-						lastStart = stringMatch.start();
+						if (lastStart < 0) {
+							lastStart = stringMatch.start();
+						}
 						buffer.add(stringMatch);
 					}
 					patternPointer--;
