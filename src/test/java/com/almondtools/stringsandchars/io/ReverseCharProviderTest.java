@@ -6,8 +6,6 @@ import static org.junit.Assert.assertThat;
 
 import org.junit.Test;
 
-import com.almondtools.stringsandchars.io.ReverseCharProvider;
-
 
 public class ReverseCharProviderTest {
 

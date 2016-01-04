@@ -3,6 +3,7 @@ package com.almondtools.stringsandchars.search;
 import static com.almondtools.stringsandchars.search.MatchOption.NO_OVERLAP;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Queue;
 
@@ -34,6 +35,20 @@ public abstract class AbstractStringFinder implements StringFinder {
 		}
 	}
 	
+	protected long removeMatchesBefore(Queue<StringMatch> buffer, long pos) {
+		long last = pos;
+		Iterator<StringMatch> bufferIterator = buffer.iterator();
+		while (bufferIterator.hasNext()) {
+			StringMatch next = bufferIterator.next();
+			if (next.start() < pos) {
+				bufferIterator.remove();
+			} else if (next.end() > last) {
+				last = next.end();
+			}
+		}
+		return last;
+	}
+
 	protected StringMatch longestLeftMost(Queue<StringMatch> buffer) {
 		StringMatch match = buffer.remove();
 		while (!buffer.isEmpty()) {

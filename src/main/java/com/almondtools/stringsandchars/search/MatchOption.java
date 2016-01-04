@@ -5,7 +5,7 @@ import java.util.List;
 
 public enum MatchOption implements StringFinderOption {
 
-	LONGEST_MATCH, NO_OVERLAP;
+	LONGEST_MATCH, NO_OVERLAP, NON_EMPTY;
 
 	public boolean in(StringFinderOption[] options) {
 		for (int i = 0; i < options.length; i++) {
