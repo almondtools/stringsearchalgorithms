@@ -36,6 +36,10 @@ public class CharLongMap {
 		}
 	}
 
+	public char[] keys() {
+		return keys;
+	}
+
 	public long get(char value) {
 		int i = h.hash(value);
 		if (keys[i] == value) {

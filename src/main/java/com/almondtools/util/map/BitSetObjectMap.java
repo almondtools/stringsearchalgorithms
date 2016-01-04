@@ -39,6 +39,10 @@ public class BitSetObjectMap<T> {
 		}
 	}
 	
+	public BitSet[] keys() {
+		return keys;
+	}
+
 	public T get(BitSet value) {
 		int i = h.hash(value.toLongArray());
 		if (keys[i].equals(value)) {
