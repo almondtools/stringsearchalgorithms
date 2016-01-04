@@ -1,4 +1,4 @@
-package com.almondtools.stringsandchars.search;
+package com.almondtools.util.map;
 
 import java.util.Map;
 
@@ -17,16 +17,22 @@ public class CharIntMap {
 
 	private void computeKeysAndValues(Map<Character, Integer> map) {
 		int len = map.size();
-		keys = new char[len];
-		values = new int[len];
-		for (Map.Entry<Character, Integer> entry : map.entrySet()) {
-			char key = entry.getKey();
-			int value = entry.getValue();
-			
-			int i = h.hash(key);
-			
-			keys[i] = key;
-			values[i] = value;
+		if (len == 0) {
+			keys = new char[1];
+			values = new int[1];
+			values[0] = defaultValue;
+		} else {
+			keys = new char[len];
+			values = new int[len];
+			for (Map.Entry<Character, Integer> entry : map.entrySet()) {
+				char key = entry.getKey();
+				int value = entry.getValue();
+
+				int i = h.hash(key);
+
+				keys[i] = key;
+				values[i] = value;
+			}
 		}
 	}
 
@@ -38,7 +44,7 @@ public class CharIntMap {
 			return defaultValue;
 		}
 	}
-	
+
 	public int getDefaultValue() {
 		return defaultValue;
 	}
@@ -59,16 +65,16 @@ public class CharIntMap {
 		}
 
 	}
-	
+
 	private static class Fallback extends CharIntMap {
 
 		private Map<Character, Integer> map;
 
 		public Fallback(Map<Character, Integer> map, Integer defaultValue) {
-			super(new HashFunction(new int[]{0}, 0, 0), map, defaultValue);
+			super(new HashFunction(new int[] { 0 }, 0, 0), map, defaultValue);
 			this.map = map;
 		}
-		
+
 		@Override
 		public int get(char key) {
 			Integer value = map.get(key);
@@ -78,7 +84,7 @@ public class CharIntMap {
 				return value;
 			}
 		}
-		
+
 	}
 
 }

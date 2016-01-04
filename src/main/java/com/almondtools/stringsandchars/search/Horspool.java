@@ -4,6 +4,7 @@ import static com.almondtools.util.text.CharUtils.computeMaxChar;
 import static com.almondtools.util.text.CharUtils.computeMinChar;
 
 import com.almondtools.stringsandchars.io.CharProvider;
+import com.almondtools.util.map.CharIntMap;
 
 /**
  * An implementation of the String Search Algorithm of Horspool.

@@ -1,4 +1,4 @@
-package com.almondtools.stringsandchars.search;
+package com.almondtools.util.map;
 
 import java.util.Map;
 
@@ -17,16 +17,22 @@ public class CharLongMap {
 
 	private void computeKeysAndValues(Map<Character, Long> map) {
 		int len = map.size();
-		keys = new char[len];
-		values = new long[len];
-		for (Map.Entry<Character, Long> entry : map.entrySet()) {
-			char key = entry.getKey();
-			long value = entry.getValue();
-			
-			int i = h.hash(key);
-			
-			keys[i] = key;
-			values[i] = value;
+		if (len == 0) {
+			keys = new char[1];
+			values = new long[1];
+			values[0] = defaultValue;
+		} else {
+			keys = new char[len];
+			values = new long[len];
+			for (Map.Entry<Character, Long> entry : map.entrySet()) {
+				char key = entry.getKey();
+				long value = entry.getValue();
+
+				int i = h.hash(key);
+
+				keys[i] = key;
+				values[i] = value;
+			}
 		}
 	}
 
@@ -38,7 +44,7 @@ public class CharLongMap {
 			return defaultValue;
 		}
 	}
-	
+
 	public long getDefaultValue() {
 		return defaultValue;
 	}
@@ -59,16 +65,16 @@ public class CharLongMap {
 		}
 
 	}
-	
+
 	private static class Fallback extends CharLongMap {
 
 		private Map<Character, Long> map;
 
 		public Fallback(Map<Character, Long> map, Long defaultValue) {
-			super(new HashFunction(new int[]{0}, 0, 0), map, defaultValue);
+			super(new HashFunction(new int[] { 0 }, 0, 0), map, defaultValue);
 			this.map = map;
 		}
-		
+
 		@Override
 		public long get(char key) {
 			Long value = map.get(key);
@@ -78,6 +84,6 @@ public class CharLongMap {
 				return value;
 			}
 		}
-		
+
 	}
 }

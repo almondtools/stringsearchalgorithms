@@ -159,7 +159,6 @@ public class AhoCorasick implements StringSearchAlgorithm {
 			}
 			return null;
 		}
-
 	}
 
 	private class LongestMatchFinder extends Finder {

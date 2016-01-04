@@ -13,6 +13,7 @@ import java.util.PriorityQueue;
 import java.util.Queue;
 
 import com.almondtools.stringsandchars.io.CharProvider;
+import com.almondtools.util.map.CharIntMap;
 
 /**
  * An implementation of the Set Horspool Algorithm.

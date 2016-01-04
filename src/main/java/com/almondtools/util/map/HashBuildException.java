@@ -1,4 +1,4 @@
-package com.almondtools.stringsandchars.search;
+package com.almondtools.util.map;
 
 public class HashBuildException extends Exception {
 

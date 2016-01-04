@@ -1,33 +1,42 @@
-package com.almondtools.stringsandchars.search;
+package com.almondtools.util.map;
 
 import static java.util.Arrays.asList;
 
 import java.util.BitSet;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Queue;
 import java.util.Random;
 import java.util.Set;
-import java.util.SortedMap;
-import java.util.TreeMap;
 
 /**
  * provides base functionality for a minimal perfect HashMap<T,S> (no hash collisions, no unused space) with the BMZ algorithm 
  */
 public class MinimalPerfectMapBuilder<T, S> {
 
+	private KeySerializer<T> keySerializer;
 	private S defaultValue;
-	private SortedMap<T, S> entries;
+	private Map<T, S> entries;
 
 	private HashFunction h;
+	private int m;
+	private int n;
 
 	public MinimalPerfectMapBuilder(S defaultValue) {
 		this.defaultValue = defaultValue;
-		this.entries = new TreeMap<T, S>();
+		this.entries = new HashMap<T, S>();
 	}
-
+	
+	public MinimalPerfectMapBuilder(KeySerializer<T> keySerializer, S defaultValue) {
+		this.keySerializer = keySerializer;
+		this.defaultValue = defaultValue;
+		this.entries = new HashMap<T, S>();
+	}
+	
 	public S get(T key) {
 		S result = entries.get(key);
 		if (result == null) {
@@ -45,20 +54,21 @@ public class MinimalPerfectMapBuilder<T, S> {
 		return defaultValue;
 	}
 
-	public SortedMap<T, S> getEntries() {
+	public Map<T, S> getEntries() {
 		return entries;
 	}
 
 	protected void computeFunctions(int maxTries, double c) throws HashBuildException {
-		int m = entries.size();
-		int n = 1 + (int) (m * c);
+		m = entries.size();
+		n = 1 + (int) (m * c);
 
 		Random r = new Random(17);
 		for (int i = 0; i < maxTries; i++) {
 			try {
 				int seed1 = r.nextInt();
 				int seed2 = r.nextInt();
-				h = computeH(m, n, seed1, seed2);
+				h = computeH(seed1, seed2);
+				break;
 			} catch (HashBuildException e) {
 				continue;
 			}
@@ -68,10 +78,10 @@ public class MinimalPerfectMapBuilder<T, S> {
 		}
 	}
 
-	private HashFunction computeH(int m, int n, int seed1, int seed2) throws HashBuildException {
+	private HashFunction computeH(int seed1, int seed2) throws HashBuildException {
 		int[] g = new int[n];
 		HashFunction h = new HashFunction(g, seed1, seed2);
-		Graph graph = buildGraph(n, h);
+		Graph graph = buildGraph(h);
 		BitSet assignedNodes = new BitSet(n);
 		BitSet assignedEdges = new BitSet(m);
 		assignIntegersToCriticalNodes(graph, g, assignedNodes, assignedEdges);
@@ -124,7 +134,7 @@ public class MinimalPerfectMapBuilder<T, S> {
 		for (int w : graph.adjacents(u)) {
 			if (assignedNodes.get(w)) {
 				int edge = next + g[w];
-				if (edge >= assignedEdges.size()) {
+				if (edge >= m) {
 					throw new HashBuildException();
 				}
 				if (assignedEdges.get(edge)) {
@@ -163,17 +173,24 @@ public class MinimalPerfectMapBuilder<T, S> {
 		}
 	}
 
-	private Graph buildGraph(int n, HashFunction h) throws HashBuildException {
+	private Graph buildGraph(HashFunction h) throws HashBuildException {
 		Graph graph = new Graph(n);
 		for (T k : entries.keySet()) {
-			int key = k.hashCode();
-			int[] edge = h.doubleHash(key);
+			int[] edge = doubleHash(h, k);
 			boolean success = graph.addEdge(edge[0], edge[1]);
 			if (!success) {
 				throw new HashBuildException();
 			}
 		}
 		return graph;
+	}
+
+	private int[] doubleHash(HashFunction h, T k) {
+		if (keySerializer == null) {
+			return h.doubleHash(k.hashCode());
+		} else {
+			return h.doubleHash(keySerializer.toLongArray(k));
+		}
 	}
 
 	protected HashFunction getH() throws HashBuildException {

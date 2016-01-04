@@ -5,6 +5,8 @@ import static com.almondtools.util.text.CharUtils.computeMinChar;
 import static java.util.Arrays.fill;
 
 import com.almondtools.stringsandchars.io.CharProvider;
+import com.almondtools.util.map.CharLongMap;
+import com.almondtools.util.map.CharObjectMap;
 
 /**
  * An implementation of the String Search Algorithm BNDM (Backward Nondeterministic Dawg Matching).
