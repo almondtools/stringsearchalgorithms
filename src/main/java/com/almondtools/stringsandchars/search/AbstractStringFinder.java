@@ -1,6 +1,6 @@
 package com.almondtools.stringsandchars.search;
 
-import static com.almondtools.stringsandchars.search.MatchOption.NO_OVERLAP;
+import static com.almondtools.stringsandchars.search.MatchOption.NON_OVERLAP;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -12,7 +12,7 @@ public abstract class AbstractStringFinder implements StringFinder {
 	private boolean nonOverlap;
 	
 	public AbstractStringFinder(StringFinderOption... options) {
-		nonOverlap = NO_OVERLAP.in(options);
+		nonOverlap = NON_OVERLAP.in(options);
 	}
 	
 	public abstract StringMatch findNext();

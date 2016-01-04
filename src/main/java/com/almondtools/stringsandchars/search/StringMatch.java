@@ -33,6 +33,10 @@ public class StringMatch implements Comparable<StringMatch> {
 		return text;
 	}
 
+	public boolean isEmpty() {
+		return start == end;
+	}
+
 	@Override
 	public int compareTo(StringMatch o) {
 		long start = this.start - o.start;

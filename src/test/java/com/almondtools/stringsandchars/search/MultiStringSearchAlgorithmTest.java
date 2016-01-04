@@ -1,7 +1,7 @@
 package com.almondtools.stringsandchars.search;
 
 import static com.almondtools.stringsandchars.search.MatchOption.LONGEST_MATCH;
-import static com.almondtools.stringsandchars.search.MatchOption.NO_OVERLAP;
+import static com.almondtools.stringsandchars.search.MatchOption.NON_OVERLAP;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.junit.Assert.assertThat;
@@ -122,7 +122,7 @@ public class MultiStringSearchAlgorithmTest {
 	@Test
 	@SearchFor({"a","b"})
 	public void testOverlappingPattern1() throws Exception {
-		List<StringMatch> matches = searcher.createSearcher(chars("abacacab"), LONGEST_MATCH, NO_OVERLAP).findAll();
+		List<StringMatch> matches = searcher.createSearcher(chars("abacacab"), LONGEST_MATCH, NON_OVERLAP).findAll();
 		assertThat(matches, contains(
 			new StringMatch(0, 1, "a"),
 			new StringMatch(1, 2, "b"),
@@ -135,7 +135,7 @@ public class MultiStringSearchAlgorithmTest {
 	@Test
 	@SearchFor({"ab","ac"})
 	public void testOverlappingPattern2() throws Exception {
-		List<StringMatch> matches = searcher.createSearcher(chars("abacacab"), LONGEST_MATCH, NO_OVERLAP).findAll();
+		List<StringMatch> matches = searcher.createSearcher(chars("abacacab"), LONGEST_MATCH, NON_OVERLAP).findAll();
 		assertThat(matches, contains(
 			new StringMatch(0, 2, "ab"),
 			new StringMatch(2, 4, "ac"),
@@ -146,7 +146,7 @@ public class MultiStringSearchAlgorithmTest {
 	@Test
 	@SearchFor({"abc","bcd"})
 	public void testOverlappingPattern3() throws Exception {
-		List<StringMatch> matches = searcher.createSearcher(chars("abcacbcdacabcdaabc"), LONGEST_MATCH, NO_OVERLAP).findAll();
+		List<StringMatch> matches = searcher.createSearcher(chars("abcacbcdacabcdaabc"), LONGEST_MATCH, NON_OVERLAP).findAll();
 		assertThat(matches, contains(
 			new StringMatch(0, 3, "abc"),
 			new StringMatch(5, 8, "bcd"),
@@ -157,7 +157,7 @@ public class MultiStringSearchAlgorithmTest {
 	@Test
 	@SearchFor({"bbcc","ccbb"})
 	public void testOverlappingPattern4() throws Exception {
-		List<StringMatch> matches = searcher.createSearcher(chars("bbccbbccbb"), LONGEST_MATCH, NO_OVERLAP).findAll();
+		List<StringMatch> matches = searcher.createSearcher(chars("bbccbbccbb"), LONGEST_MATCH, NON_OVERLAP).findAll();
 		assertThat(matches, contains(
 			new StringMatch(0, 4, "bbcc"),
 			new StringMatch(4, 8, "bbcc")));
@@ -166,7 +166,7 @@ public class MultiStringSearchAlgorithmTest {
 	@Test
 	@SearchFor({"bbcc","ccbb"})
 	public void testOverlappingPattern5() throws Exception {
-		List<StringMatch> matches = searcher.createSearcher(chars("abccbbccbb"), LONGEST_MATCH, NO_OVERLAP).findAll();
+		List<StringMatch> matches = searcher.createSearcher(chars("abccbbccbb"), LONGEST_MATCH, NON_OVERLAP).findAll();
 		assertThat(matches, contains(
 			new StringMatch(2, 6, "ccbb"),
 			new StringMatch(6, 10, "ccbb")));
@@ -175,7 +175,7 @@ public class MultiStringSearchAlgorithmTest {
 	@Test
 	@SearchFor({"abc","cd","defghi","gh"})
 	public void testOverlappingPatternDifferentLengthSubsumingAndOverlapping() throws Exception {
-		List<StringMatch> matches = searcher.createSearcher(chars("abcdghcdefcdefghiabcd"), LONGEST_MATCH, NO_OVERLAP).findAll();
+		List<StringMatch> matches = searcher.createSearcher(chars("abcdghcdefcdefghiabcd"), LONGEST_MATCH, NON_OVERLAP).findAll();
 		assertThat(matches, containsInAnyOrder(
 			new StringMatch(0, 3, "abc"),
 			new StringMatch(4, 6, "gh"),
@@ -188,7 +188,7 @@ public class MultiStringSearchAlgorithmTest {
 	@Test
 	@SearchFor({"abcd","ab","bc","cd"})
 	public void testOverlappingSubsumingPatterns1() throws Exception {
-		List<StringMatch> matches = searcher.createSearcher(chars("abcd"), LONGEST_MATCH, NO_OVERLAP).findAll();
+		List<StringMatch> matches = searcher.createSearcher(chars("abcd"), LONGEST_MATCH, NON_OVERLAP).findAll();
 		assertThat(matches, containsInAnyOrder(
 			new StringMatch(0, 4, "abcd")));
 	}
@@ -196,7 +196,7 @@ public class MultiStringSearchAlgorithmTest {
 	@Test
 	@SearchFor({"aaa","aa","a"})
 	public void testOverlappingSubsumingPatterns2() throws Exception {
-		List<StringMatch> matches = searcher.createSearcher(chars("aaaa"), LONGEST_MATCH, NO_OVERLAP).findAll();
+		List<StringMatch> matches = searcher.createSearcher(chars("aaaa"), LONGEST_MATCH, NON_OVERLAP).findAll();
 		assertThat(matches, containsInAnyOrder(
 			new StringMatch(0, 3, "aaa"),
 			new StringMatch(3, 4, "a")));
