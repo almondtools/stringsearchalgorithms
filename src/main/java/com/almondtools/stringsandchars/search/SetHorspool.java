@@ -180,7 +180,7 @@ public class SetHorspool implements StringSearchAlgorithm {
 			if (buffer.isEmpty()) {
 				return null;
 			} else {
-				return longestMatchFromBuffer();
+				return longestLeftMost(buffer);
 			}
 		}
 
@@ -203,19 +203,6 @@ public class SetHorspool implements StringSearchAlgorithm {
 			} else {
 				return start;
 			}
-		}
-
-		private StringMatch longestMatchFromBuffer() {
-			StringMatch match = buffer.remove();
-			while (!buffer.isEmpty()) {
-				StringMatch nextMatch = buffer.peek();
-				if (nextMatch.start() == match.start()) {
-					match = buffer.remove();
-				} else {
-					break;
-				}
-			}
-			return match;
 		}
 
 	}

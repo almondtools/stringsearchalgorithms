@@ -199,16 +199,7 @@ public class AhoCorasick implements StringSearchAlgorithm {
 			if (buffer.isEmpty()) {
 				return null;
 			} else {
-				StringMatch match = buffer.remove();
-				while (!buffer.isEmpty()) {
-					StringMatch nextMatch = buffer.peek();
-					if (nextMatch.start() == match.start()) {
-						match = buffer.remove();
-					} else {
-						break;
-					}
-				}
-				return match;
+				return longestLeftMost(this.buffer);
 			}
 		}
 

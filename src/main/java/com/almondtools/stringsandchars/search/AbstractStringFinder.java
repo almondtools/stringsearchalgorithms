@@ -4,6 +4,7 @@ import static com.almondtools.stringsandchars.search.MatchOption.NO_OVERLAP;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Queue;
 
 public abstract class AbstractStringFinder implements StringFinder {
 
@@ -33,4 +34,17 @@ public abstract class AbstractStringFinder implements StringFinder {
 		}
 	}
 	
+	protected StringMatch longestLeftMost(Queue<StringMatch> buffer) {
+		StringMatch match = buffer.remove();
+		while (!buffer.isEmpty()) {
+			StringMatch nextMatch = buffer.peek();
+			if (nextMatch.start() == match.start()) {
+				match = buffer.remove();
+			} else {
+				break;
+			}
+		}
+		return match;
+	}
+
 }

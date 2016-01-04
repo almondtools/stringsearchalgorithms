@@ -81,27 +81,21 @@ public class BOM implements StringSearchAlgorithm {
 	private class Finder extends AbstractStringFinder {
 
 		private CharProvider chars;
-		private List<StringMatch> buffer;
 
 		public Finder(CharProvider chars, StringFinderOption... options) {
 			super(options);
 			this.chars = chars;
-			this.buffer = new LinkedList<>();
 		}
 
 		@Override
 		public void skipTo(long pos) {
 			chars.move(pos);
-			buffer.clear();
 		}
 
 		@Override
 		public StringMatch findNext() {
-			if (!buffer.isEmpty()) {
-				return buffer.remove(0);
-			}
 			final int lookahead = patternLength - 1;
-			next: while (!chars.finished(lookahead)) {
+			while (!chars.finished(lookahead)) {
 				TrieNode<String> current = trie;
 				int j = lookahead;
 				while (j >= 0 && current != null) {
@@ -111,15 +105,10 @@ public class BOM implements StringSearchAlgorithm {
 				if (current != null && j < 0) {
 					String pattern = current.getMatch();
 					long currentWindowStart = chars.current();
-					buffer.add(createMatch(currentWindowStart, pattern));
+					StringMatch match = createMatch(currentWindowStart, pattern);
 
 					chars.next();
-					if (buffer.isEmpty()) {
-						continue next;
-					} else {
-						return buffer.remove(0);
-					}
-
+					return match;
 				}
 				if (j <= 0) {
 					chars.next();

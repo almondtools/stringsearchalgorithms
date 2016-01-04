@@ -109,7 +109,7 @@ public class SetBackwardOracleMatching implements StringSearchAlgorithm {
 	private class Finder extends AbstractStringFinder {
 
 		private CharProvider chars;
-		private List<StringMatch> buffer;
+		private Queue<StringMatch> buffer;
 
 		public Finder(CharProvider chars, StringFinderOption... options) {
 			super(options);
@@ -126,7 +126,7 @@ public class SetBackwardOracleMatching implements StringSearchAlgorithm {
 		@Override
 		public StringMatch findNext() {
 			if (!buffer.isEmpty()) {
-				return buffer.remove(0);
+				return buffer.remove();
 			}
 			final int lookahead = minLength - 1;
 			next: while (!chars.finished(lookahead)) {
@@ -158,7 +158,7 @@ public class SetBackwardOracleMatching implements StringSearchAlgorithm {
 						if (buffer.isEmpty()) {
 							continue next;
 						} else {
-							return buffer.remove(0);
+							return buffer.remove();
 						}
 					}
 
