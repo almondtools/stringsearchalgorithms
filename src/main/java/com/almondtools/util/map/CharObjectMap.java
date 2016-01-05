@@ -43,7 +43,9 @@ public class CharObjectMap<T> {
 
 	public T get(char value) {
 		int i = h.hash(value);
-		if (keys[i] == value) {
+		if (i >= keys.length) {
+			return defaultValue;
+		} else if (keys[i] == value) {
 			return values[i];
 		} else {
 			return defaultValue;

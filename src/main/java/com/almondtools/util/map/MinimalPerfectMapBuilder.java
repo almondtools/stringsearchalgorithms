@@ -31,10 +31,9 @@ public class MinimalPerfectMapBuilder<T, S> {
 		this.entries = new HashMap<T, S>();
 	}
 	
-	public MinimalPerfectMapBuilder(KeySerializer<T> keySerializer, S defaultValue) {
+	public MinimalPerfectMapBuilder<T, S> withKeySerializer(KeySerializer<T> keySerializer) {
 		this.keySerializer = keySerializer;
-		this.defaultValue = defaultValue;
-		this.entries = new HashMap<T, S>();
+		return this;
 	}
 	
 	public S get(T key) {

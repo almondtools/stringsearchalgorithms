@@ -45,7 +45,9 @@ public class BitSetObjectMap<T> {
 
 	public T get(BitSet value) {
 		int i = h.hash(value.toLongArray());
-		if (keys[i].equals(value)) {
+		if (i >= keys.length) {
+			return defaultValue;
+		} else if (keys[i].equals(value)) {
 			return values[i];
 		} else {
 			return defaultValue;
@@ -56,16 +58,16 @@ public class BitSetObjectMap<T> {
 		return defaultValue;
 	}
 
-	public static class Builder<T> extends MinimalPerfectMapBuilder<BitSet, T> {
+	public static class Builder<T> extends MinimalPerfectMapBuilder<BitSet, T> implements KeySerializer<BitSet> {
 
 		public Builder(T defaultValue) {
-			super(new KeySerializer<BitSet>() {
+			super(defaultValue);
+			withKeySerializer(this);
+		}
 
-				@Override
-				public long[] toLongArray(BitSet object) {
-					return object.toLongArray();
-				}
-			}, defaultValue);
+		@Override
+		public long[] toLongArray(BitSet object) {
+			return object.toLongArray();
 		}
 
 		public BitSetObjectMap<T> perfectMinimal() {
