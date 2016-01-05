@@ -107,9 +107,63 @@ StringFinder finder = stringSearch.createFinder(text);</code></pre>
                           <div>
       <pre><code class="java">AhoCorasick stringSearch = new AhoCorasick(asList(&quot;word&quot;, &quot;longer word&quot;));
 CharProvider text = new StringCharProvider(&quot;text with longer word and word in it&quot;, 0);
-StringFinder finder = stringSearch.createFinder(text, MatchOption.LONGEST_MATCH, MatchOption.NO_OVERLAP);</code></pre>
+StringFinder finder = stringSearch.createFinder(text, MatchOption.LONGEST_MATCH, MatchOption.NON_OVERLAP);</code></pre>
   </div>
                   <li>Finding matches is the same as above</li>
+  </ul></p>
+  </div>
+  </div>
+              <div class="row">
+              <div class="col-md-push-8 col-md-4">
+                      <div class="panel panel-default">
+              <div class="panel-heading">
+      <h3 class="panel-title">Available algorithms for regex search:</h3>
+  </div>
+          <div class="panel-body">
+                      <ul>
+                          <li>BPGlushkov (or GPGlushkov)</li>
+  </ul>
+  </div>
+  </div>
+                  <div class="panel panel-default">
+              <div class="panel-heading">
+      <h3 class="panel-title">Supported Regex Operators:</h3>
+  </div>
+          <div class="panel-body">
+                      <ul>
+                          <li>      <code >AB</code>:       <code >A</code> followed by       <code >B</code></li>
+                      <li>      <code >A|B</code>: either       <code >A</code> or       <code >B</code></li>
+                      <li>      <code >A*</code>:       <code >A</code> 0 to n times</li>
+                      <li>      <code >A+</code>:       <code >A</code> 1 to n times</li>
+                      <li>      <code >A?</code>:       <code >A</code> 0 to 1 times</li>
+                      <li>      <code >A{1,4}</code>:       <code >A</code> 1 to 4 times</li>
+                      <li>      <code >[A-C]</code>: characters from       <code >A</code> to       <code >C</code></li>
+                      <li>      <code >[^A-C]</code>: characters excluding       <code >A</code> to       <code >C</code></li>
+                      <li>      <code >.</code>: any character (excluding line breaks)</li>
+                      <li>      <code >(A)</code>: grouping of expressions</li>
+                    
+  </ul>
+  </div>
+  </div>
+  </div>
+          <div class="col-md-pull-4 col-md-8">
+                  <h3>Searching Regex Patterns:</h3>
+              <p>To search a regex pattern:   <ul>
+                      <li>Select a search algorithm, e.g. BPGlushkov</li>
+                  <li>Create a Finder</li>
+                          <div>
+      <pre><code class="java">BPGlushkov stringSearch = new BPGlushkov(&quot;(AT|GA)(AG|AAA)*&quot;);
+CharProvider text = new StringCharProvider(&quot;text with word in it&quot;, 0);
+StringFinder finder = stringSearch.createFinder(text);</code></pre>
+  </div>
+                  <li>Find the next match with:</li>
+                          <div>
+      <pre><code class="java">StringMatch next = finder.findNext();</code></pre>
+  </div>
+                  <li>Find all matches (only longest, non-overlapping and non-empty):</li>
+                          <div>
+      <pre><code class="java">List&lt;StringMatch&gt; all = finder.findAll();</code></pre>
+  </div>
   </ul></p>
   </div>
   </div>
