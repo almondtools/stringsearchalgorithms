@@ -1,4 +1,4 @@
-package com.almondtools.stringsandchars.patternsearch;
+package com.almondtools.stringsandchars.regex;
 
 import java.util.LinkedHashMap;
 import java.util.Map;

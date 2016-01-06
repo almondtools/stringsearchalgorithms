@@ -1,4 +1,4 @@
-package com.almondtools.stringsandchars.patternsearch;
+package com.almondtools.stringsandchars.regex;
 
 public class EmptyNode implements RegexNode {
 

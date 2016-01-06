@@ -14,6 +14,8 @@ import java.util.Queue;
 
 import com.almondtools.stringsandchars.io.CharProvider;
 import com.almondtools.stringsandchars.io.ReverseCharProvider;
+import com.almondtools.stringsandchars.regex.RegexNode;
+import com.almondtools.stringsandchars.regex.RegexParser;
 import com.almondtools.stringsandchars.search.AbstractStringFinder;
 import com.almondtools.stringsandchars.search.MatchOption;
 import com.almondtools.stringsandchars.search.StringFinder;
@@ -21,13 +23,18 @@ import com.almondtools.stringsandchars.search.StringFinderOption;
 import com.almondtools.stringsandchars.search.StringMatch;
 import com.almondtools.stringsandchars.search.StringSearchAlgorithm;
 
-public class GPGlushkov implements StringSearchAlgorithm {
+/**
+ * An implementation of the regex pattern search algorithm Bit-Parallel Glushkov.
+ * 
+ * This algorithm takes a regex pattern as input and generates a finder which can find this pattern in documents.
+ */
+public class BPGlushkov implements StringSearchAlgorithm {
 
 	private GlushkovAutomaton search;
 	private DualGlushkovAutomaton back;
 	private int minLength;
 
-	public GPGlushkov(String pattern) {
+	public BPGlushkov(String pattern) {
 		GlushkovAnalyzer analyzer = parseAndNormalizeRegex(pattern);
 		search = analyzer.buildAutomaton(SELF_LOOP);
 		back = analyzer.buildReverseAutomaton();

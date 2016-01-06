@@ -1,6 +1,7 @@
 package com.almondtools.util.text;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 
@@ -55,7 +56,7 @@ public class StringUtils {
 		return buffer.toString();
 	}
 
-	public static List<char[]> toCharArray(List<String> patterns) {
+	public static List<char[]> toCharArray(Collection<String> patterns) {
 		List<char[]> charpatterns = new ArrayList<char[]>(patterns.size());
 		for (String pattern : patterns) {
 			charpatterns.add(pattern.toCharArray());

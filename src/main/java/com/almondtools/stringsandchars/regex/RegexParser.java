@@ -1,4 +1,4 @@
-package com.almondtools.stringsandchars.patternsearch;
+package com.almondtools.stringsandchars.regex;
 
 import java.util.ArrayList;
 import java.util.HashMap;

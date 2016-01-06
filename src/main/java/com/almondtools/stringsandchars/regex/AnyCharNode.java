@@ -1,4 +1,4 @@
-package com.almondtools.stringsandchars.patternsearch;
+package com.almondtools.stringsandchars.regex;
 
 import static com.almondtools.util.text.CharUtils.after;
 import static com.almondtools.util.text.CharUtils.before;

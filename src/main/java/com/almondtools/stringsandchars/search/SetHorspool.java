@@ -6,7 +6,9 @@ import static com.almondtools.util.text.CharUtils.computeMinChar;
 import static com.almondtools.util.text.CharUtils.maxLength;
 import static com.almondtools.util.text.CharUtils.minLength;
 import static com.almondtools.util.text.StringUtils.toCharArray;
+import static java.lang.Math.min;
 
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.PriorityQueue;
@@ -27,7 +29,7 @@ public class SetHorspool implements StringSearchAlgorithm {
 	private int maxLength;
 	private CharShift charShift;
 
-	public SetHorspool(List<String> patterns) {
+	public SetHorspool(Collection<String> patterns) {
 		List<char[]> charpatterns = toCharArray(patterns);
 		this.trie = computeTrie(charpatterns);
 		this.minLength = minLength(charpatterns);
@@ -177,11 +179,7 @@ public class SetHorspool implements StringSearchAlgorithm {
 					break;
 				}
 			}
-			if (buffer.isEmpty()) {
-				return null;
-			} else {
-				return longestLeftMost(buffer);
-			}
+			return longestLeftMost(buffer);
 		}
 
 		public boolean bufferContainsLongestMatch(long lastStart) {
@@ -210,7 +208,7 @@ public class SetHorspool implements StringSearchAlgorithm {
 	public static class Factory implements MultiWordSearchAlgorithmFactory {
 
 		@Override
-		public StringSearchAlgorithm of(List<String> patterns) {
+		public StringSearchAlgorithm of(Collection<String> patterns) {
 			return new SetHorspool(patterns);
 		}
 
@@ -243,10 +241,6 @@ public class SetHorspool implements StringSearchAlgorithm {
 			return characters;
 		}
 
-		private static int min(int i, int j) {
-			return i < j ? i : j;
-		}
-
 		@Override
 		public int getShift(char c) {
 			if (c < minChar || c > maxChar) {
@@ -274,10 +268,6 @@ public class SetHorspool implements StringSearchAlgorithm {
 				}
 			}
 			return mapBuilder.perfectMinimal();
-		}
-
-		private static int min(int i, int j) {
-			return i < j ? i : j;
 		}
 
 		@Override

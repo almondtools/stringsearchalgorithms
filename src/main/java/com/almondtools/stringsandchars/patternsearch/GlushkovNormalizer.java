@@ -4,6 +4,23 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
+import com.almondtools.stringsandchars.regex.AlternativesNode;
+import com.almondtools.stringsandchars.regex.AnyCharNode;
+import com.almondtools.stringsandchars.regex.BoundedLoopNode;
+import com.almondtools.stringsandchars.regex.CharClassNode;
+import com.almondtools.stringsandchars.regex.CompClassNode;
+import com.almondtools.stringsandchars.regex.ConcatNode;
+import com.almondtools.stringsandchars.regex.EmptyNode;
+import com.almondtools.stringsandchars.regex.GroupNode;
+import com.almondtools.stringsandchars.regex.OptionalNode;
+import com.almondtools.stringsandchars.regex.RangeCharNode;
+import com.almondtools.stringsandchars.regex.RegexNode;
+import com.almondtools.stringsandchars.regex.RegexNodeVisitor;
+import com.almondtools.stringsandchars.regex.SingleCharNode;
+import com.almondtools.stringsandchars.regex.SpecialCharClassNode;
+import com.almondtools.stringsandchars.regex.StringNode;
+import com.almondtools.stringsandchars.regex.UnboundedLoopNode;
+
 public class GlushkovNormalizer implements RegexNodeVisitor<RegexNode> {
 	
 	public GlushkovNormalizer() {

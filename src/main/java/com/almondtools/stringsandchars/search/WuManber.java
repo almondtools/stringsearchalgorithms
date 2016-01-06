@@ -9,6 +9,7 @@ import static com.almondtools.util.text.StringUtils.toCharArray;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -38,7 +39,7 @@ public class WuManber implements StringSearchAlgorithm {
 	private int[] shift;
 	private TrieNode<Void>[] hash;
 
-	public WuManber(List<String> patterns) {
+	public WuManber(Collection<String> patterns) {
 		List<char[]> charpatterns = toCharArray(patterns);
 		this.maxChar = computeMaxChar(charpatterns);
 		this.minChar = computeMinChar(charpatterns);
@@ -263,11 +264,7 @@ public class WuManber implements StringSearchAlgorithm {
 					chars.forward(shiftBy);
 				}
 			}
-			if (buffer.isEmpty()) {
-				return null;
-			} else {
-				return longestLeftMost(buffer);
-			}
+			return longestLeftMost(buffer);
 		}
 
 		public boolean bufferContainsLongestMatch(long lastStart) {
@@ -296,7 +293,7 @@ public class WuManber implements StringSearchAlgorithm {
 	public static class Factory implements MultiWordSearchAlgorithmFactory {
 
 		@Override
-		public StringSearchAlgorithm of(List<String> patterns) {
+		public StringSearchAlgorithm of(Collection<String> patterns) {
 			return new WuManber(patterns);
 		}
 

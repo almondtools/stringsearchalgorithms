@@ -1,9 +1,9 @@
 package com.almondtools.stringsandchars.search;
 
-import java.util.List;
+import java.util.Collection;
 
 public interface MultiWordSearchAlgorithmFactory {
 
-	StringSearchAlgorithm of(List<String> patterns);
+	StringSearchAlgorithm of(Collection<String> patterns);
 
 }

@@ -5,6 +5,7 @@ import static com.almondtools.util.text.CharUtils.minLength;
 import static com.almondtools.util.text.StringUtils.toCharArray;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -23,7 +24,7 @@ public class AhoCorasick implements StringSearchAlgorithm {
 	private TrieNode<Void> trie;
 	private int minLength;
 
-	public AhoCorasick(List<String> patterns) {
+	public AhoCorasick(Collection<String> patterns) {
 		List<char[]> charpatterns = toCharArray(patterns);
 		this.trie = computeTrie(charpatterns);
 		this.minLength = minLength(charpatterns);
@@ -169,9 +170,6 @@ public class AhoCorasick implements StringSearchAlgorithm {
 
 		@Override
 		public StringMatch findNext() {
-			if (!buffer.isEmpty()) {
-				return buffer.remove();
-			}
 			while (!chars.finished()) {
 				char c = chars.next();
 				TrieNode<Void> next = current.nextNode(c);
@@ -196,11 +194,7 @@ public class AhoCorasick implements StringSearchAlgorithm {
 					buffer.addAll(createMatches(current, chars.current()));
 				}
 			}
-			if (buffer.isEmpty()) {
-				return null;
-			} else {
-				return longestLeftMost(this.buffer);
-			}
+			return longestLeftMost(buffer);
 		}
 
 	}
@@ -208,7 +202,7 @@ public class AhoCorasick implements StringSearchAlgorithm {
 	public static class Factory implements MultiWordSearchAlgorithmFactory {
 
 		@Override
-		public StringSearchAlgorithm of(List<String> patterns) {
+		public StringSearchAlgorithm of(Collection<String> patterns) {
 			return new AhoCorasick(patterns);
 		}
 

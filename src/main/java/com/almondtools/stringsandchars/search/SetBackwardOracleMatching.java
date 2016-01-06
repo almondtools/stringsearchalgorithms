@@ -5,6 +5,7 @@ import static com.almondtools.util.text.StringUtils.toCharArray;
 import static java.util.Arrays.copyOfRange;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.IdentityHashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -24,7 +25,7 @@ public class SetBackwardOracleMatching implements StringSearchAlgorithm {
 	private TrieNode<List<String>> trie;
 	private int minLength;
 
-	public SetBackwardOracleMatching(List<String> patterns) {
+	public SetBackwardOracleMatching(Collection<String> patterns) {
 		List<char[]> charpatterns = toCharArray(patterns);
 		this.minLength = minLength(charpatterns);
 		this.trie = computeTrie(charpatterns, minLength);
@@ -181,7 +182,7 @@ public class SetBackwardOracleMatching implements StringSearchAlgorithm {
 	public static class Factory implements MultiWordSearchAlgorithmFactory {
 
 		@Override
-		public StringSearchAlgorithm of(List<String> patterns) {
+		public StringSearchAlgorithm of(Collection<String> patterns) {
 			return new SetBackwardOracleMatching(patterns);
 		}
 

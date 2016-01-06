@@ -50,6 +50,9 @@ public abstract class AbstractStringFinder implements StringFinder {
 	}
 
 	protected StringMatch longestLeftMost(Queue<StringMatch> buffer) {
+		if (buffer.isEmpty()) {
+			return null;
+		}
 		StringMatch match = buffer.remove();
 		while (!buffer.isEmpty()) {
 			StringMatch nextMatch = buffer.peek();
