@@ -4,7 +4,7 @@ import static java.util.Arrays.asList;
 
 import java.util.List;
 
-public class SpecialCharClassNode extends CharNode {
+public class SpecialCharClassNode extends AbstractCharClassNode {
 
 	private char symbol;
 	private List<DefinedCharNode> charNodes;
@@ -17,14 +17,19 @@ public class SpecialCharClassNode extends CharNode {
 		this.symbol = symbol;
 		this.charNodes = charNodes;
 	}
+	
+	public char getSymbol() {
+		return symbol;
+	}
 
 	@Override
 	public List<DefinedCharNode> toCharNodes() {
 		return charNodes;
 	}
 
-	public SpecialCharClassNode invert() {
-		return new SpecialCharClassNode(Character.toUpperCase(symbol), computeComplement(charNodes));
+	@Override
+	public SpecialCharClassNode invert(char min, char max) {
+		return new SpecialCharClassNode(Character.toUpperCase(symbol), computeComplement(charNodes, min, max));
 	}
 
 	@Override

@@ -6,10 +6,12 @@ import static org.junit.Assert.assertThat;
 import org.junit.Test;
 
 import com.almondtools.stringsandchars.io.StringCharProvider;
+import com.almondtools.stringsandchars.search.AhoCorasick;
 import com.almondtools.stringsandchars.search.StringFinder;
 import com.almondtools.stringsandchars.search.StringMatch;
 
-public class BPGlushkovTest {
+
+public class MultiPrefixRESinglePatternTest {
 
 	@Test
 	public void testRegexConcat() throws Exception {
@@ -45,28 +47,6 @@ public class BPGlushkovTest {
 			new StringMatch(4, 6, "ba"),
 			new StringMatch(5, 7, "ab"),
 			new StringMatch(6, 8, "ba")));
-	}
-
-	@Test
-	public void testRegexStar() throws Exception {
-		StringFinder finder = findIn("cccaaacc", "a*");
-
-		assertThat(finder.findAll(), contains(
-			new StringMatch(0, 0, ""),
-			new StringMatch(1, 1, ""),
-			new StringMatch(2, 2, ""),
-			new StringMatch(3, 3, ""),
-			new StringMatch(3, 4, "a"),
-			new StringMatch(3, 5, "aa"),
-			new StringMatch(3, 6, "aaa"),
-			new StringMatch(4, 4, ""),
-			new StringMatch(4, 5, "a"),
-			new StringMatch(4, 6, "aa"),
-			new StringMatch(5, 5, ""),
-			new StringMatch(5, 6, "a"),
-			new StringMatch(6, 6, ""),
-			new StringMatch(7, 7, ""),
-			new StringMatch(8, 8, "")));
 	}
 
 	@Test
@@ -188,8 +168,8 @@ public class BPGlushkovTest {
 			new StringMatch(3, 5, "bc")));
 	}
 
-	private StringFinder findIn(String in, String pattern) {
-		BPGlushkov algorithm = new BPGlushkov(pattern);
+	private StringFinder findIn(String in, String... pattern) {
+		MultiPrefixRE algorithm = new MultiPrefixRE(new AhoCorasick.Factory(), new GlushkovPrefixPatternMatcher.Factory(), pattern);
 		return algorithm.createFinder(new StringCharProvider(in, 0));
 	}
 

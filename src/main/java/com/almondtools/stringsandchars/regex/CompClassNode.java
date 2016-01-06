@@ -1,25 +1,26 @@
 package com.almondtools.stringsandchars.regex;
 
-import static java.util.Arrays.asList;
-
 import java.util.Iterator;
 import java.util.List;
 
-public class CompClassNode extends CharNode implements RegexNode {
+public class CompClassNode extends AbstractCharClassNode implements RegexNode {
 
 	private List<DefinedCharNode> charNodes;
+	private List<DefinedCharNode> invertedNodes;
 
-	public CompClassNode(DefinedCharNode... charNodes) {
-		this(asList(charNodes));
-	}
-
-	public CompClassNode(List<DefinedCharNode> charNodes) {
+	public CompClassNode(List<DefinedCharNode> charNodes, List<DefinedCharNode> invertedNodes) {
 		this.charNodes = charNodes;
+		this.invertedNodes = invertedNodes;
 	}
 	
 	@Override
 	public List<DefinedCharNode> toCharNodes() {
-		return computeComplement(charNodes);
+		return invertedNodes;
+	}
+	
+	@Override
+	public CharClassNode invert(char min, char max) {
+		return new CharClassNode(charNodes);
 	}
 
 	@Override

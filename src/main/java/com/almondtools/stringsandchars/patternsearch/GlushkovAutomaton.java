@@ -2,6 +2,7 @@ package com.almondtools.stringsandchars.patternsearch;
 
 import java.util.BitSet;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.Queue;
 import java.util.Set;
@@ -73,6 +74,31 @@ public class GlushkovAutomaton implements BitParallelAutomaton {
 			length++;
 		}
 		return length;
+	}
+
+	public Set<String> getPrefixes(int max) {
+		return getPrefixes(getInitial(), 1, max);
+	}
+
+	private Set<String> getPrefixes(BitSet state, int min, int max) {
+		Set<String> prefixes = new LinkedHashSet<String>();
+		if (min <= 0 && isFinal(state)) {
+			prefixes.add("");
+			return prefixes;
+		} else if (max <= 0) {
+			prefixes.add("");
+			return prefixes;
+		}
+		for (char c : reachableByChar.keys()) {
+			BitSet next = next(state, c);
+			if (!next.isEmpty()) {
+				Set<String> subPrefixes = getPrefixes(next, min - 1, max - 1);
+				for (String subPrefix : subPrefixes) {
+					prefixes.add(c + subPrefix);
+				}
+			}
+		}
+		return prefixes;
 	}
 
 }

@@ -22,12 +22,17 @@ import com.almondtools.stringsandchars.search.StringFinder;
 import com.almondtools.stringsandchars.search.StringFinderOption;
 import com.almondtools.stringsandchars.search.StringMatch;
 import com.almondtools.stringsandchars.search.StringSearchAlgorithm;
+import com.almondtools.stringsandchars.search.WordSearchAlgorithmFactory;
 
 /**
  * An implementation of the regex pattern search algorithm Bit-Parallel Glushkov.
  * 
  * This algorithm takes a regex pattern as input and generates a finder which can find this pattern in documents.
- */
+ * 
+ * The efficiency of this algorithm depends on the pattern to process:
+ * - works fine for complex patterns (many regex operators)
+ * - works better for short patterns (few chars (excluding regex operators))
+*/
 public class BPGlushkov implements StringSearchAlgorithm {
 
 	private GlushkovAutomaton search;
@@ -38,7 +43,7 @@ public class BPGlushkov implements StringSearchAlgorithm {
 		GlushkovAnalyzer analyzer = parseAndNormalizeRegex(pattern);
 		search = analyzer.buildAutomaton(SELF_LOOP);
 		back = analyzer.buildReverseAutomaton();
-		minLength = search.minLength();
+		minLength = analyzer.minLength();
 	}
 
 	private static GlushkovAnalyzer parseAndNormalizeRegex(String pattern) {
@@ -160,5 +165,14 @@ public class BPGlushkov implements StringSearchAlgorithm {
 				}
 			}
 		}
+	}
+
+	public static class Factory implements WordSearchAlgorithmFactory {
+
+		@Override
+		public StringSearchAlgorithm of(String pattern) {
+			return new BPGlushkov(pattern);
+		}
+
 	}
 }

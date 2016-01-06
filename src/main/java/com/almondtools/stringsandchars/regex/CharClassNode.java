@@ -5,7 +5,7 @@ import static java.util.Arrays.asList;
 import java.util.Iterator;
 import java.util.List;
 
-public class CharClassNode extends CharNode implements RegexNode {
+public class CharClassNode extends AbstractCharClassNode implements RegexNode {
 
 	private List<DefinedCharNode> charNodes;
 
@@ -20,6 +20,11 @@ public class CharClassNode extends CharNode implements RegexNode {
 	@Override
 	public List<DefinedCharNode> toCharNodes() {
 		return charNodes;
+	}
+	
+	@Override
+	public CompClassNode invert(char min, char max) {
+		return new CompClassNode(charNodes, computeComplement(charNodes, min, max));
 	}
 
 	@Override

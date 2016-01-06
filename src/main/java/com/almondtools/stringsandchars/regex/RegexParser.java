@@ -1,7 +1,6 @@
 package com.almondtools.stringsandchars.regex;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -30,27 +29,36 @@ public class RegexParser {
 	private static final char[] OPEN_LOOP = new char[] { OPT, STAR, PLUS, OBRC };
 	private static final char[] CLOSE_CHAR_CLASS = new char[] { CBRK };
 
+	private static final char DEFAULT_MIN_CHAR = (char) 0x0000;
+	private static final char DEFAULT_MAX_CHAR = (char) 0x00ff;
+
+	private Map<Character, CharNode> characterClasses;
+
 	private String pattern;
 	private int pos;
 
-	private Map<Character, CharNode> characterClasses = new CharClassBuilder()
-		.add('t', new SingleCharNode('\t'))
-		.add('n', new SingleCharNode('\n'))
-		.add('r', new SingleCharNode('\r'))
-		.add('f', new SingleCharNode('\f'))
-		.add('\\', new SingleCharNode('\\'))
-		.add('s', createWhiteSpaceEscapes())
-		.add('S', createWhiteSpaceEscapes().invert())
-		.add('w', createAlphaNumericEscapes())
-		.add('W', createAlphaNumericEscapes().invert())
-		.add('d', createDigitEscapes())
-		.add('D', createDigitEscapes().invert())
-		.build();
+	private char min;
+	private char max;
 
 	public RegexParser(String pattern) {
+		this(pattern, DEFAULT_MIN_CHAR, DEFAULT_MAX_CHAR);
+	}
+
+	public RegexParser(String pattern, char min, char max) {
 		this.pattern = pattern;
+		this.min = min;
+		this.max = max;
 		this.pos = 0;
-		this.characterClasses = new HashMap<>();
+		this.characterClasses = new CharClassBuilder(min, max)
+			.add('t', new SingleCharNode('\t'))
+			.add('n', new SingleCharNode('\n'))
+			.add('r', new SingleCharNode('\r'))
+			.add('f', new SingleCharNode('\f'))
+			.add('\\', new SingleCharNode('\\'))
+			.add(createWhiteSpaceEscapes())
+			.add(createAlphaNumericEscapes())
+			.add(createDigitEscapes())
+			.build();
 	}
 
 	private static SpecialCharClassNode createWhiteSpaceEscapes() {
@@ -191,11 +199,11 @@ public class RegexParser {
 			if (!match(CBRK)) {
 				throw new RegexCompileException(pattern, pos, "]");
 			}
+			AbstractCharClassNode charClassNode = new CharClassNode(toCharNodes(subNodes));
 			if (complement) {
-				return new CompClassNode(toCharNodes(subNodes));
-			} else {
-				return new CharClassNode(toCharNodes(subNodes));
+				charClassNode = charClassNode.invert(min, max);
 			}
+			return charClassNode;
 		} else if (match(ESCAPE)) {
 			return parseEscapedChar();
 		} else {

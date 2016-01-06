@@ -16,13 +16,13 @@ public class BPGlushkovLongestNonOverlappingNonEmptyTest {
 
 	@Test
 	public void testRegexConcat() throws Exception {
-		StringFinder finder = find("ab", "cccabcc");
+		StringFinder finder = findIn("cccabcc", "ab");
 		assertThat(finder.findAll(), contains(new StringMatch(3, 5, "ab")));
 	}
 
 	@Test
 	public void testRegexOverlappingConcat() throws Exception {
-		StringFinder finder = find("aba", "cccababacc");
+		StringFinder finder = findIn("cccababacc", "aba");
 
 		assertThat(finder.findAll(), contains(
 			new StringMatch(3, 6, "aba")));
@@ -30,7 +30,7 @@ public class BPGlushkovLongestNonOverlappingNonEmptyTest {
 
 	@Test
 	public void testRegexAlternatives() throws Exception {
-		StringFinder finder = find("ab|ac", "cccababacc");
+		StringFinder finder = findIn("cccababacc", "ab|ac");
 
 		assertThat(finder.findAll(), contains(
 			new StringMatch(3, 5, "ab"),
@@ -40,7 +40,7 @@ public class BPGlushkovLongestNonOverlappingNonEmptyTest {
 
 	@Test
 	public void testRegexAlternativesOverlapping() throws Exception {
-		StringFinder finder = find("ab|ba", "cccababacc");
+		StringFinder finder = findIn("cccababacc", "ab|ba");
 
 		assertThat(finder.findAll(), contains(
 			new StringMatch(3, 5, "ab"),
@@ -49,7 +49,7 @@ public class BPGlushkovLongestNonOverlappingNonEmptyTest {
 
 	@Test
 	public void testRegexStar() throws Exception {
-		StringFinder finder = find("a*", "cccaaacc");
+		StringFinder finder = findIn("cccaaacc", "a*");
 
 		assertThat(finder.findAll(), contains(
 			new StringMatch(3, 6, "aaa")));
@@ -57,7 +57,7 @@ public class BPGlushkovLongestNonOverlappingNonEmptyTest {
 
 	@Test
 	public void testRegexPlus() throws Exception {
-		StringFinder finder = find("a+", "cccaaacc");
+		StringFinder finder = findIn("cccaaacc", "a+");
 
 		assertThat(finder.findAll(), contains(
 			new StringMatch(3, 6, "aaa")));
@@ -65,7 +65,7 @@ public class BPGlushkovLongestNonOverlappingNonEmptyTest {
 
 	@Test
 	public void testRegexOptional() throws Exception {
-		StringFinder finder = find("ab?", "cccabacc");
+		StringFinder finder = findIn("cccabacc", "ab?");
 
 		assertThat(finder.findAll(), contains(
 			new StringMatch(3, 5, "ab"),
@@ -74,7 +74,7 @@ public class BPGlushkovLongestNonOverlappingNonEmptyTest {
 
 	@Test
 	public void testRegexBoundedLoop() throws Exception {
-		StringFinder finder = find("a{1,2}", "cccaaacc");
+		StringFinder finder = findIn("cccaaacc", "a{1,2}");
 
 		assertThat(finder.findAll(), contains(
 			new StringMatch(3, 5, "aa"),
@@ -83,7 +83,7 @@ public class BPGlushkovLongestNonOverlappingNonEmptyTest {
 
 	@Test
 	public void testRegexComplex() throws Exception {
-		StringFinder finder = find("((a|b)*c{1,2})+", "abaccxaaccccbbcx");
+		StringFinder finder = findIn("abaccxaaccccbbcx", "((a|b)*c{1,2})+");
 
 		assertThat(finder.findAll(), contains(
 			new StringMatch(0, 5, "abacc"),
@@ -93,7 +93,7 @@ public class BPGlushkovLongestNonOverlappingNonEmptyTest {
 
 	@Test
 	public void testRegexCharClasses() throws Exception {
-		StringFinder finder = find("[a-b]+", "ccabccaccbcc");
+		StringFinder finder = findIn("ccabccaccbcc", "[a-b]+");
 
 		assertThat(finder.findAll(), contains(
 			new StringMatch(2, 4, "ab"),
@@ -103,7 +103,7 @@ public class BPGlushkovLongestNonOverlappingNonEmptyTest {
 
 	@Test
 	public void testRegexCompClasses() throws Exception {
-		StringFinder finder = find("[^a-b]+", "ccabccaccbcc");
+		StringFinder finder = findIn("ccabccaccbcc", "[^a-b]+");
 
 		assertThat(finder.findAll(), contains(
 			new StringMatch(0, 2, "cc"),
@@ -114,14 +114,14 @@ public class BPGlushkovLongestNonOverlappingNonEmptyTest {
 
 	@Test
 	public void testRegexOverlappingCharClasses() throws Exception {
-		StringFinder finder = find("[a-b][b-c]", "aabbcc");
+		StringFinder finder = findIn("aabbcc", "[a-b][b-c]");
 
 		assertThat(finder.findAll(), contains(
 			new StringMatch(1, 3, "ab"),
 			new StringMatch(3, 5, "bc")));
 	}
 
-	private StringFinder find(String pattern, String in) {
+	private StringFinder findIn(String in, String pattern) {
 		BPGlushkov algorithm = new BPGlushkov(pattern);
 		return algorithm.createFinder(new StringCharProvider(in, 0), LONGEST_MATCH, NON_OVERLAP, NON_EMPTY);
 	}

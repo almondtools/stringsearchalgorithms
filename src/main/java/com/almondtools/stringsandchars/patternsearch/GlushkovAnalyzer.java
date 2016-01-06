@@ -46,7 +46,7 @@ public class GlushkovAnalyzer implements RegexNodeVisitor<Void> {
 	private Map<RegexNode, Set<Integer>> last;
 	private Map<Integer, Set<Integer>> follow;
 	private Map<Integer, Set<Integer>> precede;
-	private Map<RegexNode, Boolean> empty;
+	private Map<RegexNode, Integer> minLength;
 	private DefinedCharNode[] chars;
 	private int len;
 	private char[] alphabet;
@@ -57,7 +57,7 @@ public class GlushkovAnalyzer implements RegexNodeVisitor<Void> {
 		this.last = new LinkedHashMap<>();
 		this.follow = new LinkedHashMap<>();
 		this.precede = new LinkedHashMap<>();
-		this.empty = new LinkedHashMap<>();
+		this.minLength = new LinkedHashMap<>();
 		this.charCollector = new ArrayList<>();
 		this.charCollector.add(null);
 	}
@@ -125,22 +125,6 @@ public class GlushkovAnalyzer implements RegexNodeVisitor<Void> {
 		return result;
 	}
 
-	private void empty(RegexNode node, Boolean value) {
-		empty.put(node, value);
-	}
-
-	private Boolean empty(RegexNode node) {
-		return empty.get(node);
-	}
-
-	private List<Boolean> empty(List<RegexNode> nodes) {
-		List<Boolean> result = new ArrayList<>(nodes.size());
-		for (RegexNode node : nodes) {
-			result.add(empty(node));
-		}
-		return result;
-	}
-
 	private void appendFollow(int key, Collection<Integer> append) {
 		Set<Integer> followSet = follow.get(key);
 		if (followSet == null) {
@@ -175,6 +159,22 @@ public class GlushkovAnalyzer implements RegexNodeVisitor<Void> {
 		} else {
 			return set;
 		}
+	}
+
+	private void minLength(RegexNode node, Integer value) {
+		minLength.put(node, value);
+	}
+
+	private List<Integer> minLength(List<RegexNode> nodes) {
+		List<Integer> result = new ArrayList<>(nodes.size());
+		for (RegexNode node : nodes) {
+			result.add(minLength(node));
+		}
+		return result;
+	}
+
+	private Integer minLength(RegexNode node) {
+		return minLength.get(node);
 	}
 
 	public GlushkovAnalyzer analyze() {
@@ -213,6 +213,10 @@ public class GlushkovAnalyzer implements RegexNodeVisitor<Void> {
 		return new DualGlushkovAutomaton(initial, finals, emittingChar, reachableByState);
 	}
 
+	public int minLength() {
+		return minLength(root);
+	}
+
 	private BitSet initial() {
 		BitSet initial = new BitSet(len);
 		initial.set(0);
@@ -244,7 +248,7 @@ public class GlushkovAnalyzer implements RegexNodeVisitor<Void> {
 		return reachable.perfectMinimal();
 	}
 
-	private void reachableByState(BitSet d, MinimalPerfectMapBuilder<BitSet, BitSet> reachable, CharObjectMap<BitSet> reachableByChar, BitSet defaultValue) {
+	private void reachableByState(BitSet d, MinimalPerfectMapBuilder<BitSet, BitSet, BitSetObjectMap<BitSet>> reachable, CharObjectMap<BitSet> reachableByChar, BitSet defaultValue) {
 		BitSet td = reachable.get(d);
 		if (td == defaultValue) {
 			td = (BitSet) defaultValue.clone();
@@ -306,7 +310,7 @@ public class GlushkovAnalyzer implements RegexNodeVisitor<Void> {
 		return result;
 	}
 
-	private void sourceableByState(BitSet d, int len, MinimalPerfectMapBuilder<BitSet, BitSet> sourceable, CharObjectMap<BitSet> emittingChar, BitSet defaultValue) {
+	private void sourceableByState(BitSet d, int len, MinimalPerfectMapBuilder<BitSet, BitSet, BitSetObjectMap<BitSet>> sourceable, CharObjectMap<BitSet> emittingChar, BitSet defaultValue) {
 		BitSet td = sourceable.get(d);
 		if (td == defaultValue) {
 			td = (BitSet) defaultValue.clone();
@@ -341,7 +345,7 @@ public class GlushkovAnalyzer implements RegexNodeVisitor<Void> {
 		for (int x : last(root)) {
 			finals.set(x);
 		}
-		if (empty(root)) {
+		if (minLength.get(root) == 0) {
 			finals.set(0);
 		}
 		return finals;
@@ -364,7 +368,7 @@ public class GlushkovAnalyzer implements RegexNodeVisitor<Void> {
 
 		last(node, union(last(subNodes)));
 
-		empty(node, or(empty(subNodes)));
+		minLength(node, minimum(minLength(subNodes)));
 
 		return null;
 	}
@@ -395,7 +399,7 @@ public class GlushkovAnalyzer implements RegexNodeVisitor<Void> {
 
 		last(node, union(concatLast(subNodes)));
 
-		empty(node, and(empty(subNodes)));
+		minLength(node, sum(minLength(subNodes)));
 
 		for (int i = 0; i < subNodes.size() - 1; i++) {
 			RegexNode current = subNodes.get(i);
@@ -413,12 +417,13 @@ public class GlushkovAnalyzer implements RegexNodeVisitor<Void> {
 
 	private List<Set<Integer>> concatFirst(List<RegexNode> subNodes) {
 		List<Set<Integer>> result = new ArrayList<>();
-		boolean empty = true;
+		int minLength = 0;
 		for (RegexNode subNode : subNodes) {
-			if (empty) {
-				result.add(first(subNode));
+			if (minLength > 0) {
+				break;
 			}
-			empty &= empty(subNode);
+			result.add(first(subNode));
+			minLength += minLength(subNode);
 		}
 		return result;
 	}
@@ -427,12 +432,13 @@ public class GlushkovAnalyzer implements RegexNodeVisitor<Void> {
 		List<RegexNode> reverseSubNodes = new ArrayList<>(subNodes);
 		Collections.reverse(reverseSubNodes);
 		List<Set<Integer>> result = new ArrayList<>();
-		boolean empty = true;
+		int minLength = 0;
 		for (RegexNode subNode : reverseSubNodes) {
-			if (empty) {
-				result.add(last(subNode));
+			if (minLength > 0) {
+				break;
 			}
-			empty &= empty(subNode);
+			result.add(last(subNode));
+			minLength += minLength(subNode);
 		}
 		return result;
 	}
@@ -443,7 +449,7 @@ public class GlushkovAnalyzer implements RegexNodeVisitor<Void> {
 
 		last(node, new HashSet<Integer>());
 
-		empty(node, true);
+		minLength(node, 0);
 
 		return null;
 	}
@@ -457,7 +463,7 @@ public class GlushkovAnalyzer implements RegexNodeVisitor<Void> {
 
 		last(node, last(subNode));
 
-		empty(node, empty(subNode));
+		minLength(node, minLength(subNode));
 
 		return null;
 	}
@@ -479,7 +485,7 @@ public class GlushkovAnalyzer implements RegexNodeVisitor<Void> {
 
 		last(node, last(subNode));
 
-		empty(node, true);
+		minLength(node, 0);
 
 		RegexNode current = subNode;
 		RegexNode next = subNode;
@@ -501,7 +507,7 @@ public class GlushkovAnalyzer implements RegexNodeVisitor<Void> {
 
 		last(node, last(subNode));
 
-		empty(node, true);
+		minLength(node, 0);
 
 		return null;
 	}
@@ -515,7 +521,7 @@ public class GlushkovAnalyzer implements RegexNodeVisitor<Void> {
 
 		last(node, pos);
 
-		empty(node, false);
+		minLength(node, 1);
 
 		return null;
 	}
@@ -529,7 +535,7 @@ public class GlushkovAnalyzer implements RegexNodeVisitor<Void> {
 
 		last(node, pos);
 
-		empty(node, false);
+		minLength(node, 1);
 
 		return null;
 	}
@@ -552,20 +558,22 @@ public class GlushkovAnalyzer implements RegexNodeVisitor<Void> {
 		return result;
 	}
 
-	private Boolean or(List<Boolean> values) {
-		boolean result = false;
-		for (Boolean value : values) {
-			result |= value;
+	private Integer minimum(List<Integer> values) {
+		int min = Integer.MAX_VALUE;
+		for (Integer value : values) {
+			if (value < min) {
+				min = value;
+			}
 		}
-		return result;
+		return min;
 	}
 
-	private Boolean and(List<Boolean> values) {
-		boolean result = true;
-		for (Boolean value : values) {
-			result &= value;
+	private Integer sum(List<Integer> values) {
+		int sum = 0;
+		for (Integer value : values) {
+			sum += value;
 		}
-		return result;
+		return sum;
 	}
 
 	private BitSet and(BitSet b1, BitSet b2) {

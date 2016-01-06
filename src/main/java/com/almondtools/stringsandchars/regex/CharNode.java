@@ -20,10 +20,10 @@ public abstract class CharNode implements RegexNode {
 		}
 	}
 
-	public List<DefinedCharNode> computeComplement(List<? extends DefinedCharNode> nodes) {
+	public List<DefinedCharNode> computeComplement(List<? extends DefinedCharNode> nodes, char min, char max) {
 		Collections.sort(nodes);
 		List<DefinedCharNode> remainderNodes = new LinkedList<DefinedCharNode>();
-		char current = Character.MIN_VALUE;
+		char current = min;
 		for (DefinedCharNode node : nodes) {
 			char from = node.getFrom();
 			char to = node.getTo();
@@ -34,12 +34,12 @@ public abstract class CharNode implements RegexNode {
 			}
 			current = after(to);
 		}
-		if (current == Character.MAX_VALUE) {
+		if (current == max) {
 			remainderNodes.add(new SingleCharNode(current));
-		} else if (current == after(Character.MAX_VALUE)) {
+		} else if (current == after(max)) {
 			// overflow from previous loop => do nothing
-		} else if (current < Character.MAX_VALUE) {
-			remainderNodes.add(new RangeCharNode(current, Character.MAX_VALUE).optimize());
+		} else if (current < max) {
+			remainderNodes.add(new RangeCharNode(current, max).optimize());
 		}
 		return remainderNodes;
 	}
