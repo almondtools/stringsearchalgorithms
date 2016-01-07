@@ -55,7 +55,7 @@ public class CharLongMap {
 		return defaultValue;
 	}
 
-	public static class Builder extends MinimalPerfectMapBuilder<Character, Long> {
+	public static class Builder extends MinimalPerfectMapBuilder<Character, Long, CharLongMap> {
 
 		public Builder(Long defaultValue) {
 			super(defaultValue);

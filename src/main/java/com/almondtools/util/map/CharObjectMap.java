@@ -56,7 +56,7 @@ public class CharObjectMap<T> {
 		return defaultValue;
 	}
 
-	public static class Builder<T> extends MinimalPerfectMapBuilder<Character, T> {
+	public static class Builder<T> extends MinimalPerfectMapBuilder<Character, T, CharObjectMap<T>> {
 
 		public Builder(T defaultValue) {
 			super(defaultValue);

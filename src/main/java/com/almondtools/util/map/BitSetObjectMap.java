@@ -58,7 +58,7 @@ public class BitSetObjectMap<T> {
 		return defaultValue;
 	}
 
-	public static class Builder<T> extends MinimalPerfectMapBuilder<BitSet, T> implements KeySerializer<BitSet> {
+	public static class Builder<T> extends MinimalPerfectMapBuilder<BitSet, T, BitSetObjectMap<T>> implements KeySerializer<BitSet> {
 
 		public Builder(T defaultValue) {
 			super(defaultValue);
@@ -70,6 +70,7 @@ public class BitSetObjectMap<T> {
 			return object.toLongArray();
 		}
 
+		@Override
 		public BitSetObjectMap<T> perfectMinimal() {
 			try {
 				computeFunctions(100, 1.15);

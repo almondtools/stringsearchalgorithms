@@ -16,7 +16,7 @@ import java.util.Set;
 /**
  * provides base functionality for a minimal perfect HashMap<T,S> (no hash collisions, no unused space) with the BMZ algorithm 
  */
-public class MinimalPerfectMapBuilder<T, S> {
+public abstract class MinimalPerfectMapBuilder<T, S, U> {
 
 	private KeySerializer<T> keySerializer;
 	private S defaultValue;
@@ -31,7 +31,7 @@ public class MinimalPerfectMapBuilder<T, S> {
 		this.entries = new HashMap<T, S>();
 	}
 	
-	public MinimalPerfectMapBuilder<T, S> withKeySerializer(KeySerializer<T> keySerializer) {
+	public MinimalPerfectMapBuilder<T, S, U> withKeySerializer(KeySerializer<T> keySerializer) {
 		this.keySerializer = keySerializer;
 		return this;
 	}
@@ -51,6 +51,11 @@ public class MinimalPerfectMapBuilder<T, S> {
 
 	public S getDefaultValue() {
 		return defaultValue;
+	}
+	
+	public MinimalPerfectMapBuilder<T, S, U> addEntry(T key, S value) {
+		entries.put(key, value);
+		return this;
 	}
 
 	public Map<T, S> getEntries() {
@@ -264,5 +269,7 @@ public class MinimalPerfectMapBuilder<T, S> {
 		}
 
 	}
+
+	public abstract U perfectMinimal();
 
 }

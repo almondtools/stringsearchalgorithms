@@ -1,8 +1,12 @@
 package com.almondtools.util.text;
 
+import java.util.Collection;
 import java.util.List;
 
-public class CharUtils {
+public final class CharUtils {
+
+	private CharUtils() {
+	}
 
 	public static boolean isAsciiPrintable(char ch) {
 		return ch >= 32 && ch < 127;
@@ -40,7 +44,7 @@ public class CharUtils {
 		return min;
 	}
 
-	public static char computeMinChar(List<char[]> patterns) {
+	public static char computeMinChar(Collection<char[]> patterns) {
 		char min = Character.MAX_VALUE;
 		for (char[] pattern : patterns) {
 			for (int i = 0; i < pattern.length; i++) {
@@ -62,7 +66,7 @@ public class CharUtils {
 		return max;
 	}
 
-	public static char computeMaxChar(List<char[]> patterns) {
+	public static char computeMaxChar(Collection<char[]> patterns) {
 		char max = Character.MIN_VALUE;
 		for (char[] pattern : patterns) {
 			for (int i = 0; i < pattern.length; i++) {

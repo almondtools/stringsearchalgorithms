@@ -5,8 +5,11 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 
-public class StringUtils {
+public final class StringUtils {
 
+	private StringUtils() {
+	}
+	
 	public static String reverse(String word) {
 		char[] chars = word.toCharArray();
         int size = word.length();
@@ -63,6 +66,5 @@ public class StringUtils {
 		}
 		return charpatterns;
 	}
-
 
 }

@@ -55,12 +55,13 @@ public class CharIntMap {
 		return defaultValue;
 	}
 
-	public static class Builder extends MinimalPerfectMapBuilder<Character, Integer> {
+	public static class Builder extends MinimalPerfectMapBuilder<Character, Integer, CharIntMap> {
 
 		public Builder(Integer defaultValue) {
 			super(defaultValue);
 		}
 
+		@Override
 		public CharIntMap perfectMinimal() {
 			try {
 				computeFunctions(100, 1.15);

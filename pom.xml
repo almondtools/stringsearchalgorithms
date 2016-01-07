@@ -46,6 +46,13 @@
 			<groupId>com.github.almondtools</groupId>
 			<artifactId>picklock</artifactId>
 			<version>0.2.6</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>com.github.almondtools</groupId>
+			<artifactId>conmatch</artifactId>
+			<version>0.1.5</version>
+			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.hamcrest</groupId>
