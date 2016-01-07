@@ -22,7 +22,7 @@ import com.almondtools.stringsandchars.search.StringFinder;
 import com.almondtools.stringsandchars.search.StringFinderOption;
 import com.almondtools.stringsandchars.search.StringMatch;
 import com.almondtools.stringsandchars.search.StringSearchAlgorithm;
-import com.almondtools.stringsandchars.search.WordSearchAlgorithmFactory;
+import com.almondtools.stringsandchars.search.StringSearchAlgorithmFactory;
 
 /**
  * An implementation of the regex pattern search algorithm Bit-Parallel Glushkov.
@@ -167,7 +167,7 @@ public class BPGlushkov implements StringSearchAlgorithm {
 		}
 	}
 
-	public static class Factory implements WordSearchAlgorithmFactory {
+	public static class Factory implements StringSearchAlgorithmFactory {
 
 		@Override
 		public StringSearchAlgorithm of(String pattern) {

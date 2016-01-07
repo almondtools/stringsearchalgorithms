@@ -31,12 +31,14 @@ public class ConcatNode implements RegexNode {
 		return new ConcatNode(subNodes);
 	}
 	
-	public RegexNode optimize() {
+	public RegexNode simplify() {
 		List<RegexNode> newSubNodes = joinIfPossible(subNodes);
-		if (newSubNodes.equals(subNodes)) {
-			return this;
+		if (newSubNodes.isEmpty()) {
+			return new EmptyNode();
 		} else if (newSubNodes.size() == 1) {
 			return newSubNodes.get(0);
+		} else if (newSubNodes.equals(subNodes)) {
+			return this;
 		} else {
 			return new ConcatNode(newSubNodes);
 		}

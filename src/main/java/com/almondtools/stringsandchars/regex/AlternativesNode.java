@@ -15,11 +15,11 @@ public class AlternativesNode implements RegexNode {
 		this.subNodes = subNodes;
 	}
 
-	public static RegexNode anyOf(RegexNode... nodes) {
+	public static AlternativesNode anyOf(RegexNode... nodes) {
 		return anyOf(asList(nodes));
 	}
 
-	public static RegexNode anyOf(List<? extends RegexNode> nodes) {
+	public static AlternativesNode anyOf(List<? extends RegexNode> nodes) {
 		List<RegexNode> subNodes = new LinkedList<RegexNode>();
 		for (RegexNode node : nodes) {
 			if (node instanceof AlternativesNode) {
@@ -29,6 +29,16 @@ public class AlternativesNode implements RegexNode {
 			}
 		}
 		return new AlternativesNode(subNodes);
+	}
+
+	public RegexNode simplify() {
+		if (subNodes.isEmpty()) {
+			return new EmptyNode();
+		} else if (subNodes.size() == 1) {
+			return subNodes.get(0);
+		} else {
+			return this;
+		}
 	}
 
 	public List<RegexNode> getSubNodes() {

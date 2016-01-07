@@ -95,7 +95,7 @@ public class Horspool implements StringSearchAlgorithm {
 		}
 	}
 
-	public static class Factory implements WordSearchAlgorithmFactory {
+	public static class Factory implements StringSearchAlgorithmFactory {
 
 		@Override
 		public StringSearchAlgorithm of(String pattern) {

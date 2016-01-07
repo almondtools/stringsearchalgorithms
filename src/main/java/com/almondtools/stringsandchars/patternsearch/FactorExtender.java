@@ -5,14 +5,14 @@ import java.util.List;
 import com.almondtools.stringsandchars.io.CharProvider;
 import com.almondtools.stringsandchars.search.StringMatch;
 
-public interface PrefixPatternMatcher {
+public interface FactorExtender {
 
 	int getPatternLength();
 
-	List<String> getPrefixes(int max);
+	List<String> getBestFactors(int max);
 
-	List<StringMatch> match(CharProvider chars, boolean longest);
+	List<StringMatch> extendFactor(CharProvider chars, boolean longest);
 
-	PrefixPatternMatcher withPrefix(String prefix);
+	FactorExtender forFactor(String factor);
 
 }

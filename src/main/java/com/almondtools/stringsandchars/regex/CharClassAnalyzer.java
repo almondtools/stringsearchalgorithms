@@ -128,7 +128,7 @@ public class CharClassAnalyzer implements RegexNodeVisitor<CharClassAnalyzer> {
 		List<DefinedCharNode> ranges = new ArrayList<>(nodes.length);
 		for (DefinedCharNode node : nodes) {
 			if (node instanceof RangeCharNode) {
-				DefinedCharNode optimized = ((RangeCharNode) node).optimize();
+				DefinedCharNode optimized = ((RangeCharNode) node).simplify();
 				if (optimized != null) {
 					ranges.add(optimized);
 				}

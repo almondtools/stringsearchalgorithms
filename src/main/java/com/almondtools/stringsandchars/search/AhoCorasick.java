@@ -199,7 +199,7 @@ public class AhoCorasick implements StringSearchAlgorithm {
 
 	}
 
-	public static class Factory implements MultiWordSearchAlgorithmFactory {
+	public static class Factory implements MultiStringSearchAlgorithmFactory {
 
 		@Override
 		public StringSearchAlgorithm of(Collection<String> patterns) {

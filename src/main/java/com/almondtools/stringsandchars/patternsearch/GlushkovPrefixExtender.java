@@ -10,7 +10,7 @@ import com.almondtools.stringsandchars.regex.RegexNode;
 import com.almondtools.stringsandchars.regex.RegexParser;
 import com.almondtools.stringsandchars.search.StringMatch;
 
-public class GlushkovPrefixPatternMatcher implements PrefixPatternMatcher {
+public class GlushkovPrefixExtender implements FactorExtender {
 
 	private GlushkovAutomaton automaton;
 	private int minLength;
@@ -18,13 +18,13 @@ public class GlushkovPrefixPatternMatcher implements PrefixPatternMatcher {
 	private int prefixLength;
 	private BitSet prefixInitial;
 
-	public GlushkovPrefixPatternMatcher(String pattern) {
+	public GlushkovPrefixExtender(String pattern) {
 		GlushkovAnalyzer analyzer = parseAndNormalizeRegex(pattern);
 		automaton = analyzer.buildAutomaton();
 		minLength = analyzer.minLength();
 	}
 
-	private GlushkovPrefixPatternMatcher(GlushkovAutomaton automaton, int minLength, int prefixLength, BitSet prefixInitial) {
+	private GlushkovPrefixExtender(GlushkovAutomaton automaton, int minLength, int prefixLength, BitSet prefixInitial) {
 		this.automaton = automaton;
 		this.minLength = minLength;
 		this.prefixLength = prefixLength;
@@ -38,9 +38,9 @@ public class GlushkovPrefixPatternMatcher implements PrefixPatternMatcher {
 		return new GlushkovAnalyzer(root).analyze();
 	}
 	
-	public GlushkovPrefixPatternMatcher withPrefix(String prefix) {
+	public GlushkovPrefixExtender forFactor(String prefix) {
 		BitSet prefixInitial = match(automaton.getInitial(), new StringCharProvider(prefix, 0));
-		return new GlushkovPrefixPatternMatcher(automaton, minLength, prefix.length(), prefixInitial);
+		return new GlushkovPrefixExtender(automaton, minLength, prefix.length(), prefixInitial);
 	}
 
 	@Override
@@ -49,12 +49,12 @@ public class GlushkovPrefixPatternMatcher implements PrefixPatternMatcher {
 	}
 
 	@Override
-	public List<String> getPrefixes(int max) {
+	public List<String> getBestFactors(int max) {
 		return new ArrayList<>(automaton.getPrefixes(max));
 	}
 
 	@Override
-	public List<StringMatch> match(CharProvider chars, boolean longest) {
+	public List<StringMatch> extendFactor(CharProvider chars, boolean longest) {
 		MatchBuilder listener = new MatchBuilder(longest);
 		match(prefixInitial, chars, listener);
 		return listener.getMatches();
@@ -109,11 +109,11 @@ public class GlushkovPrefixPatternMatcher implements PrefixPatternMatcher {
 
 	}
 	
-	public static class Factory implements PatternMatcherFactory {
+	public static class Factory implements FactorExtenderFactory {
 
 		@Override
-		public PrefixPatternMatcher of(String pattern) {
-			return new GlushkovPrefixPatternMatcher(pattern);
+		public FactorExtender of(String pattern) {
+			return new GlushkovPrefixExtender(pattern);
 		}
 		
 	}

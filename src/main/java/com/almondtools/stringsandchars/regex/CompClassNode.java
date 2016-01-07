@@ -39,7 +39,8 @@ public class CompClassNode extends AbstractCharClassNode implements RegexNode {
 		buffer.append("[^");
 		Iterator<DefinedCharNode> charNodeIterator = charNodes.iterator();
 		while (charNodeIterator.hasNext()) {
-			buffer.append(charNodeIterator.next());
+			DefinedCharNode next = charNodeIterator.next();
+			buffer.append(next.toInlinedString());
 		}
 		buffer.append(']');
 		return buffer.toString();

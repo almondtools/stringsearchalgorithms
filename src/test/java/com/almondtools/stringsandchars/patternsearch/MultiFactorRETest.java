@@ -13,7 +13,7 @@ import com.almondtools.stringsandchars.search.StringFinder;
 import com.almondtools.stringsandchars.search.StringMatch;
 
 
-public class MultiPrefixRETest {
+public class MultiFactorRETest {
 
 	@Test
 	public void testRegexComplex1() throws Exception {
@@ -53,7 +53,7 @@ public class MultiPrefixRETest {
 	}
 
 	private StringFinder findIn(String in, String... pattern) {
-		MultiPrefixRE algorithm = new MultiPrefixRE(new AhoCorasick.Factory(), new GlushkovPrefixPatternMatcher.Factory(), pattern);
+		MultiFactorRE algorithm = new MultiFactorRE(new AhoCorasick.Factory(), new GlushkovPrefixExtender.Factory(), pattern);
 		return algorithm.createFinder(new StringCharProvider(in, 0), LONGEST_MATCH, NON_OVERLAP);
 	}
 

@@ -1,5 +1,7 @@
 package com.almondtools.stringsandchars.regex;
 
+import static com.almondtools.util.text.CharUtils.charToString;
+
 public class SingleCharNode extends DefinedCharNode implements JoinableNode {
 
 	private char value;
@@ -45,7 +47,7 @@ public class SingleCharNode extends DefinedCharNode implements JoinableNode {
 	@Override
 	public String toInlinedString() {
 		StringBuilder buffer = new StringBuilder();
-		buffer.append(value);
+		buffer.append(charToString(value));
 		return buffer.toString();
 	}
 

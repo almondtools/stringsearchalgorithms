@@ -169,7 +169,7 @@ public class MultiPrefixRESinglePatternTest {
 	}
 
 	private StringFinder findIn(String in, String... pattern) {
-		MultiPrefixRE algorithm = new MultiPrefixRE(new AhoCorasick.Factory(), new GlushkovPrefixPatternMatcher.Factory(), pattern);
+		MultiFactorRE algorithm = new MultiFactorRE(new AhoCorasick.Factory(), new GlushkovPrefixExtender.Factory(), pattern);
 		return algorithm.createFinder(new StringCharProvider(in, 0));
 	}
 

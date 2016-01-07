@@ -80,6 +80,10 @@ public class StringSearchRule implements TestRule {
 		return algorithm.createFinder(chars, options);
 	}
 	
+	public StringSearchAlgorithm getAlgorithm() {
+		return algorithm;
+	}
+	
 	@Retention(RetentionPolicy.RUNTIME)
 	@Target({ElementType.METHOD})
 	public @interface SearchFor {

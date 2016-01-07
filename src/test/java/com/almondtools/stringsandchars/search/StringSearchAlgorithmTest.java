@@ -2,6 +2,8 @@ package com.almondtools.stringsandchars.search;
 
 import static com.almondtools.stringsandchars.search.MatchOption.LONGEST_MATCH;
 import static com.almondtools.stringsandchars.search.MatchOption.NON_OVERLAP;
+import static com.almondtools.stringsandchars.search.StringSearchAlgorithmMatcher.isStringSearchAlgorithm;
+import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.Matchers.contains;
 import static org.junit.Assert.assertThat;
 
@@ -18,6 +20,12 @@ public class StringSearchAlgorithmTest {
 	@Rule
 	public StringSearchRule searcher = new StringSearchRule();
 
+	@Test
+	@SearchFor("x")
+	public void testAlgorithmDesign() throws Exception {
+		assertThat(searcher.getAlgorithm().getClass(), isStringSearchAlgorithm());
+	}
+	
 	@Test
 	@SearchFor("a")
 	public void testPattern1() throws Exception {
@@ -153,6 +161,24 @@ public class StringSearchAlgorithmTest {
 		assertThat(matches, contains(
 			new StringMatch(6, 8, "ab"),
 			new StringMatch(8, 10, "ab")));
+	}
+	
+	@Test
+	@SearchFor("a")
+	public void testPatternLength1() throws Exception {
+		assertThat(searcher.getAlgorithm().getPatternLength(), equalTo(1));
+	}
+	
+	@Test
+	@SearchFor("ab")
+	public void testPatternLength2() throws Exception {
+		assertThat(searcher.getAlgorithm().getPatternLength(), equalTo(2));
+	}
+	
+	@Test
+	@SearchFor("abcab")
+	public void testPatternLength5() throws Exception {
+		assertThat(searcher.getAlgorithm().getPatternLength(), equalTo(5));
 	}
 	
 	private StringCharProvider chars(String input) {

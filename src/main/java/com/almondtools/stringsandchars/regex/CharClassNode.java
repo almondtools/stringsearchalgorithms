@@ -43,7 +43,8 @@ public class CharClassNode extends AbstractCharClassNode implements RegexNode {
 		buffer.append('[');
 		Iterator<DefinedCharNode> charNodeIterator = charNodes.iterator();
 		while (charNodeIterator.hasNext()) {
-			buffer.append(charNodeIterator.next().toInlinedString());
+			DefinedCharNode next = charNodeIterator.next();
+			buffer.append(next.toInlinedString());
 		}
 		buffer.append(']');
 		return buffer.toString();

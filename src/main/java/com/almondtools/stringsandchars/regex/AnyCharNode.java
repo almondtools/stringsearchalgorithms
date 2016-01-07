@@ -1,7 +1,5 @@
 package com.almondtools.stringsandchars.regex;
 
-import static com.almondtools.util.text.CharUtils.after;
-import static com.almondtools.util.text.CharUtils.before;
 import static java.util.Arrays.asList;
 
 import java.util.List;
@@ -9,14 +7,6 @@ import java.util.List;
 public class AnyCharNode extends CharNode {
 
 	private static final DefinedCharNode DOTALL = new RangeCharNode(Character.MIN_VALUE, Character.MAX_VALUE);
-
-	private static final DefinedCharNode[] DEFAULT = new DefinedCharNode[]{
-		new RangeCharNode(Character.MIN_VALUE, before('\n')),
-		new RangeCharNode(after('\n'), before('\r')),
-		new RangeCharNode(after('\r'), before('\u0085')),
-		new RangeCharNode(after('\u0085'), before('\u2028')),
-		new RangeCharNode(after('\u2029'), Character.MAX_VALUE)
-	};
 
 	private List<DefinedCharNode> charNodes;
 
@@ -27,15 +17,22 @@ public class AnyCharNode extends CharNode {
 	private AnyCharNode(List<DefinedCharNode> charNodes) {
 		this.charNodes = charNodes;
 	}
-	
-	public static AnyCharNode dotAll() {
+
+	public static AnyCharNode dotAll(char min, char max) {
 		return new AnyCharNode(DOTALL);
 	}
 
-	public static AnyCharNode dotDefault() {
-		return new AnyCharNode(DEFAULT);
+	public static AnyCharNode dotDefault(char min, char max) {
+		return new AnyCharNode(computeDefault(min, max));
 	}
-	
+
+	private static DefinedCharNode[] computeDefault(char min, char max) {
+		return computeComplement(asList(new SingleCharNode('\n'),
+			new SingleCharNode('\r'),
+			new SingleCharNode('\u0085'),
+			new RangeCharNode('\u2028', '\u2029')), min, max).toArray(new DefinedCharNode[0]);
+	}
+
 	@Override
 	public List<DefinedCharNode> toCharNodes() {
 		return charNodes;
@@ -45,12 +42,12 @@ public class AnyCharNode extends CharNode {
 	public <T> T accept(RegexNodeVisitor<T> visitor) {
 		return visitor.visitAnyChar(this);
 	}
-	
+
 	@Override
 	public AnyCharNode clone() {
 		return (AnyCharNode) super.clone();
 	}
-	
+
 	@Override
 	public String toString() {
 		return ".";

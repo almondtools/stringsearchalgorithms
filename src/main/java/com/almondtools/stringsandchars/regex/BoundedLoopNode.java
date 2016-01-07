@@ -13,7 +13,7 @@ public class BoundedLoopNode implements RegexNode {
 		this.to = to;
 	}
 
-	public static RegexNode bounded(RegexNode node, int from, int to) {
+	public static BoundedLoopNode bounded(RegexNode node, int from, int to) {
 		return new BoundedLoopNode(node, from, to);
 	}
 

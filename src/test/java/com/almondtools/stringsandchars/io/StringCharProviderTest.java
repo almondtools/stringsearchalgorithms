@@ -10,6 +10,13 @@ import org.junit.Test;
 public class StringCharProviderTest {
 
 	@Test
+	public void testRestart() throws Exception {
+		StringCharProvider provider = new StringCharProvider("abcd", 2);
+		provider.restart();
+		assertThat(provider.current(), equalTo(0l));
+	}
+	
+	@Test
 	public void testNextAtBeginning() throws Exception {
 		StringCharProvider provider = new StringCharProvider("abcd", 0);
 		assertThat(provider.next(), equalTo('a'));
@@ -211,5 +218,5 @@ public class StringCharProviderTest {
 		assertThat(provider.finished(2), is(true));
 		assertThat(provider.finished(1), is(false));
 	}
-	
+
 }

@@ -1,7 +1,7 @@
 package com.almondtools.stringsandchars.search;
 
 
-public interface WordSearchAlgorithmFactory {
+public interface StringSearchAlgorithmFactory {
 
 	StringSearchAlgorithm of(String pattern);
 

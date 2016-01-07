@@ -1,5 +1,7 @@
 package com.almondtools.stringsandchars.regex;
 
+import static com.almondtools.util.text.CharUtils.charToString;
+
 
 public class RangeCharNode extends DefinedCharNode {
 
@@ -21,10 +23,8 @@ public class RangeCharNode extends DefinedCharNode {
 		return to;
 	}
 	
-	public DefinedCharNode optimize() {
-		if (from > to) {
-			return null;
-		} else if (from == to) {
+	public DefinedCharNode simplify() {
+		if (from == to) {
 			return new SingleCharNode(from);
 		} else {
 			return this;
@@ -53,9 +53,9 @@ public class RangeCharNode extends DefinedCharNode {
 	@Override
 	public String toInlinedString() {
 		StringBuilder buffer = new StringBuilder();
-		buffer.append(from);
+		buffer.append(charToString(from));
 		buffer.append('-');
-		buffer.append(to);
+		buffer.append(charToString(to));
 		return buffer.toString();
 	}
 

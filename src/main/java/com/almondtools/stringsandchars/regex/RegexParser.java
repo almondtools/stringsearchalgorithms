@@ -1,5 +1,7 @@
 package com.almondtools.stringsandchars.regex;
 
+import static com.almondtools.stringsandchars.regex.RegexParserOption.DOT_ALL;
+
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
@@ -39,15 +41,17 @@ public class RegexParser {
 
 	private char min;
 	private char max;
+	private RegexParserOption[] options;
 
-	public RegexParser(String pattern) {
-		this(pattern, DEFAULT_MIN_CHAR, DEFAULT_MAX_CHAR);
+	public RegexParser(String pattern, RegexParserOption... options) {
+		this(pattern, DEFAULT_MIN_CHAR, DEFAULT_MAX_CHAR, options);
 	}
 
-	public RegexParser(String pattern, char min, char max) {
+	public RegexParser(String pattern, char min, char max, RegexParserOption... options) {
 		this.pattern = pattern;
 		this.min = min;
 		this.max = max;
+		this.options = options;
 		this.pos = 0;
 		this.characterClasses = new CharClassBuilder(min, max)
 			.add('t', new SingleCharNode('\t'))
@@ -157,7 +161,7 @@ public class RegexParser {
 		while (!lookaheadIsBreakConcat()) {
 			nodes.add(parseLoop());
 		}
-		return ConcatNode.inSequence(nodes.toArray(new RegexNode[0])).optimize();
+		return ConcatNode.inSequence(nodes.toArray(new RegexNode[0])).simplify();
 	}
 
 	private RegexNode parseLoop() {
@@ -222,7 +226,7 @@ public class RegexParser {
 				} else {
 					char from = ch;
 					char to = parseChar();
-					return new RangeCharNode(from, to).optimize();
+					return new RangeCharNode(from, to).simplify();
 				}
 			} else {
 				return new SingleCharNode(ch);
@@ -241,7 +245,11 @@ public class RegexParser {
 
 	private RegexNode parseLeaf() {
 		if (match(DOT)) {
-			return AnyCharNode.dotAll();
+			if (DOT_ALL.in(options)) {
+				return AnyCharNode.dotAll(min, max);
+			} else {
+				return AnyCharNode.dotDefault(min, max);
+			}
 		} else if (match(OPAR)) {
 			RegexNode node = parseAlternatives();
 			if (!match(CPAR)) {

@@ -10,15 +10,15 @@ public class UnboundedLoopNode implements RegexNode {
 		this.from = from;
 	}
 
-	public static RegexNode star(RegexNode node) {
+	public static UnboundedLoopNode star(RegexNode node) {
 		return new UnboundedLoopNode(node, 0);
 	}
 
-	public static RegexNode plus(RegexNode node) {
+	public static UnboundedLoopNode plus(RegexNode node) {
 		return new UnboundedLoopNode(node, 1);
 	}
 
-	public static RegexNode unbounded(RegexNode node, int from) {
+	public static UnboundedLoopNode unbounded(RegexNode node, int from) {
 		return new UnboundedLoopNode(node, from);
 	}
 	
