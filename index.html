@@ -79,6 +79,18 @@
   </ul>
   </div>
   </div>
+                  <div class="panel panel-default">
+              <div class="panel-heading">
+      <h3 class="panel-title">Available StringFinderOptions:</h3>
+  </div>
+          <div class="panel-body">
+                      <ul>
+                          <li>  <small>MatchOption</small>.<strong>LONGEST_MATCH</strong>:   <p>only the longest match starting at one char will be reported</p></li>
+                      <li>  <small>MatchOption</small>.<strong>NON_OVERLAP</strong>:   <p>overlapping matches are not reported</p></li>
+                      <li>  <small>MatchOption</small>.<strong>NON_EMPTY</strong>:   <p>empty matches (strings of length 0) are not reported</p></li>
+  </ul>
+  </div>
+  </div>
   </div>
           <div class="col-md-pull-4 col-md-8">
                   <h3>Searching Strings:</h3>
@@ -107,7 +119,7 @@ StringFinder finder = stringSearch.createFinder(text);</code></pre>
                           <div>
       <pre><code class="java">AhoCorasick stringSearch = new AhoCorasick(asList(&quot;word&quot;, &quot;longer word&quot;));
 CharProvider text = new StringCharProvider(&quot;text with longer word and word in it&quot;, 0);
-StringFinder finder = stringSearch.createFinder(text, MatchOption.LONGEST_MATCH, MatchOption.NON_OVERLAP);</code></pre>
+StringFinder finder = stringSearch.createFinder(text, LONGEST_MATCH, NON_OVERLAP);</code></pre>
   </div>
                   <li>Finding matches is the same as above</li>
   </ul></p>
@@ -121,7 +133,17 @@ StringFinder finder = stringSearch.createFinder(text, MatchOption.LONGEST_MATCH,
   </div>
           <div class="panel-body">
                       <ul>
-                          <li>BPGlushkov (or GPGlushkov)</li>
+                          <li>BPGlushkov</li>
+  </ul>
+  </div>
+  </div>
+                  <div class="panel panel-default">
+              <div class="panel-heading">
+      <h3 class="panel-title">Available algorithms for multi pattern search:</h3>
+  </div>
+          <div class="panel-body">
+                      <ul>
+                          <li>MultiFactorRE</li>
   </ul>
   </div>
   </div>
@@ -149,12 +171,53 @@ StringFinder finder = stringSearch.createFinder(text, MatchOption.LONGEST_MATCH,
           <div class="col-md-pull-4 col-md-8">
                   <h3>Searching Regex Patterns:</h3>
               <p>To search a regex pattern:   <ul>
-                      <li>Select a search algorithm, e.g. BPGlushkov</li>
-                  <li>Create a Finder</li>
+                      <li>Select BPGlushkov algorithm</li>
+                  <li>Create the Finder</li>
                           <div>
       <pre><code class="java">BPGlushkov stringSearch = new BPGlushkov(&quot;(AT|GA)(AG|AAA)*&quot;);
-CharProvider text = new StringCharProvider(&quot;text with word in it&quot;, 0);
-StringFinder finder = stringSearch.createFinder(text);</code></pre>
+CharProvider text = new StringCharProvider(&quot;GCATCCCGATCGTAAAATAGAAAAGCCGCCCGCAAT&quot;, 0);
+StringFinder finder = stringSearch.createFinder(text, LONGEST_MATCH, NON_OVERLAP);</code></pre>
+  </div>
+                  <li>Find the next match with:</li>
+                          <div>
+      <pre><code class="java">StringMatch next = finder.findNext();</code></pre>
+  </div>
+                  <li>Find all matches (only longest, non-overlapping and non-empty):</li>
+                          <div>
+      <pre><code class="java">List&lt;StringMatch&gt; all = finder.findAll();</code></pre>
+  </div>
+  </ul></p>
+              <h3>Searching Multiple Patterns:</h3>
+              <p>                Some of the upper regex search algorithms (e.g. BPGlushkov) only provide good performance for smaller patterns. The reason is that
+                their performance decreases with the number of states of the recognizing automaton. This especially holds for patterns that are
+                a alternation of several sub patterns like       <div>
+      <pre><code >((AT|GA)(AG|AAA)*)|
+((G|C)(G|C)+)|
+(A(G|C|T|A){2}C+)|
+...</code></pre>
+  </div>
+                
+                For such a problem one might better shift to another kind of search algorithm. The following algorithm is given a set of patterns
+                that are processed in the following way:
+                  <ul>
+                        <li>for each pattern compute a set of unique factors (strings that may lead to this pattern)</li>
+                    <li>do a multi string search for these factors</li>
+                    <li>every time a factor is found, try to extend this factor to the attached pattern</li>
+  </ul>
+                Each of these steps is configurable, there is no hard dependency to other StringsAndChars algorithms. </p>
+              <p>To search a multiple patterns:   <ul>
+                      <li>Select MultiFactorRE algorithm</li>
+                  <li>Select a suiting       <code >StringSearchAlgorithmFactory</code> for searching the factors, e.g. SetBackwardOracleMatching</li>
+                  <li>Select a suiting       <code >FactorExtenderFactory</code> for extracting the factors from an expression and extending a given factor to a complete pattern, e.g. GlushkovPrefixExtender
+                (you may even insert your own FactorExtenderFactory, yet the available ones are very limited)</li>
+                  <li>Create the Finder</li>
+                          <div>
+      <pre><code class="java">MultiFactorRE stringSearch = new MultiFactorRE(
+    new SetBackwardOracleMatching.Factory(), 
+    new GlushkovPrefixExtender.Factory(), 
+    &quot;((AT|GA)(AG|AAA)*)&quot;, &quot;((G|C)(G|C)+)&quot;, &quot;(A(G|C|T|A){2}C+)&quot;, &quot;...&quot;);
+CharProvider text = new StringCharProvider(&quot;GCATCCCGATCGTAAAATAGAAAAGCCGCCCGCAAT&quot;, 0);
+StringFinder finder = stringSearch.createFinder(text, LONGEST_MATCH, NON_OVERLAP);</code></pre>
   </div>
                   <li>Find the next match with:</li>
                           <div>
