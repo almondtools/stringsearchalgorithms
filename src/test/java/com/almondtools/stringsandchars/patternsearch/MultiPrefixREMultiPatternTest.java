@@ -13,7 +13,7 @@ import com.almondtools.stringsandchars.search.StringFinder;
 import com.almondtools.stringsandchars.search.StringMatch;
 
 
-public class MultiFactorRETest {
+public class MultiPrefixREMultiPatternTest {
 
 	@Test
 	public void testRegexComplex1() throws Exception {
@@ -50,6 +50,15 @@ public class MultiFactorRETest {
 			new StringMatch(9, 17, "dddccccd"),
 			new StringMatch(18, 20, "aa"),
 			new StringMatch(21, 26, "bbaaa")));
+	}
+
+	@Test
+	public void testRegexComplex4() throws Exception {
+		StringFinder finder = findIn("xxxccaaxbdddccccdxaaxbbaaaxxd", "d*","ddd*c");
+		assertThat(finder.findAll(), contains(
+			new StringMatch(9, 13, "dddc"),
+			new StringMatch(16, 17, "d"),
+			new StringMatch(28, 29, "d")));
 	}
 
 	private StringFinder findIn(String in, String... pattern) {

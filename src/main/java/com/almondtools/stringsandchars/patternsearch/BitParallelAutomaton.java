@@ -4,6 +4,8 @@ import java.util.BitSet;
 
 public interface BitParallelAutomaton {
 
+	char[] supportedChars();
+	
 	BitSet getInitial();
 
 	boolean isInitial(BitSet state);

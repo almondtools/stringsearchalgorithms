@@ -2,7 +2,9 @@ package com.almondtools.stringsandchars.patternsearch;
 
 import java.util.ArrayList;
 import java.util.BitSet;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
 import com.almondtools.stringsandchars.io.CharProvider;
 import com.almondtools.stringsandchars.io.StringCharProvider;
@@ -19,7 +21,8 @@ public class GlushkovPrefixExtender implements FactorExtender {
 	private BitSet prefixInitial;
 
 	public GlushkovPrefixExtender(String pattern) {
-		GlushkovAnalyzer analyzer = parseAndNormalizeRegex(pattern);
+		RegexNode root = parseAndNormalizeRegex(pattern);
+		GlushkovAnalyzer analyzer = new GlushkovAnalyzer(root).analyze();
 		automaton = analyzer.buildAutomaton();
 		minLength = analyzer.minLength();
 	}
@@ -31,11 +34,10 @@ public class GlushkovPrefixExtender implements FactorExtender {
 		this.prefixInitial = prefixInitial;
 	}
 
-	private static GlushkovAnalyzer parseAndNormalizeRegex(String pattern) {
+	private static RegexNode parseAndNormalizeRegex(String pattern) {
 		RegexParser parser = new RegexParser(pattern);
 		RegexNode root = parser.parse();
-		root = root.accept(new GlushkovNormalizer());
-		return new GlushkovAnalyzer(root).analyze();
+		return root.accept(new GlushkovNormalizer());
 	}
 	
 	public GlushkovPrefixExtender forFactor(String prefix) {
@@ -50,7 +52,32 @@ public class GlushkovPrefixExtender implements FactorExtender {
 
 	@Override
 	public List<String> getBestFactors(int max) {
-		return new ArrayList<>(automaton.getPrefixes(max));
+		return new ArrayList<>(getPrefixes(max));
+	}
+
+	public Set<String> getPrefixes(int max) {
+		return getPrefixes(automaton.getInitial(), 1, max);
+	}
+
+	private Set<String> getPrefixes(BitSet state, int min, int max) {
+		Set<String> prefixes = new LinkedHashSet<String>();
+		if (min <= 0 && automaton.isFinal(state)) {
+			prefixes.add("");
+			return prefixes;
+		} else if (max <= 0) {
+			prefixes.add("");
+			return prefixes;
+		}
+		for (char c : automaton.supportedChars()) {
+			BitSet next = automaton.next(state, c);
+			if (!next.isEmpty()) {
+				Set<String> subPrefixes = getPrefixes(next, min - 1, max - 1);
+				for (String subPrefix : subPrefixes) {
+					prefixes.add(c + subPrefix);
+				}
+			}
+		}
+		return prefixes;
 	}
 
 	@Override

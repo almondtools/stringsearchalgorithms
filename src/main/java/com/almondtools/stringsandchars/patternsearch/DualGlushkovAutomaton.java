@@ -22,6 +22,11 @@ public class DualGlushkovAutomaton implements BitParallelAutomaton {
 		this.emittingChar = emittingChar;
 		this.reachableByState = reachableByState;
 	}
+	
+	@Override
+	public char[] supportedChars() {
+		return emittingChar.keys();
+	}
 
 	@Override
 	public BitSet getInitial() {

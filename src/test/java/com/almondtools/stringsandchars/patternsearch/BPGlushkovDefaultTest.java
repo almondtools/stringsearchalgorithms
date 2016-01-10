@@ -9,7 +9,7 @@ import com.almondtools.stringsandchars.io.StringCharProvider;
 import com.almondtools.stringsandchars.search.StringFinder;
 import com.almondtools.stringsandchars.search.StringMatch;
 
-public class BPGlushkovTest {
+public class BPGlushkovDefaultTest {
 
 	@Test
 	public void testRegexConcat() throws Exception {
