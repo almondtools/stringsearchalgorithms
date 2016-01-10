@@ -85,6 +85,26 @@ public class GlushkovAnalyzer implements RegexNodeVisitor<Void> {
 		return alphabet;
 	}
 
+	public Set<Character> firstChars() {
+		Set<Character> firstChars = new LinkedHashSet<>();
+		for (int index : first(root)) {
+			for (char c : chars[index].chars()) {
+				firstChars.add(c);
+			}
+		}
+		return firstChars;
+	}
+
+	public Set<Character> lastChars() {
+		Set<Character> lastChars = new LinkedHashSet<>();
+		for (int index : last(root)) {
+			for (char c : chars[index].chars()) {
+				lastChars.add(c);
+			}
+		}
+		return lastChars;
+	}
+
 	private void first(RegexNode node, Integer... value) {
 		first(node, new LinkedHashSet<>(asList(value)));
 	}
@@ -242,9 +262,10 @@ public class GlushkovAnalyzer implements RegexNodeVisitor<Void> {
 
 	private BitSetObjectMap<BitSet> reachableByState(CharObjectMap<BitSet> reachableByChar, GlushkovAnalyzerOption... options) {
 		BitSet defaultValue = SELF_LOOP.in(options) ? initial() : new BitSet(len);
+		BitSet start = FACTORS.in(options) ? all() : initial();
 
 		BitSetObjectMap.Builder<BitSet> reachable = new BitSetObjectMap.Builder<>(defaultValue);
-		reachableByState(initial(), reachable, reachableByChar, defaultValue);
+		reachableByState(start, reachable, reachableByChar, defaultValue);
 		return reachable.perfectMinimal();
 	}
 
@@ -271,10 +292,11 @@ public class GlushkovAnalyzer implements RegexNodeVisitor<Void> {
 	}
 
 	private BitSetObjectMap<BitSet> sourceableByState(CharObjectMap<BitSet> emittingChar, GlushkovAnalyzerOption... options) {
-		BitSet defaultValue = SELF_LOOP.in(options) ? initial() : new BitSet(len);
+		BitSet defaultValue = SELF_LOOP.in(options) ? finals() : new BitSet(len);
+		BitSet start = FACTORS.in(options) ? all() : finals();
 
 		BitSetObjectMap.Builder<BitSet> sourceable = new BitSetObjectMap.Builder<>(defaultValue);
-		List<BitSet> allFinals = powerSet(finals());
+		List<BitSet> allFinals = powerSet(start);
 		allFinals.remove(new BitSet(len));
 		for (BitSet finals : allFinals) {
 			sourceableByState(finals, len, sourceable, emittingChar, defaultValue);
