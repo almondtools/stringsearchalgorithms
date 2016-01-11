@@ -1,7 +1,10 @@
 package com.almondtools.stringsandchars.patternsearch;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
+import java.util.SortedSet;
+import java.util.TreeSet;
 
 import com.almondtools.stringsandchars.io.CharProvider;
 import com.almondtools.stringsandchars.search.StringMatch;
@@ -9,11 +12,11 @@ import com.almondtools.stringsandchars.search.StringMatch;
 public class MatchBuilder implements MatchListener {
 	
 	private boolean longest;
-	private List<StringMatch> matches;
+	private SortedSet<StringMatch> matches;
 
 	public MatchBuilder(boolean longest) {
 		this.longest = longest;
-		this.matches = new ArrayList<>();
+		this.matches = new TreeSet<>();
 	}
 
 	@Override
@@ -21,12 +24,24 @@ public class MatchBuilder implements MatchListener {
 		matches.add(new StringMatch(start, end, chars.slice(start, end)));
 	}
 	
-	public List<StringMatch> getMatches() {
+	public SortedSet<StringMatch> getMatches() {
 		if (longest && !matches.isEmpty()) {
-			return matches.subList(matches.size() -1, matches.size());
-		} else {
-			return matches;
+			List<StringMatch> toRemove = new ArrayList<>();
+			Iterator<StringMatch> matchIterator = matches.iterator();
+			StringMatch longestMatch = matchIterator.next();
+			while (matchIterator.hasNext()) {
+				StringMatch currentMatch = matchIterator.next();
+				if (currentMatch.start() > longestMatch.start()) {
+					longestMatch = currentMatch;
+				} else if (currentMatch.length() > longestMatch.length()) {
+					toRemove.add(longestMatch);
+				} else {
+					toRemove.add(currentMatch);
+				}
+			}
+			matches.removeAll(toRemove);
 		}
+		return matches;
 	}
 
 }

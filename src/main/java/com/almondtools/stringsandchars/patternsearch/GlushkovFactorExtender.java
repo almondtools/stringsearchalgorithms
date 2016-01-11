@@ -8,6 +8,7 @@ import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
+import java.util.SortedSet;
 
 import com.almondtools.stringsandchars.io.CharProvider;
 import com.almondtools.stringsandchars.io.ReverseCharProvider;
@@ -83,7 +84,7 @@ public class GlushkovFactorExtender implements FactorExtender {
 	}
 
 	@Override
-	public List<StringMatch> extendFactor(CharProvider chars, boolean longest) {
+	public SortedSet<StringMatch> extendFactor(CharProvider chars, boolean longest) {
 		long pos = chars.current();
 		List<Long> starts = findStarts(chars);
 		MatchBuilder listener = new MatchBuilder(longest);

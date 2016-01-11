@@ -291,10 +291,10 @@ public class BestFactorAnalyzer implements RegexNodeVisitor<Factors> {
 			}
 
 			public Builder(Factors prototype) {
-				all = new LinkedHashSet<>(prototype.all);
-				prefix = new LinkedHashSet<>(prototype.prefix);
-				suffix = new LinkedHashSet<>(prototype.suffix);
-				factor = new LinkedHashSet<>(prototype.factor);
+				all = prototype.all ==  null ? null : new LinkedHashSet<>(prototype.all);
+				prefix = prototype.prefix ==  null ? null : new LinkedHashSet<>(prototype.prefix);
+				suffix = prototype.suffix ==  null ? null : new LinkedHashSet<>(prototype.suffix);
+				factor = prototype.factor ==  null ? null : new LinkedHashSet<>(prototype.factor);
 			}
 
 			public void addAll(Set<String> factors) {

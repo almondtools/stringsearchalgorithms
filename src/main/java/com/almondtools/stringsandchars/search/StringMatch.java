@@ -37,6 +37,10 @@ public class StringMatch implements Comparable<StringMatch> {
 		return start == end;
 	}
 
+	public int length() {
+		return text.length();
+	}
+
 	@Override
 	public int compareTo(StringMatch o) {
 		long start = this.start - o.start;

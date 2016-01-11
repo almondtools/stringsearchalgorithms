@@ -5,6 +5,7 @@ import java.util.BitSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.SortedSet;
 
 import com.almondtools.stringsandchars.io.CharProvider;
 import com.almondtools.stringsandchars.io.StringCharProvider;
@@ -81,7 +82,7 @@ public class GlushkovPrefixExtender implements FactorExtender {
 	}
 
 	@Override
-	public List<StringMatch> extendFactor(CharProvider chars, boolean longest) {
+	public SortedSet<StringMatch> extendFactor(CharProvider chars, boolean longest) {
 		MatchBuilder listener = new MatchBuilder(longest);
 		match(prefixInitial, chars, listener);
 		return listener.getMatches();
