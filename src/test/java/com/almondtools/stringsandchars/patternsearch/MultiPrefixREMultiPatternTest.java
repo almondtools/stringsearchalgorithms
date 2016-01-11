@@ -71,6 +71,17 @@ public class MultiPrefixREMultiPatternTest {
 			new StringMatch(21, 26, "bbaaa")));
 	}
 
+	@Test
+	public void testRegexComplex6() throws Exception {
+		StringFinder finder = findIn("xxxccaaxbdddccccdxaaxbbaaaxxd", "d","d*cc");
+		assertThat(finder.findAll(), contains(
+			new StringMatch(3, 5, "cc"),
+			new StringMatch(9, 14, "dddcc"),
+			new StringMatch(14, 16, "cc"),
+			new StringMatch(16, 17, "d"),
+			new StringMatch(28, 29, "d")));
+	}
+
 	private StringFinder findIn(String in, String... pattern) {
 		MultiFactorRE algorithm = new MultiFactorRE(new AhoCorasick.Factory(), new GlushkovPrefixExtender.Factory(), pattern);
 		return algorithm.createFinder(new StringCharProvider(in, 0), LONGEST_MATCH, NON_OVERLAP);

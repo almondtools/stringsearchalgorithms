@@ -7,13 +7,13 @@ import static java.util.Arrays.asList;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.PriorityQueue;
-import java.util.Queue;
+import java.util.Set;
 
 import com.almondtools.stringsandchars.io.CharProvider;
-import com.almondtools.stringsandchars.search.AbstractStringFinder;
+import com.almondtools.stringsandchars.search.BufferedStringFinder;
 import com.almondtools.stringsandchars.search.MatchOption;
 import com.almondtools.stringsandchars.search.MultiStringSearchAlgorithmFactory;
 import com.almondtools.stringsandchars.search.StringFinder;
@@ -60,7 +60,7 @@ public class MultiFactorRE implements StringSearchAlgorithm {
 	public MultiFactorRE(MultiStringSearchAlgorithmFactory factorSearcher, FactorExtenderFactory factorExtender, int length, Collection<String> patterns) {
 		Map<String, FactorExtender> matchers = computeMatchers(patterns, factorExtender);
 		this.minLength = computeMinLength(matchers, length);
-		this.extenders = computePrefixes(matchers, minLength);
+		this.extenders = computeExtenders(matchers, minLength);
 		this.searchAlgorithm = factorSearcher.of(extenders.keySet());
 	}
 
@@ -80,20 +80,40 @@ public class MultiFactorRE implements StringSearchAlgorithm {
 		return max(max(length, MIN_LENGTH), minLength);
 	}
 
-	private static Map<String, List<FactorExtender>> computePrefixes(Map<String, FactorExtender> matchers, int length) {
-		Map<String, List<FactorExtender>> prefixes = new LinkedHashMap<>();
-		for (FactorExtender matcher : matchers.values()) {
-			List<String> newprefixes = matcher.getBestFactors(length);
-			for (String newprefix : newprefixes) {
-				List<FactorExtender> matchersByPrefix = prefixes.get(newprefix);
+	private static Map<String, List<FactorExtender>> computeExtenders(Map<String, FactorExtender> matchers, int length) {
+		Collection<FactorExtender> allMatchers = matchers.values();
+		Map<String, List<FactorExtender>> factors = new LinkedHashMap<>();
+		for (FactorExtender matcher : allMatchers) {
+			List<String> newFactors = matcher.getBestFactors(length);
+			for (String newFactor : newFactors) {
+				List<FactorExtender> matchersByPrefix = factors.get(newFactor);
 				if (matchersByPrefix == null) {
 					matchersByPrefix = new ArrayList<>();
-					prefixes.put(newprefix, matchersByPrefix);
+					factors.put(newFactor, matchersByPrefix);
 				}
-				matchersByPrefix.add(matcher.forFactor(newprefix));
+				matchersByPrefix.add(matcher.forFactor(newFactor));
 			}
 		}
-		return prefixes;
+		for (FactorExtender matcher : allMatchers) {
+			String pattern = matcher.getPattern();
+			for (Map.Entry<String,List<FactorExtender>> factorEntry : factors.entrySet()) {
+				String factor = factorEntry.getKey();
+				List<FactorExtender> extenders = factorEntry.getValue();
+				Set<String> patterns = getPatterns(extenders);
+				if (!patterns.contains(pattern) && matcher.hasFactor(factor))  {
+					extenders.add(matcher.forFactor(factor));
+				}
+			}
+		}
+		return factors;
+	}
+
+	private static Set<String> getPatterns(List<FactorExtender> extenders) {
+		Set<String> patterns = new LinkedHashSet<>();
+		for (FactorExtender extender : extenders) {
+			patterns.add(extender.getPattern());
+		}
+		return patterns;
 	}
 
 	@Override
@@ -106,12 +126,11 @@ public class MultiFactorRE implements StringSearchAlgorithm {
 		return minLength;
 	}
 
-	private class Finder extends AbstractStringFinder {
+	private class Finder extends BufferedStringFinder {
 
 		private StringFinder searchFactors;
 		private boolean longest;
 		private CharProvider chars;
-		private Queue<StringMatch> buffer;
 		private long last;
 
 		public Finder(CharProvider chars, StringFinderOption... options) {
@@ -119,13 +138,12 @@ public class MultiFactorRE implements StringSearchAlgorithm {
 			this.searchFactors = searchAlgorithm.createFinder(chars, options);
 			this.longest = MatchOption.LONGEST_MATCH.in(options);
 			this.chars = chars;
-			this.buffer = new PriorityQueue<StringMatch>();
 			this.last = 0;
 		}
 
 		@Override
 		public void skipTo(long pos) {
-			long last = removeMatchesBefore(buffer, pos);
+			last = removeMatchesBefore(pos);
 			searchFactors.skipTo(last);
 		}
 
@@ -133,7 +151,7 @@ public class MultiFactorRE implements StringSearchAlgorithm {
 		public StringMatch findNext() {
 			long firstStart = last;
 			long currentStart = last;
-			while (!chars.finished() && (buffer.isEmpty() || currentStart == firstStart)) {
+			while (!chars.finished() && (isBufferEmpty() || currentStart == firstStart)) {
 				StringMatch match = searchFactors.findNext();
 				if (match == null) {
 					break;
@@ -146,15 +164,19 @@ public class MultiFactorRE implements StringSearchAlgorithm {
 				
 				List<FactorExtender> matchers = extenders.get(match.text());
 				for (FactorExtender matcher : matchers) {
-					buffer.addAll(matcher.extendFactor(chars, longest));
+					for (StringMatch extendedMatch : matcher.extendFactor(chars, longest)) {
+						if (extendedMatch.start() >= last) {
+							push(extendedMatch);
+						}
+					}
 				}
 			}
 			last = currentStart;
-			if (!buffer.isEmpty()) {
+			if (!isBufferEmpty()) {
 				if (longest) {
-					return longestLeftMost(buffer);
+					return longestLeftMost();
 				} else {
-					return buffer.remove();
+					return leftMost();
 				}
 			}
 			return null;

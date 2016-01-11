@@ -9,14 +9,12 @@ import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.Iterator;
 import java.util.List;
-import java.util.PriorityQueue;
-import java.util.Queue;
 
 import com.almondtools.stringsandchars.io.CharProvider;
 import com.almondtools.stringsandchars.io.ReverseCharProvider;
 import com.almondtools.stringsandchars.regex.RegexNode;
 import com.almondtools.stringsandchars.regex.RegexParser;
-import com.almondtools.stringsandchars.search.AbstractStringFinder;
+import com.almondtools.stringsandchars.search.BufferedStringFinder;
 import com.almondtools.stringsandchars.search.MatchOption;
 import com.almondtools.stringsandchars.search.StringFinder;
 import com.almondtools.stringsandchars.search.StringFinderOption;
@@ -63,7 +61,7 @@ public class BPGlushkov implements StringSearchAlgorithm {
 		return minLength;
 	}
 
-	private class Finder extends AbstractStringFinder {
+	private class Finder extends BufferedStringFinder {
 
 		private boolean longestMatch;
 		private boolean nonEmpty;
@@ -71,7 +69,6 @@ public class BPGlushkov implements StringSearchAlgorithm {
 		private CharProvider reverse;
 		private long border;
 		private BitSet state;
-		private Queue<StringMatch> buffer;
 
 		public Finder(CharProvider chars, StringFinderOption... options) {
 			super(options);
@@ -81,43 +78,42 @@ public class BPGlushkov implements StringSearchAlgorithm {
 			this.reverse = new ReverseCharProvider(chars);
 			this.border = -1;
 			this.state = search.getInitial();
-			this.buffer = new PriorityQueue<StringMatch>();
 		}
 
 		@Override
 		public void skipTo(long pos) {
-			long last = removeMatchesBefore(buffer, pos);
+			long last = removeMatchesBefore(pos);
 			border = last;
 			chars.move(last);
 		}
 
 		@Override
 		public StringMatch findNext() {
-			if (chars.finished() && border >= chars.current() && buffer.isEmpty()) {
+			if (chars.finished() && border >= chars.current() && isBufferEmpty()) {
 				return null;
 			}
-			if (buffer.isEmpty()) {
+			if (isBufferEmpty()) {
 				while (!chars.finished()) {
 					if (search.isFinal(state)) {
-						buffer.addAll(createMatches(chars.current(), state));
+						push(createMatches(chars.current(), state));
 					}
 					char c = chars.next();
 					state = search.next(state, c);
-					if (search.isInitial(state) && !buffer.isEmpty()) {
+					if (search.isInitial(state) && !isBufferEmpty()) {
 						break;
 					}
 				}
 				if (chars.finished() && search.isFinal(state)) {
-					buffer.addAll(createMatches(chars.current(), state));
+					push(createMatches(chars.current(), state));
 					border = chars.current();
 				}
 			}
-			if (buffer.isEmpty()) {
+			if (isBufferEmpty()) {
 				return null;
 			} else if (!longestMatch) {
-				return buffer.remove();
+				return leftMost();
 			} else {
-				return longestLeftMost(buffer);
+				return longestLeftMost();
 			}
 		}
 

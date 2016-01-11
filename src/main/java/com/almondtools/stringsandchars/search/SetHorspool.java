@@ -9,10 +9,7 @@ import static com.almondtools.util.text.StringUtils.toCharArray;
 import static java.lang.Math.min;
 
 import java.util.Collection;
-import java.util.Iterator;
 import java.util.List;
-import java.util.PriorityQueue;
-import java.util.Queue;
 
 import com.almondtools.stringsandchars.io.CharProvider;
 import com.almondtools.util.map.CharIntMap;
@@ -81,8 +78,8 @@ public class SetHorspool implements StringSearchAlgorithm {
 
 		@Override
 		public StringMatch findNext() {
-			if (!buffer.isEmpty()) {
-				return buffer.remove();
+			if (!isBufferEmpty()) {
+				return leftMost();
 			}
 			int lookahead = minLength - 1;
 			while (!chars.finished(lookahead)) {
@@ -93,7 +90,7 @@ public class SetHorspool implements StringSearchAlgorithm {
 				while (node != null) {
 					String match = node.getMatch();
 					if (match != null) {
-						buffer.add(createMatch(patternPointer, match));
+						push(createMatch(patternPointer, match));
 					}
 					patternPointer--;
 					if (pos + patternPointer < 0) {
@@ -102,8 +99,8 @@ public class SetHorspool implements StringSearchAlgorithm {
 					node = node.nextNode(chars.lookahead(patternPointer));
 				}
 				chars.forward(charShift.getShift(current));
-				if (!buffer.isEmpty()) {
-					return buffer.remove();
+				if (!isBufferEmpty()) {
+					return leftMost();
 				}
 			}
 			return null;
@@ -111,29 +108,18 @@ public class SetHorspool implements StringSearchAlgorithm {
 
 	}
 
-	private abstract class Finder extends AbstractStringFinder {
+	private abstract class Finder extends BufferedStringFinder {
 
 		protected CharProvider chars;
-		protected Queue<StringMatch> buffer;
 
 		public Finder(CharProvider chars, StringFinderOption... options) {
 			super(options);
 			this.chars = chars;
-			this.buffer = new PriorityQueue<>();
 		}
 
 		@Override
 		public void skipTo(long pos) {
-			long last = pos;
-			Iterator<StringMatch> bufferIterator = buffer.iterator();
-			while (bufferIterator.hasNext()) {
-				StringMatch next = bufferIterator.next();
-				if (next.start() < pos) {
-					bufferIterator.remove();
-				} else if (next.end() > last) {
-					last = next.end();
-				}
-			}
+			long last = removeMatchesBefore(pos);
 			chars.move(last);
 		}
 
@@ -166,7 +152,7 @@ public class SetHorspool implements StringSearchAlgorithm {
 						if (lastStart < 0) {
 							lastStart = stringMatch.start();
 						}
-						buffer.add(stringMatch);
+						push(stringMatch);
 					}
 					patternPointer--;
 					if (pos + patternPointer < 0) {
@@ -179,28 +165,12 @@ public class SetHorspool implements StringSearchAlgorithm {
 					break;
 				}
 			}
-			return longestLeftMost(buffer);
+			return longestLeftMost();
 		}
 
 		public boolean bufferContainsLongestMatch(long lastStart) {
-			return !buffer.isEmpty()
+			return !isBufferEmpty()
 				&& chars.current() - lastStart - 1 > maxLength - minLength;
-		}
-
-		private long lastStartFromBuffer() {
-			long start = Long.MAX_VALUE;
-			Iterator<StringMatch> bufferIterator = buffer.iterator();
-			while (bufferIterator.hasNext()) {
-				StringMatch next = bufferIterator.next();
-				if (next.start() < start) {
-					start = next.start();
-				}
-			}
-			if (start == Long.MAX_VALUE) {
-				return -1;
-			} else {
-				return start;
-			}
 		}
 
 	}

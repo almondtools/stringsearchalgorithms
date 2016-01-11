@@ -11,10 +11,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
-import java.util.PriorityQueue;
-import java.util.Queue;
 import java.util.Set;
 
 import com.almondtools.stringsandchars.io.CharProvider;
@@ -146,20 +143,18 @@ public class WuManber implements StringSearchAlgorithm {
 		return minLength;
 	}
 
-	private abstract class Finder extends AbstractStringFinder {
+	private abstract class Finder extends BufferedStringFinder {
 
 		protected CharProvider chars;
-		protected Queue<StringMatch> buffer;
 
 		public Finder(CharProvider chars, StringFinderOption... options) {
 			super(options);
 			this.chars = chars;
-			this.buffer = new PriorityQueue<>();
 		}
 
 		@Override
 		public void skipTo(long pos) {
-			long last = removeMatchesBefore(buffer, pos);
+			long last = removeMatchesBefore(pos);
 			chars.move(last);
 		}
 
@@ -179,8 +174,8 @@ public class WuManber implements StringSearchAlgorithm {
 
 		@Override
 		public StringMatch findNext() {
-			if (!buffer.isEmpty()) {
-				return buffer.remove();
+			if (!isBufferEmpty()) {
+				return leftMost();
 			}
 			int lookahead = minLength - 1;
 			while (!chars.finished(lookahead)) {
@@ -197,7 +192,7 @@ public class WuManber implements StringSearchAlgorithm {
 						while (node != null) {
 							String match = node.getMatch();
 							if (match != null) {
-								buffer.add(createMatch(patternPointer, match));
+								push(createMatch(patternPointer, match));
 							}
 							patternPointer--;
 							if (pos + patternPointer < 0) {
@@ -207,8 +202,8 @@ public class WuManber implements StringSearchAlgorithm {
 						}
 					}
 					chars.next();
-					if (!buffer.isEmpty()) {
-						return buffer.remove();
+					if (!isBufferEmpty()) {
+						return leftMost();
 					}
 				} else {
 					chars.forward(shiftBy);
@@ -247,7 +242,7 @@ public class WuManber implements StringSearchAlgorithm {
 								if (lastStart < 0) {
 									lastStart = stringMatch.start();
 								}
-								buffer.add(stringMatch);
+								push(stringMatch);
 							}
 							patternPointer--;
 							if (pos + patternPointer < 0) {
@@ -264,28 +259,12 @@ public class WuManber implements StringSearchAlgorithm {
 					chars.forward(shiftBy);
 				}
 			}
-			return longestLeftMost(buffer);
+			return longestLeftMost();
 		}
 
 		public boolean bufferContainsLongestMatch(long lastStart) {
-			return !buffer.isEmpty()
+			return !isBufferEmpty()
 				&& chars.current() - lastStart - 1 > maxLength - minLength;
-		}
-
-		private long lastStartFromBuffer() {
-			long start = Long.MAX_VALUE;
-			Iterator<StringMatch> bufferIterator = buffer.iterator();
-			while (bufferIterator.hasNext()) {
-				StringMatch next = bufferIterator.next();
-				if (next.start() < start) {
-					start = next.start();
-				}
-			}
-			if (start == Long.MAX_VALUE) {
-				return -1;
-			} else {
-				return start;
-			}
 		}
 
 	}

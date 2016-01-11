@@ -8,6 +8,8 @@ import com.almondtools.stringsandchars.search.StringMatch;
 
 public interface FactorExtender {
 
+	String getPattern();
+
 	int getPatternLength();
 
 	List<String> getBestFactors(int max);
@@ -15,5 +17,7 @@ public interface FactorExtender {
 	SortedSet<StringMatch> extendFactor(CharProvider chars, boolean longest);
 
 	FactorExtender forFactor(String factor);
+
+	boolean hasFactor(String factor);
 
 }

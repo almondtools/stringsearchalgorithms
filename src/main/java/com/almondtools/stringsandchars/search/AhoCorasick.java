@@ -9,7 +9,6 @@ import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.PriorityQueue;
 import java.util.Queue;
 
 import com.almondtools.stringsandchars.io.CharProvider;
@@ -85,23 +84,21 @@ public class AhoCorasick implements StringSearchAlgorithm {
 		}
 	}
 
-	private abstract class Finder extends AbstractStringFinder {
+	private abstract class Finder extends BufferedStringFinder {
 		protected CharProvider chars;
 		protected TrieNode<Void> current;
-		protected Queue<StringMatch> buffer;
 
 		public Finder(CharProvider chars, StringFinderOption... options) {
 			super(options);
 			this.chars = chars;
 			this.current = trie;
-			this.buffer = new PriorityQueue<>();
 		}
 
 		@Override
 		public void skipTo(long pos) {
 			chars.move(pos);
 			current = trie;
-			buffer.clear();
+			clear();
 		}
 
 		protected List<StringMatch> createMatches(TrieNode<Void> current, long end) {
@@ -134,8 +131,8 @@ public class AhoCorasick implements StringSearchAlgorithm {
 
 		@Override
 		public StringMatch findNext() {
-			if (!buffer.isEmpty()) {
-				return buffer.remove();
+			if (!isBufferEmpty()) {
+				return leftMost();
 			}
 			while (!chars.finished()) {
 				char c = chars.next();
@@ -154,8 +151,8 @@ public class AhoCorasick implements StringSearchAlgorithm {
 					current = trie;
 				}
 				if (current.getMatch() != null) {
-					buffer.addAll(createMatches(current, chars.current()));
-					return buffer.remove();
+					push(createMatches(current, chars.current()));
+					return leftMost();
 				}
 			}
 			return null;
@@ -173,7 +170,7 @@ public class AhoCorasick implements StringSearchAlgorithm {
 			while (!chars.finished()) {
 				char c = chars.next();
 				TrieNode<Void> next = current.nextNode(c);
-				if (next == null && !buffer.isEmpty()) {
+				if (next == null && !isBufferEmpty()) {
 					chars.prev();
 					break;
 				}
@@ -191,10 +188,10 @@ public class AhoCorasick implements StringSearchAlgorithm {
 					current = trie;
 				}
 				if (current.getMatch() != null) {
-					buffer.addAll(createMatches(current, chars.current()));
+					push(createMatches(current, chars.current()));
 				}
 			}
-			return longestLeftMost(buffer);
+			return longestLeftMost();
 		}
 
 	}

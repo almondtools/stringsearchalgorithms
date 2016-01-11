@@ -19,6 +19,7 @@ import com.almondtools.stringsandchars.search.StringMatch;
 
 public class GlushkovFactorExtender implements FactorExtender {
 
+	private String pattern;
 	private Set<String> bestFactors;
 	private DualGlushkovAutomaton factors;
 	private GlushkovAutomaton automaton;
@@ -31,14 +32,15 @@ public class GlushkovFactorExtender implements FactorExtender {
 		RegexNode root = parseAndNormalizeRegex(pattern);
 		BestFactorAnalyzer bestFactorAnalyzer = new BestFactorAnalyzer(root).analyze();
 		GlushkovAnalyzer analyzer = new GlushkovAnalyzer(root).analyze();
-
-		bestFactors = bestFactorAnalyzer.getBestFactors(asStrings(analyzer.firstChars()), asStrings(analyzer.lastChars()));
-		factors = analyzer.buildReverseAutomaton(FACTORS);
-		automaton = analyzer.buildAutomaton();
-		minLength = analyzer.minLength();
+		this.pattern = pattern;
+		this.bestFactors = bestFactorAnalyzer.getBestFactors(asStrings(analyzer.firstChars()), asStrings(analyzer.lastChars()));
+		this.factors = analyzer.buildReverseAutomaton(FACTORS);
+		this.automaton = analyzer.buildAutomaton();
+		this.minLength = analyzer.minLength();
 	}
 
-	private GlushkovFactorExtender(DualGlushkovAutomaton factors, GlushkovAutomaton automaton, int minLength, int factorLength, BitSet factorInitial) {
+	private GlushkovFactorExtender(String pattern, DualGlushkovAutomaton factors, GlushkovAutomaton automaton, int minLength, int factorLength, BitSet factorInitial) {
+		this.pattern = pattern;
 		this.factors = factors;
 		this.automaton = automaton;
 		this.minLength = minLength;
@@ -54,7 +56,7 @@ public class GlushkovFactorExtender implements FactorExtender {
 
 	public GlushkovFactorExtender forFactor(String factor) {
 		BitSet factorInitial = backTrack(factors.getInitial(), factor);
-		return new GlushkovFactorExtender(factors, automaton, minLength, factor.length(), factorInitial);
+		return new GlushkovFactorExtender(pattern, factors, automaton, minLength, factor.length(), factorInitial);
 	}
 
 	private Set<String> asStrings(Set<Character> chars) {
@@ -63,6 +65,11 @@ public class GlushkovFactorExtender implements FactorExtender {
 			strings.add(c.toString());
 		}
 		return strings;
+	}
+
+	@Override
+	public String getPattern() {
+		return pattern;
 	}
 
 	@Override
@@ -82,6 +89,12 @@ public class GlushkovFactorExtender implements FactorExtender {
 		}
 		return new ArrayList<>(bestFactorsMax);
 	}
+
+	@Override
+	public boolean hasFactor(String factor) {
+		BitSet factorInitial = backTrack(factors.getInitial(), factor);
+		return !factorInitial.isEmpty();
+	};
 
 	@Override
 	public SortedSet<StringMatch> extendFactor(CharProvider chars, boolean longest) {

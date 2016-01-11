@@ -15,35 +15,43 @@ import com.almondtools.stringsandchars.search.StringMatch;
 
 public class GlushkovPrefixExtender implements FactorExtender {
 
+	private String pattern;
 	private GlushkovAutomaton automaton;
 	private int minLength;
-	
+
 	private int prefixLength;
 	private BitSet prefixInitial;
 
 	public GlushkovPrefixExtender(String pattern) {
 		RegexNode root = parseAndNormalizeRegex(pattern);
 		GlushkovAnalyzer analyzer = new GlushkovAnalyzer(root).analyze();
-		automaton = analyzer.buildAutomaton();
-		minLength = analyzer.minLength();
+		this.pattern = pattern;
+		this.automaton = analyzer.buildAutomaton();
+		this.minLength = analyzer.minLength();
 	}
 
-	private GlushkovPrefixExtender(GlushkovAutomaton automaton, int minLength, int prefixLength, BitSet prefixInitial) {
+	private GlushkovPrefixExtender(String pattern, GlushkovAutomaton automaton, int minLength, int prefixLength, BitSet prefixInitial) {
+		this.pattern = pattern;
 		this.automaton = automaton;
 		this.minLength = minLength;
 		this.prefixLength = prefixLength;
 		this.prefixInitial = prefixInitial;
 	}
-
+	
 	private static RegexNode parseAndNormalizeRegex(String pattern) {
 		RegexParser parser = new RegexParser(pattern);
 		RegexNode root = parser.parse();
 		return root.accept(new GlushkovNormalizer());
 	}
-	
+
 	public GlushkovPrefixExtender forFactor(String prefix) {
 		BitSet prefixInitial = match(automaton.getInitial(), new StringCharProvider(prefix, 0));
-		return new GlushkovPrefixExtender(automaton, minLength, prefix.length(), prefixInitial);
+		return new GlushkovPrefixExtender(pattern, automaton, minLength, prefix.length(), prefixInitial);
+	}
+	
+	@Override
+	public String getPattern() {
+		return pattern;
 	}
 
 	@Override
@@ -54,6 +62,11 @@ public class GlushkovPrefixExtender implements FactorExtender {
 	@Override
 	public List<String> getBestFactors(int max) {
 		return new ArrayList<>(getPrefixes(max));
+	}
+
+	@Override
+	public boolean hasFactor(String factor) {
+		return getPrefixes(factor.length()).contains(factor);
 	}
 
 	public Set<String> getPrefixes(int max) {
@@ -89,7 +102,7 @@ public class GlushkovPrefixExtender implements FactorExtender {
 	}
 
 	private BitSet match(BitSet state, CharProvider chars, MatchListener... listeners) {
-		boolean notify = listeners != null && listeners.length > 0; 
+		boolean notify = listeners != null && listeners.length > 0;
 		long pos = chars.current();
 		long start = pos - this.prefixLength;
 		while (!chars.finished() && !state.isEmpty()) {
@@ -118,6 +131,6 @@ public class GlushkovPrefixExtender implements FactorExtender {
 		public FactorExtender of(String pattern) {
 			return new GlushkovPrefixExtender(pattern);
 		}
-		
+
 	}
 }
