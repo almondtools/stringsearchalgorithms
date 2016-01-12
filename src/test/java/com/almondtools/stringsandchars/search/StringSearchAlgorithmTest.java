@@ -12,13 +12,18 @@ import java.util.List;
 import org.junit.Rule;
 import org.junit.Test;
 
-import com.almondtools.stringsandchars.io.StringCharProvider;
 import com.almondtools.stringsandchars.search.StringSearchRule.SearchFor;
 
 public class StringSearchAlgorithmTest {
 
 	@Rule
-	public StringSearchRule searcher = new StringSearchRule();
+	public StringSearchRule searcher = new StringSearchRule(
+		new ShiftAnd.Factory(),
+		new KnuthMorrisPratt.Factory(),
+		new Horspool.Factory(),
+		new Sunday.Factory(),
+		new BNDM.Factory(),
+		new BOM.Factory());
 
 	@Test
 	@SearchFor("x")
@@ -29,7 +34,7 @@ public class StringSearchAlgorithmTest {
 	@Test
 	@SearchFor("a")
 	public void testPattern1() throws Exception {
-		List<StringMatch> matches = searcher.createSearcher(chars("abababab")).findAll();
+		List<StringMatch> matches = searcher.createSearcher("abababab").findAll();
 		assertThat(matches, contains(
 			new StringMatch(0, 1, "a"),
 			new StringMatch(2, 3, "a"),
@@ -40,7 +45,7 @@ public class StringSearchAlgorithmTest {
 	@Test
 	@SearchFor("abc")
 	public void testPattern2() throws Exception {
-		List<StringMatch> matches = searcher.createSearcher(chars("abcababcab")).findAll();
+		List<StringMatch> matches = searcher.createSearcher("abcababcab").findAll();
 		assertThat(matches, contains(
 			new StringMatch(0, 3, "abc"),
 			new StringMatch(5, 8, "abc")));
@@ -49,7 +54,7 @@ public class StringSearchAlgorithmTest {
 	@Test
 	@SearchFor("abcabd")
 	public void testPattern3() throws Exception {
-		List<StringMatch> matches = searcher.createSearcher(chars("abcabcabcabdabcabcabd")).findAll();
+		List<StringMatch> matches = searcher.createSearcher("abcabcabcabdabcabcabd").findAll();
 		assertThat(matches, contains(
 			new StringMatch(6, 12, "abcabd"),
 			new StringMatch(15, 21, "abcabd")));
@@ -58,7 +63,7 @@ public class StringSearchAlgorithmTest {
 	@Test
 	@SearchFor("abcab")
 	public void testPattern4() throws Exception {
-		List<StringMatch> matches = searcher.createSearcher(chars("xxxabcabcabcxxx")).findAll();
+		List<StringMatch> matches = searcher.createSearcher("xxxabcabcabcxxx").findAll();
 		assertThat(matches, contains(
 			new StringMatch(3, 8, "abcab"),
 			new StringMatch(6, 11, "abcab")));
@@ -67,7 +72,7 @@ public class StringSearchAlgorithmTest {
 	@Test
 	@SearchFor("abcab")
 	public void testPattern5() throws Exception {
-		List<StringMatch> matches = searcher.createSearcher(chars("xxxabcabcabcabxxx")).findAll();
+		List<StringMatch> matches = searcher.createSearcher("xxxabcabcabcabxxx").findAll();
 		assertThat(matches, contains(
 			new StringMatch(3, 8, "abcab"),
 			new StringMatch(6, 11, "abcab"),
@@ -77,7 +82,7 @@ public class StringSearchAlgorithmTest {
 	@Test
 	@SearchFor("ab")
 	public void testPattern6() throws Exception {
-		List<StringMatch> matches = searcher.createSearcher(chars("xxxaaaababaaxxx")).findAll();
+		List<StringMatch> matches = searcher.createSearcher("xxxaaaababaaxxx").findAll();
 		assertThat(matches, contains(
 			new StringMatch(6, 8, "ab"),
 			new StringMatch(8, 10, "ab")));
@@ -86,7 +91,7 @@ public class StringSearchAlgorithmTest {
 	@Test
 	@SearchFor("a\u0262ba")
 	public void testPatternLargeAlphabet() throws Exception {
-		List<StringMatch> matches = searcher.createSearcher(chars("xxxaaaa\u0262ba\u0262baaxxx")).findAll();
+		List<StringMatch> matches = searcher.createSearcher("xxxaaaa\u0262ba\u0262baaxxx").findAll();
 		assertThat(matches, contains(
 			new StringMatch(6, 10, "a\u0262ba"),
 			new StringMatch(9, 13, "a\u0262ba")));
@@ -95,7 +100,7 @@ public class StringSearchAlgorithmTest {
 	@Test
 	@SearchFor("aaaa aaaa bbbb bbbb aaaa aaaa bbbb bbbb aaaa aaaa bbbb bbbb aaaa aaaa bbbb bbbb")
 	public void testPatternLargeSize() throws Exception {
-		List<StringMatch> matches = searcher.createSearcher(chars("xxx aaaa aaaa bbbb bbbb aaaa aaaa bbbb bbbb aaaa aaaa bbbb bbbb aaaa aaaa bbbb bbbb xxx")).findAll();
+		List<StringMatch> matches = searcher.createSearcher("xxx aaaa aaaa bbbb bbbb aaaa aaaa bbbb bbbb aaaa aaaa bbbb bbbb aaaa aaaa bbbb bbbb xxx").findAll();
 		assertThat(matches, contains(
 			new StringMatch(4, 83, "aaaa aaaa bbbb bbbb aaaa aaaa bbbb bbbb aaaa aaaa bbbb bbbb aaaa aaaa bbbb bbbb")));
 	}
@@ -103,7 +108,7 @@ public class StringSearchAlgorithmTest {
 	@Test
 	@SearchFor("axxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\u0262xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxb")
 	public void testPatternLargeSizeAndAlphabet() throws Exception {
-		List<StringMatch> matches = searcher.createSearcher(chars("xxx axxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\u0262xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxb xxx")).findAll();
+		List<StringMatch> matches = searcher.createSearcher("xxx axxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\u0262xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxb xxx").findAll();
 		assertThat(matches, contains(
 			new StringMatch(4, 83, "axxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\u0262xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxb")));
 	}
@@ -111,7 +116,7 @@ public class StringSearchAlgorithmTest {
 	@Test
 	@SearchFor("a")
 	public void testNonOverlappingPattern1() throws Exception {
-		List<StringMatch> matches = searcher.createSearcher(chars("abababab"), LONGEST_MATCH, NON_OVERLAP).findAll();
+		List<StringMatch> matches = searcher.createSearcher("abababab", LONGEST_MATCH, NON_OVERLAP).findAll();
 		assertThat(matches, contains(
 			new StringMatch(0, 1, "a"),
 			new StringMatch(2, 3, "a"),
@@ -122,7 +127,7 @@ public class StringSearchAlgorithmTest {
 	@Test
 	@SearchFor("abc")
 	public void testNonOverlappingPattern2() throws Exception {
-		List<StringMatch> matches = searcher.createSearcher(chars("abcababcab"), LONGEST_MATCH, NON_OVERLAP).findAll();
+		List<StringMatch> matches = searcher.createSearcher("abcababcab", LONGEST_MATCH, NON_OVERLAP).findAll();
 		assertThat(matches, contains(
 			new StringMatch(0, 3, "abc"),
 			new StringMatch(5, 8, "abc")));
@@ -131,7 +136,7 @@ public class StringSearchAlgorithmTest {
 	@Test
 	@SearchFor("abcabd")
 	public void testNonOverlappingPattern3() throws Exception {
-		List<StringMatch> matches = searcher.createSearcher(chars("abcabcabcabdabcabcabd"), LONGEST_MATCH, NON_OVERLAP).findAll();
+		List<StringMatch> matches = searcher.createSearcher("abcabcabcabdabcabcabd", LONGEST_MATCH, NON_OVERLAP).findAll();
 		assertThat(matches, contains(
 			new StringMatch(6, 12, "abcabd"),
 			new StringMatch(15, 21, "abcabd")));
@@ -140,7 +145,7 @@ public class StringSearchAlgorithmTest {
 	@Test
 	@SearchFor("abcab")
 	public void testNonOverlappingPattern4() throws Exception {
-		List<StringMatch> matches = searcher.createSearcher(chars("xxxabcabcabcxxx"), LONGEST_MATCH, NON_OVERLAP).findAll();
+		List<StringMatch> matches = searcher.createSearcher("xxxabcabcabcxxx", LONGEST_MATCH, NON_OVERLAP).findAll();
 		assertThat(matches, contains(
 			new StringMatch(3, 8, "abcab")));
 	}
@@ -148,7 +153,7 @@ public class StringSearchAlgorithmTest {
 	@Test
 	@SearchFor("abcab")
 	public void testNonOverlappingPattern5() throws Exception {
-		List<StringMatch> matches = searcher.createSearcher(chars("xxxabcabcabcabxxx"), LONGEST_MATCH, NON_OVERLAP).findAll();
+		List<StringMatch> matches = searcher.createSearcher("xxxabcabcabcabxxx", LONGEST_MATCH, NON_OVERLAP).findAll();
 		assertThat(matches, contains(
 			new StringMatch(3, 8, "abcab"),
 			new StringMatch(9, 14, "abcab")));
@@ -157,7 +162,7 @@ public class StringSearchAlgorithmTest {
 	@Test
 	@SearchFor("ab")
 	public void testNonOverlappingPattern6() throws Exception {
-		List<StringMatch> matches = searcher.createSearcher(chars("xxxaaaababaaxxx"), LONGEST_MATCH, NON_OVERLAP).findAll();
+		List<StringMatch> matches = searcher.createSearcher("xxxaaaababaaxxx", LONGEST_MATCH, NON_OVERLAP).findAll();
 		assertThat(matches, contains(
 			new StringMatch(6, 8, "ab"),
 			new StringMatch(8, 10, "ab")));
@@ -179,10 +184,6 @@ public class StringSearchAlgorithmTest {
 	@SearchFor("abcab")
 	public void testPatternLength5() throws Exception {
 		assertThat(searcher.getAlgorithm().getPatternLength(), equalTo(5));
-	}
-	
-	private StringCharProvider chars(String input) {
-		return new StringCharProvider(input,0);
 	}
 
 }

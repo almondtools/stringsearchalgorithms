@@ -1,4 +1,4 @@
-package com.almondtools.stringsandchars.search;
+package com.almondtools.stringsandchars.patternsearch;
 
 import static java.util.Arrays.asList;
 
@@ -17,20 +17,24 @@ import org.junit.runners.model.Statement;
 
 import com.almondtools.stringsandchars.io.CharProvider;
 import com.almondtools.stringsandchars.io.StringCharProvider;
+import com.almondtools.stringsandchars.search.MultiStringSearchAlgorithmFactory;
+import com.almondtools.stringsandchars.search.StringFinder;
+import com.almondtools.stringsandchars.search.StringFinderOption;
+import com.almondtools.stringsandchars.search.StringSearchAlgorithm;
 
-public class StringSearchRule implements TestRule {
+public class MultiPatternSearchRule implements TestRule {
 
 	private StringSearchAlgorithm algorithm;
-	private List<StringSearchAlgorithmFactory> algorithmFactories;
-
-	public StringSearchRule(StringSearchAlgorithmFactory... algorithmFactories) {
+	private List<MultiStringSearchAlgorithmFactory> algorithmFactories;
+	
+	public MultiPatternSearchRule(MultiStringSearchAlgorithmFactory... algorithmFactories) {
 		this.algorithmFactories = asList(algorithmFactories);
 	}
-
-	private List<StringSearchAlgorithm> getAlgorithms(String pattern) {
+	
+	private List<StringSearchAlgorithm> getAlgorithms(String[] patterns) {
 		List<StringSearchAlgorithm> algorithms = new ArrayList<>();
-		for (StringSearchAlgorithmFactory algorithmFactory : algorithmFactories) {
-			algorithms.add(algorithmFactory.of(pattern));
+		for (MultiStringSearchAlgorithmFactory algorithmFactory : algorithmFactories) {
+			algorithms.add(algorithmFactory.of(asList(patterns)));
 		}
 		return algorithms;
 	}
@@ -41,15 +45,15 @@ public class StringSearchRule implements TestRule {
 			@Override
 			public void evaluate() throws Throwable {
 				SearchFor searchFor = description.getAnnotation(SearchFor.class);
-				if (searchFor == null) {
+				if (searchFor == null)  {
 					throw new AssertionError();
 				}
-				String pattern = searchFor.value();
-				List<StringSearchAlgorithm> algorithms = getAlgorithms(pattern);
+				String[] patterns = searchFor.value();
+				List<StringSearchAlgorithm> algorithms = getAlgorithms(patterns);
 				Map<StringSearchAlgorithm, String> failures = new IdentityHashMap<StringSearchAlgorithm, String>();
 				StackTraceElement[] stackTrace = null;
 				for (StringSearchAlgorithm algorithm : algorithms) {
-					StringSearchRule.this.algorithm = algorithm;
+					MultiPatternSearchRule.this.algorithm = algorithm;
 					try {
 						base.evaluate();
 					} catch (AssertionError e) {
@@ -84,20 +88,20 @@ public class StringSearchRule implements TestRule {
 	public StringFinder createSearcher(String chars, StringFinderOption... options) {
 		return createSearcher(new StringCharProvider(chars, 0), options);
 	}
-	
+
 	public StringFinder createSearcher(CharProvider chars, StringFinderOption... options) {
 		return algorithm.createFinder(chars, options);
 	}
-
+	
 	public StringSearchAlgorithm getAlgorithm() {
 		return algorithm;
 	}
-
+	
 	@Retention(RetentionPolicy.RUNTIME)
-	@Target({ ElementType.METHOD })
+	@Target({ElementType.METHOD})
 	public @interface SearchFor {
 
-		String value();
+		String[] value();
 	}
 
 }

@@ -1,10 +1,12 @@
 package com.almondtools.stringsandchars.search;
 
+import static java.util.Arrays.asList;
+
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
@@ -14,11 +16,25 @@ import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 
 import com.almondtools.stringsandchars.io.CharProvider;
+import com.almondtools.stringsandchars.io.StringCharProvider;
 
 public class MultiStringSearchRule implements TestRule {
 
 	private StringSearchAlgorithm algorithm;
+	private List<MultiStringSearchAlgorithmFactory> algorithmFactories;
 	
+	public MultiStringSearchRule(MultiStringSearchAlgorithmFactory... algorithmFactories) {
+		this.algorithmFactories = asList(algorithmFactories);
+	}
+	
+	private List<StringSearchAlgorithm> getAlgorithms(String[] patterns) {
+		List<StringSearchAlgorithm> algorithms = new ArrayList<>();
+		for (MultiStringSearchAlgorithmFactory algorithmFactory : algorithmFactories) {
+			algorithms.add(algorithmFactory.of(asList(patterns)));
+		}
+		return algorithms;
+	}
+
 	@Override
 	public Statement apply(final Statement base, final Description description) {
 		return new Statement() {
@@ -65,15 +81,10 @@ public class MultiStringSearchRule implements TestRule {
 		return buffer.toString();
 	}
 
-	private List<StringSearchAlgorithm> getAlgorithms(String[] patterns) {
-		return Arrays.asList((StringSearchAlgorithm) 
-			new AhoCorasick(Arrays.asList(patterns)),
-			new SetHorspool(Arrays.asList(patterns)),
-			new WuManber(Arrays.asList(patterns)),
-			new SetBackwardOracleMatching(Arrays.asList(patterns))
-		);
+	public StringFinder createSearcher(String chars, StringFinderOption... options) {
+		return createSearcher(new StringCharProvider(chars, 0), options);
 	}
-
+	
 	public StringFinder createSearcher(CharProvider chars, StringFinderOption... options) {
 		return algorithm.createFinder(chars, options);
 	}
