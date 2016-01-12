@@ -140,9 +140,10 @@ public class MultiFactorRE implements StringSearchAlgorithm {
 
 		private StringFinder searchFactors;
 		private boolean longest;
-		private boolean nonEmpty; 
+		private boolean nonEmpty;
 		private CharProvider chars;
-		private long last;
+		private long lastStart;
+		private long lastEnd;
 
 		public Finder(CharProvider chars, StringFinderOption... options) {
 			super(options);
@@ -153,28 +154,32 @@ public class MultiFactorRE implements StringSearchAlgorithm {
 			this.longest = LONGEST_MATCH.in(options);
 			this.nonEmpty = NON_EMPTY.in(options);
 			this.chars = chars;
-			this.last = 0;
+			this.lastStart = 0;
+			this.lastEnd = -1;
 		}
 
 		@Override
 		public void skipTo(long pos) {
-			last = removeMatchesBefore(pos);
-			if (last > chars.current()) {
-				searchFactors.skipTo(last);
+			removeMatchesBefore(pos);
+			if (lastStart < pos) {
+				lastStart = pos;
+			}
+			if (lastStart > chars.current()) {
+				searchFactors.skipTo(lastStart);
 			}
 		}
 
 		@Override
 		public StringMatch findNext() {
-			long firstStart = last;
-			long currentStart = last;
+			long firstStart = lastStart;
+			long currentStart = lastStart;
 			while (!chars.finished() && (isBufferEmpty() || currentStart == firstStart)) {
 				StringMatch match = searchFactors.findNext();
 				if (match == null) {
 					break;
 				}
 
-				if (firstStart == last) {
+				if (firstStart == lastStart) {
 					firstStart = match.start();
 				}
 				currentStart = match.start();
@@ -187,12 +192,16 @@ public class MultiFactorRE implements StringSearchAlgorithm {
 					extend(match);
 				}
 			}
-			last = currentStart;
+			lastStart = currentStart;
 			if (!isBufferEmpty()) {
 				if (longest) {
-					return longestLeftMost();
+					StringMatch current = longestLeftMost();
+					lastEnd = current.end();
+					return current;
 				} else {
-					return leftMost();
+					StringMatch current = leftMost();
+					lastEnd = current.end();
+					return current;
 				}
 			}
 			return null;
@@ -204,16 +213,17 @@ public class MultiFactorRE implements StringSearchAlgorithm {
 				long pos = chars.current();
 				chars.move(match.end());
 				for (StringMatch extendedMatch : matcher.extendFactor(chars, longest)) {
-					if (extendedMatch.start() >= last) {
-						if (!extendedMatch.isEmpty() || !nonEmpty) {
-							push(extendedMatch);
-						}
+					if (extendedMatch.start() >= lastStart //do only report matches starting after last match
+						&& (extendedMatch.start() > lastStart || extendedMatch.end() > lastEnd) // do only reports matches different form the last match
+						&& (!longest || extendedMatch.end() > lastEnd) // if longest: do only report matches not being subsumed by last match
+						&& (!nonEmpty || !extendedMatch.isEmpty())) { // if non-empty: do only report matches that do not match the empty string
+						push(extendedMatch);
 					}
+
 				}
 				chars.move(pos);
 			}
 		}
-
 	}
 
 	public static class Factory implements StringSearchAlgorithmFactory, MultiStringSearchAlgorithmFactory {

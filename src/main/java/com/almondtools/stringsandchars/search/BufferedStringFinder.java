@@ -69,6 +69,8 @@ public abstract class BufferedStringFinder extends AbstractStringFinder {
 			StringMatch nextMatch = buffer.peek();
 			if (nextMatch.start() == match.start()) {
 				match = buffer.remove();
+			} else if (nextMatch.end() <= match.end()){
+				buffer.remove();
 			} else {
 				break;
 			}
