@@ -2,10 +2,6 @@ package com.almondtools.stringsandchars.search;
 
 import static java.util.Arrays.asList;
 
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
 import java.util.ArrayList;
 import java.util.IdentityHashMap;
 import java.util.List;
@@ -40,11 +36,7 @@ public class MultiStringSearchRule implements TestRule {
 		return new Statement() {
 			@Override
 			public void evaluate() throws Throwable {
-				SearchFor searchFor = description.getAnnotation(SearchFor.class);
-				if (searchFor == null)  {
-					throw new AssertionError();
-				}
-				String[] patterns = searchFor.value();
+				String[] patterns = extractPattern(description);
 				List<StringSearchAlgorithm> algorithms = getAlgorithms(patterns);
 				Map<StringSearchAlgorithm, String> failures = new IdentityHashMap<StringSearchAlgorithm, String>();
 				StackTraceElement[] stackTrace = null;
@@ -73,6 +65,14 @@ public class MultiStringSearchRule implements TestRule {
 		};
 	}
 
+	private String[] extractPattern(final Description description) throws AssertionError {
+		SearchFor searchFor = description.getAnnotation(SearchFor.class);
+		if (searchFor == null) {
+			throw new AssertionError("expected @SearchFor annotation");
+		}
+		return searchFor.value();
+	}
+
 	private String computeMessage(Map<StringSearchAlgorithm, String> failures) {
 		StringBuilder buffer = new StringBuilder();
 		for (Map.Entry<StringSearchAlgorithm, String> entry : failures.entrySet()) {
@@ -91,13 +91,6 @@ public class MultiStringSearchRule implements TestRule {
 	
 	public StringSearchAlgorithm getAlgorithm() {
 		return algorithm;
-	}
-	
-	@Retention(RetentionPolicy.RUNTIME)
-	@Target({ElementType.METHOD})
-	public @interface SearchFor {
-
-		String[] value();
 	}
 
 }

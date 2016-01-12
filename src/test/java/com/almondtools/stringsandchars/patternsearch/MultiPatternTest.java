@@ -1,6 +1,7 @@
 package com.almondtools.stringsandchars.patternsearch;
 
 import static com.almondtools.stringsandchars.search.MatchOption.LONGEST_MATCH;
+import static com.almondtools.stringsandchars.search.MatchOption.NON_EMPTY;
 import static com.almondtools.stringsandchars.search.MatchOption.NON_OVERLAP;
 import static org.hamcrest.Matchers.contains;
 import static org.junit.Assert.assertThat;
@@ -8,8 +9,8 @@ import static org.junit.Assert.assertThat;
 import org.junit.Rule;
 import org.junit.Test;
 
-import com.almondtools.stringsandchars.patternsearch.MultiPatternSearchRule.SearchFor;
 import com.almondtools.stringsandchars.search.AhoCorasick;
+import com.almondtools.stringsandchars.search.SearchFor;
 import com.almondtools.stringsandchars.search.StringFinder;
 import com.almondtools.stringsandchars.search.StringMatch;
 
@@ -17,8 +18,8 @@ public class MultiPatternTest {
 
 	@Rule
 	public MultiPatternSearchRule searcher = new MultiPatternSearchRule(
-		new MultiFactorRE.Factory(new AhoCorasick.Factory(), new GlushkovPrefixExtender.Factory(), 1),
-		new MultiFactorRE.Factory(new AhoCorasick.Factory(), new GlushkovFactorExtender.Factory(), 1));
+		new MultiFactorRE.Factory(new AhoCorasick.Factory(), new GlushkovPrefixExtender.Factory(), 2),
+		new MultiFactorRE.Factory(new AhoCorasick.Factory(), new GlushkovFactorExtender.Factory(), 2));
 
 	@Test
 	@SearchFor({"a+","b+","c+","d+"})
@@ -51,7 +52,7 @@ public class MultiPatternTest {
 	@Test
 	@SearchFor({"[a-b]*","[c-d]{3,}"})
 	public void testRegexComplex3() throws Exception {
-		StringFinder finder = searcher.createSearcher("xxxccaaxbdddccccdxaaxbbaaaxxd", LONGEST_MATCH, NON_OVERLAP);
+		StringFinder finder = searcher.createSearcher("xxxccaaxbdddccccdxaaxbbaaaxxd", LONGEST_MATCH, NON_OVERLAP, NON_EMPTY);
 		assertThat(finder.findAll(), contains(
 			new StringMatch(5, 7, "aa"),
 			new StringMatch(8, 9, "b"),
@@ -63,7 +64,7 @@ public class MultiPatternTest {
 	@Test
 	@SearchFor({"d*","ddd*c"})
 	public void testRegexComplex4() throws Exception {
-		StringFinder finder = searcher.createSearcher("xxxccaaxbdddccccdxaaxbbaaaxxd", LONGEST_MATCH, NON_OVERLAP);
+		StringFinder finder = searcher.createSearcher("xxxccaaxbdddccccdxaaxbbaaaxxd", LONGEST_MATCH, NON_OVERLAP, NON_EMPTY);
 		assertThat(finder.findAll(), contains(
 			new StringMatch(9, 13, "dddc"),
 			new StringMatch(16, 17, "d"),

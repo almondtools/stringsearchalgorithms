@@ -61,13 +61,13 @@ public class SetBackwardOracleMatching implements StringSearchAlgorithm {
 
 	private static List<TrieNode<List<String>>> process(TrieNode<List<String>> parent, Map<TrieNode<List<String>>, TrieNode<List<String>>> oracle, TrieNode<List<String>> init) {
 		List<TrieNode<List<String>>> nexts = new ArrayList<>();
-		for (Map.Entry<Character,TrieNode<List<String>>> entry : parent.getNexts().entrySet()) {
+		for (Map.Entry<Character, TrieNode<List<String>>> entry : parent.getNexts().entrySet()) {
 			char c = entry.getKey();
 			TrieNode<List<String>> trie = entry.getValue();
-			
+
 			TrieNode<List<String>> down = oracle.get(parent);
 			while (down != null && down.nextNode(c) == null) {
-				down.addNext(c,trie);
+				down.addNext(c, trie);
 				down = oracle.get(down);
 			}
 			if (down != null) {
@@ -76,7 +76,7 @@ public class SetBackwardOracleMatching implements StringSearchAlgorithm {
 			} else {
 				oracle.put(trie, init);
 			}
-			
+
 			nexts.add(trie);
 		}
 		return nexts;
@@ -106,7 +106,7 @@ public class SetBackwardOracleMatching implements StringSearchAlgorithm {
 	public int getPatternLength() {
 		return minLength;
 	}
-	
+
 	private class Finder extends AbstractStringFinder {
 
 		private CharProvider chars;

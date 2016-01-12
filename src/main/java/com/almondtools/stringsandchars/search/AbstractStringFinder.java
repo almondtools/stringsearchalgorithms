@@ -20,14 +20,16 @@ public abstract class AbstractStringFinder implements StringFinder {
 	@Override
 	public List<StringMatch> findAll() {
 		List<StringMatch> matches = new ArrayList<>();
+		long last = -1;
 		while (true) {
 			StringMatch match = findNext();
 			if (match == null) {
 				return matches;
 			} else {
 				matches.add(match);
-				if (nonOverlap) {
-					skipTo(match.end());
+				if (nonOverlap && match.end() > last) {
+					last = match.end(); 
+					skipTo(last);
 				}
 			}
 		}

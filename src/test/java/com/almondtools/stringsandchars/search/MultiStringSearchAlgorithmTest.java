@@ -13,8 +13,6 @@ import java.util.List;
 import org.junit.Rule;
 import org.junit.Test;
 
-import com.almondtools.stringsandchars.search.MultiStringSearchRule.SearchFor;
-
 public class MultiStringSearchAlgorithmTest {
 
 	@Rule

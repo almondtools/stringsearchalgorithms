@@ -60,7 +60,7 @@ public class BNDM implements StringSearchAlgorithm {
 	}
 
 	private abstract class Finder extends AbstractStringFinder {
-		
+
 		protected final long finalstate;
 		protected final long activeStates;
 
@@ -68,7 +68,7 @@ public class BNDM implements StringSearchAlgorithm {
 
 		public Finder(CharProvider chars, StringFinderOption... options) {
 			super(options);
-			this.finalstate = 1l << ((patternLength - 1) % 64); 
+			this.finalstate = 1l << ((patternLength - 1) % 64);
 			this.activeStates = (finalstate - 1) | finalstate;
 			this.chars = chars;
 		}
@@ -81,7 +81,7 @@ public class BNDM implements StringSearchAlgorithm {
 		}
 
 	}
-	
+
 	private class LongFinder extends Finder {
 
 		private long state;
@@ -103,11 +103,11 @@ public class BNDM implements StringSearchAlgorithm {
 				state = activeStates;
 				int j = patternLength - 1;
 				int last = patternLength;
-				while (state != 0l) { 
+				while (state != 0l) {
 					char currentChar = chars.lookahead(j);
 					long single = states.single(currentChar);
 					state &= single;
-					if ((state & finalstate) != 0l) { 
+					if ((state & finalstate) != 0l) {
 						if (j > 0) {
 							last = j;
 						} else {
@@ -140,7 +140,7 @@ public class BNDM implements StringSearchAlgorithm {
 		}
 
 		private long[] init(long[] state) {
-			fill(state, -1l); 
+			fill(state, -1l);
 			state[0] = activeStates;
 			return state;
 		}
@@ -161,7 +161,7 @@ public class BNDM implements StringSearchAlgorithm {
 					char currentChar = chars.lookahead(j);
 					long[] all = states.all(currentChar);
 					state = join(state, all);
-					if ((state[0] & finalstate) != 0l) { 
+					if ((state[0] & finalstate) != 0l) {
 						if (j > 0) {
 							last = j;
 						} else {
@@ -181,7 +181,7 @@ public class BNDM implements StringSearchAlgorithm {
 		private long[] next(long[] state) {
 			for (int i = 0; i < state.length; i++) {
 				int j = i + 1;
-				long leastBit = j < state.length ? state[j] >>> 63 : 0l; 
+				long leastBit = j < state.length ? state[j] >>> 63 : 0l;
 				state[i] = state[i] << 1 | leastBit;
 			}
 			state[0] &= activeStates;
@@ -190,7 +190,7 @@ public class BNDM implements StringSearchAlgorithm {
 
 		private boolean zero(long[] state) {
 			for (int i = 0; i < state.length; i++) {
-				if (state[i] != 0l) { 
+				if (state[i] != 0l) {
 					return true;
 				}
 			}
@@ -246,7 +246,7 @@ public class BNDM implements StringSearchAlgorithm {
 			for (int i = 0; i < pattern.length; i++) {
 				char c = pattern[i];
 				int j = pattern.length - i - 1;
-				characters[c - min] |= 1l << j; 
+				characters[c - min] |= 1l << j;
 			}
 			return characters;
 		}
@@ -254,7 +254,7 @@ public class BNDM implements StringSearchAlgorithm {
 		@Override
 		public long single(char c) {
 			if (c < minChar || c > maxChar) {
-				return 0l; 
+				return 0l;
 			}
 			return characters[c - minChar];
 		}
@@ -270,11 +270,11 @@ public class BNDM implements StringSearchAlgorithm {
 		}
 
 		private static CharLongMap computeStates(char[] pattern) {
-			CharLongMap.Builder mapBuilder = new CharLongMap.Builder(0l); 
+			CharLongMap.Builder mapBuilder = new CharLongMap.Builder(0l);
 			for (int i = 0; i < pattern.length; i++) {
 				char c = pattern[i];
 				int j = pattern.length - i - 1;
-				long newState = mapBuilder.get(c) | (1l << j); 
+				long newState = mapBuilder.get(c) | (1l << j);
 				mapBuilder.put(c, newState);
 			}
 			return mapBuilder.perfectMinimal();
@@ -329,7 +329,7 @@ public class BNDM implements StringSearchAlgorithm {
 				int j = pattern.length - i - 1;
 				int slot = ((pattern.length - 1) / 64) - j / 64;
 				int offset = j % 64;
-				characters[c - min][slot] |= 1l << offset; 
+				characters[c - min][slot] |= 1l << offset;
 			}
 			return characters;
 		}
@@ -364,7 +364,7 @@ public class BNDM implements StringSearchAlgorithm {
 				if (newState == zero) {
 					newState = computeZero(pattern.length);
 				}
-				newState[slot] |= 1l << offset; 
+				newState[slot] |= 1l << offset;
 				mapBuilder.put(c, newState);
 			}
 			return mapBuilder.perfectMinimal();

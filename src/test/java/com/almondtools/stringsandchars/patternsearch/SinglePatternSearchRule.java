@@ -1,4 +1,4 @@
-package com.almondtools.stringsandchars.search;
+package com.almondtools.stringsandchars.patternsearch;
 
 import static java.util.Arrays.asList;
 
@@ -13,13 +13,18 @@ import org.junit.runners.model.Statement;
 
 import com.almondtools.stringsandchars.io.CharProvider;
 import com.almondtools.stringsandchars.io.StringCharProvider;
+import com.almondtools.stringsandchars.search.SearchFor;
+import com.almondtools.stringsandchars.search.StringFinder;
+import com.almondtools.stringsandchars.search.StringFinderOption;
+import com.almondtools.stringsandchars.search.StringSearchAlgorithm;
+import com.almondtools.stringsandchars.search.StringSearchAlgorithmFactory;
 
-public class StringSearchRule implements TestRule {
+public class SinglePatternSearchRule implements TestRule {
 
 	private StringSearchAlgorithm algorithm;
 	private List<StringSearchAlgorithmFactory> algorithmFactories;
 
-	public StringSearchRule(StringSearchAlgorithmFactory... algorithmFactories) {
+	public SinglePatternSearchRule(StringSearchAlgorithmFactory... algorithmFactories) {
 		this.algorithmFactories = asList(algorithmFactories);
 	}
 
@@ -41,7 +46,7 @@ public class StringSearchRule implements TestRule {
 				Map<StringSearchAlgorithm, String> failures = new IdentityHashMap<StringSearchAlgorithm, String>();
 				StackTraceElement[] stackTrace = null;
 				for (StringSearchAlgorithm algorithm : algorithms) {
-					StringSearchRule.this.algorithm = algorithm;
+					SinglePatternSearchRule.this.algorithm = algorithm;
 					try {
 						base.evaluate();
 					} catch (AssertionError e) {
@@ -88,7 +93,7 @@ public class StringSearchRule implements TestRule {
 	public StringFinder createSearcher(String chars, StringFinderOption... options) {
 		return createSearcher(new StringCharProvider(chars, 0), options);
 	}
-	
+
 	public StringFinder createSearcher(CharProvider chars, StringFinderOption... options) {
 		return algorithm.createFinder(chars, options);
 	}

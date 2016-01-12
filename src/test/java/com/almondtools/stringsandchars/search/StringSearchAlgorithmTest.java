@@ -12,8 +12,6 @@ import java.util.List;
 import org.junit.Rule;
 import org.junit.Test;
 
-import com.almondtools.stringsandchars.search.StringSearchRule.SearchFor;
-
 public class StringSearchAlgorithmTest {
 
 	@Rule

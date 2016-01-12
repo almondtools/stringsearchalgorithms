@@ -1,6 +1,7 @@
 package com.almondtools.stringsandchars.patternsearch;
 
-import static java.lang.Math.max;
+import static com.almondtools.stringsandchars.search.MatchOption.LONGEST_MATCH;
+import static com.almondtools.stringsandchars.search.MatchOption.NON_EMPTY;
 import static java.lang.Math.min;
 import static java.util.Arrays.asList;
 
@@ -14,7 +15,7 @@ import java.util.Set;
 
 import com.almondtools.stringsandchars.io.CharProvider;
 import com.almondtools.stringsandchars.search.BufferedStringFinder;
-import com.almondtools.stringsandchars.search.MatchOption;
+import com.almondtools.stringsandchars.search.EmptyMatchFinder;
 import com.almondtools.stringsandchars.search.MultiStringSearchAlgorithmFactory;
 import com.almondtools.stringsandchars.search.StringFinder;
 import com.almondtools.stringsandchars.search.StringFinderOption;
@@ -39,28 +40,28 @@ import com.almondtools.stringsandchars.search.StringSearchAlgorithmFactory;
  */
 public class MultiFactorRE implements StringSearchAlgorithm {
 
-	private static final int MIN_LENGTH = 1;
-	
+	private static final int DEFAULT_MAX_LENGTH = 3;
+
 	private int minLength;
 	private StringSearchAlgorithm searchAlgorithm;
 	private Map<String, List<FactorExtender>> extenders;
 
 	public MultiFactorRE(MultiStringSearchAlgorithmFactory factorSearcher, FactorExtenderFactory factorExtender, String... patterns) {
-		this(factorSearcher, factorExtender, MIN_LENGTH, asList(patterns));
+		this(factorSearcher, factorExtender, DEFAULT_MAX_LENGTH, asList(patterns));
 	}
 
-	public MultiFactorRE(MultiStringSearchAlgorithmFactory factorSearcher, FactorExtenderFactory factorExtender, int length, String... patterns) {
-		this(factorSearcher, factorExtender, length, asList(patterns));
+	public MultiFactorRE(MultiStringSearchAlgorithmFactory factorSearcher, FactorExtenderFactory factorExtender, int maxLength, String... patterns) {
+		this(factorSearcher, factorExtender, maxLength, asList(patterns));
 	}
 
 	public MultiFactorRE(MultiStringSearchAlgorithmFactory factorSearcher, FactorExtenderFactory factorExtender, Collection<String> patterns) {
-		this(factorSearcher, factorExtender, MIN_LENGTH, patterns);
+		this(factorSearcher, factorExtender, DEFAULT_MAX_LENGTH, patterns);
 	}
-	
-	public MultiFactorRE(MultiStringSearchAlgorithmFactory factorSearcher, FactorExtenderFactory factorExtender, int length, Collection<String> patterns) {
+
+	public MultiFactorRE(MultiStringSearchAlgorithmFactory factorSearcher, FactorExtenderFactory factorExtender, int maxLength, Collection<String> patterns) {
 		Map<String, FactorExtender> matchers = computeMatchers(patterns, factorExtender);
-		this.minLength = computeMinLength(matchers, length);
-		this.extenders = computeExtenders(matchers, minLength);
+		this.minLength = computeMinLength(matchers);
+		this.extenders = computeExtenders(matchers, minLength, maxLength);
 		this.searchAlgorithm = factorSearcher.of(extenders.keySet());
 	}
 
@@ -72,35 +73,44 @@ public class MultiFactorRE implements StringSearchAlgorithm {
 		return matchers;
 	}
 
-	private static int computeMinLength(Map<String, FactorExtender> matchers, int length) {
+	private static int computeMinLength(Map<String, FactorExtender> matchers) {
 		int minLength = Integer.MAX_VALUE;
 		for (FactorExtender matcher : matchers.values()) {
 			minLength = min(minLength, matcher.getPatternLength());
 		}
-		return max(max(length, MIN_LENGTH), minLength);
+		return minLength;
 	}
 
-	private static Map<String, List<FactorExtender>> computeExtenders(Map<String, FactorExtender> matchers, int length) {
-		Collection<FactorExtender> allMatchers = matchers.values();
+	private static Map<String, List<FactorExtender>> computeExtenders(Map<String, FactorExtender> matchers, int minLength, int length) {
 		Map<String, List<FactorExtender>> factors = new LinkedHashMap<>();
+
+		Collection<FactorExtender> allMatchers = matchers.values();
 		for (FactorExtender matcher : allMatchers) {
 			List<String> newFactors = matcher.getBestFactors(length);
 			for (String newFactor : newFactors) {
-				List<FactorExtender> matchersByPrefix = factors.get(newFactor);
-				if (matchersByPrefix == null) {
-					matchersByPrefix = new ArrayList<>();
-					factors.put(newFactor, matchersByPrefix);
+				List<FactorExtender> matchersByFactor = factors.get(newFactor);
+				if (matchersByFactor == null) {
+					matchersByFactor = new ArrayList<>();
+					factors.put(newFactor, matchersByFactor);
 				}
-				matchersByPrefix.add(matcher.forFactor(newFactor));
+				matchersByFactor.add(matcher.forFactor(newFactor));
+			}
+			if (matcher.getPatternLength() == 0) {
+				List<FactorExtender> matchersByFactor = factors.get("");
+				if (matchersByFactor == null) {
+					matchersByFactor = new ArrayList<>();
+					factors.put("", matchersByFactor);
+				}
+				matchersByFactor.add(matcher.forFactor(""));
 			}
 		}
 		for (FactorExtender matcher : allMatchers) {
 			String pattern = matcher.getPattern();
-			for (Map.Entry<String,List<FactorExtender>> factorEntry : factors.entrySet()) {
+			for (Map.Entry<String, List<FactorExtender>> factorEntry : factors.entrySet()) {
 				String factor = factorEntry.getKey();
 				List<FactorExtender> extenders = factorEntry.getValue();
 				Set<String> patterns = getPatterns(extenders);
-				if (!patterns.contains(pattern) && matcher.hasFactor(factor))  {
+				if (!patterns.contains(pattern) && matcher.hasFactor(factor)) {
 					extenders.add(matcher.forFactor(factor));
 				}
 			}
@@ -130,13 +140,18 @@ public class MultiFactorRE implements StringSearchAlgorithm {
 
 		private StringFinder searchFactors;
 		private boolean longest;
+		private boolean nonEmpty; 
 		private CharProvider chars;
 		private long last;
 
 		public Finder(CharProvider chars, StringFinderOption... options) {
 			super(options);
 			this.searchFactors = searchAlgorithm.createFinder(chars, options);
-			this.longest = MatchOption.LONGEST_MATCH.in(options);
+			if (minLength == 0) {
+				this.searchFactors = new EmptyMatchFinder(searchFactors, chars, options);
+			}
+			this.longest = LONGEST_MATCH.in(options);
+			this.nonEmpty = NON_EMPTY.in(options);
 			this.chars = chars;
 			this.last = 0;
 		}
@@ -144,7 +159,9 @@ public class MultiFactorRE implements StringSearchAlgorithm {
 		@Override
 		public void skipTo(long pos) {
 			last = removeMatchesBefore(pos);
-			searchFactors.skipTo(last);
+			if (last > chars.current()) {
+				searchFactors.skipTo(last);
+			}
 		}
 
 		@Override
@@ -156,19 +173,18 @@ public class MultiFactorRE implements StringSearchAlgorithm {
 				if (match == null) {
 					break;
 				}
-				
+
 				if (firstStart == last) {
 					firstStart = match.start();
 				}
 				currentStart = match.start();
-				
-				List<FactorExtender> matchers = extenders.get(match.text());
-				for (FactorExtender matcher : matchers) {
-					for (StringMatch extendedMatch : matcher.extendFactor(chars, longest)) {
-						if (extendedMatch.start() >= last) {
-							push(extendedMatch);
-						}
-					}
+
+				extend(match);
+			}
+			if (chars.finished() && isBufferEmpty()) {
+				StringMatch match = searchFactors.findNext();
+				if (match != null) {
+					extend(match);
 				}
 			}
 			last = currentStart;
@@ -182,28 +198,44 @@ public class MultiFactorRE implements StringSearchAlgorithm {
 			return null;
 		}
 
+		private void extend(StringMatch match) {
+			List<FactorExtender> matchers = extenders.get(match.text());
+			for (FactorExtender matcher : matchers) {
+				long pos = chars.current();
+				chars.move(match.end());
+				for (StringMatch extendedMatch : matcher.extendFactor(chars, longest)) {
+					if (extendedMatch.start() >= last) {
+						if (!extendedMatch.isEmpty() || !nonEmpty) {
+							push(extendedMatch);
+						}
+					}
+				}
+				chars.move(pos);
+			}
+		}
+
 	}
 
 	public static class Factory implements StringSearchAlgorithmFactory, MultiStringSearchAlgorithmFactory {
 
 		private MultiStringSearchAlgorithmFactory factorSearcher;
 		private FactorExtenderFactory factorExtender;
-		private int length;
+		private int maxLength;
 
-		public Factory(MultiStringSearchAlgorithmFactory factorSearcher, FactorExtenderFactory factorExtender, int length) {
+		public Factory(MultiStringSearchAlgorithmFactory factorSearcher, FactorExtenderFactory factorExtender, int maxLength) {
 			this.factorSearcher = factorSearcher;
 			this.factorExtender = factorExtender;
-			this.length = length;
+			this.maxLength = maxLength;
 		}
 
 		@Override
 		public StringSearchAlgorithm of(String pattern) {
-			return new MultiFactorRE(factorSearcher, factorExtender, length, pattern);
+			return new MultiFactorRE(factorSearcher, factorExtender, maxLength, pattern);
 		}
 
 		@Override
 		public StringSearchAlgorithm of(Collection<String> patterns) {
-			return new MultiFactorRE(factorSearcher, factorExtender, length, patterns);
+			return new MultiFactorRE(factorSearcher, factorExtender, maxLength, patterns);
 		}
 
 	}

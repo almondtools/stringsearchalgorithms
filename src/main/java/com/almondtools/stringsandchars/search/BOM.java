@@ -47,13 +47,13 @@ public class BOM implements StringSearchAlgorithm {
 
 	private static List<TrieNode<String>> process(TrieNode<String> parent, Map<TrieNode<String>, TrieNode<String>> oracle, TrieNode<String> init) {
 		List<TrieNode<String>> nexts = new ArrayList<>();
-		for (Map.Entry<Character,TrieNode<String>> entry : parent.getNexts().entrySet()) {
+		for (Map.Entry<Character, TrieNode<String>> entry : parent.getNexts().entrySet()) {
 			char c = entry.getKey();
 			TrieNode<String> trie = entry.getValue();
-			
+
 			TrieNode<String> down = oracle.get(parent);
 			while (down != null && down.nextNode(c) == null) {
-				down.addNext(c,trie);
+				down.addNext(c, trie);
 				down = oracle.get(down);
 			}
 			if (down != null) {
@@ -62,7 +62,7 @@ public class BOM implements StringSearchAlgorithm {
 			} else {
 				oracle.put(trie, init);
 			}
-			
+
 			nexts.add(trie);
 		}
 		return nexts;
