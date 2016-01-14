@@ -139,16 +139,6 @@ StringFinder finder = stringSearch.createFinder(text, LONGEST_MATCH, NON_OVERLAP
   </div>
                   <div class="panel panel-default">
               <div class="panel-heading">
-      <h3 class="panel-title">Available algorithms for multi pattern search:</h3>
-  </div>
-          <div class="panel-body">
-                      <ul>
-                          <li>MultiFactorRE</li>
-  </ul>
-  </div>
-  </div>
-                  <div class="panel panel-default">
-              <div class="panel-heading">
       <h3 class="panel-title">Supported Regex Operators:</h3>
   </div>
           <div class="panel-body">
@@ -187,7 +177,23 @@ StringFinder finder = stringSearch.createFinder(text, LONGEST_MATCH, NON_OVERLAP
       <pre><code class="java">List&lt;StringMatch&gt; all = finder.findAll();</code></pre>
   </div>
   </ul></p>
-              <h3>Searching Multiple Patterns:</h3>
+  </div>
+  </div>
+              <div class="row">
+              <div class="col-md-push-8 col-md-4">
+                      <div class="panel panel-default">
+              <div class="panel-heading">
+      <h3 class="panel-title">Available algorithms for multi pattern search:</h3>
+  </div>
+          <div class="panel-body">
+                      <ul>
+                          <li>MultiFactorRE</li>
+  </ul>
+  </div>
+  </div>
+  </div>
+          <div class="col-md-pull-4 col-md-8">
+                  <h3>Searching Multiple Patterns:</h3>
               <p>                Some of the upper regex search algorithms (e.g. BPGlushkov) only provide good performance for smaller patterns. The reason is that
                 their performance decreases with the number of states of the recognizing automaton. This especially holds for patterns that are
                 a alternation of several sub patterns like       <div>
