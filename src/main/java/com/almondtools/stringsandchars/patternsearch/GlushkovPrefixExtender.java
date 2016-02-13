@@ -125,6 +125,11 @@ public class GlushkovPrefixExtender implements FactorExtender {
 		return state;
 	}
 
+	@Override
+	public String toString() {
+		return getClass().getSimpleName();
+	}
+
 	public static class Factory implements FactorExtenderFactory {
 
 		@Override

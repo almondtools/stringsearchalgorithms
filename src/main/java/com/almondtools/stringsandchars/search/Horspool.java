@@ -47,6 +47,11 @@ public class Horspool implements StringSearchAlgorithm {
 		return new Finder(chars, options);
 	}
 
+	@Override
+	public String toString() {
+		return getClass().getSimpleName();
+	}
+
 	private class Finder extends AbstractStringFinder {
 
 		private CharProvider chars;

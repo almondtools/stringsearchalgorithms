@@ -59,6 +59,11 @@ public class ShiftAnd implements StringSearchAlgorithm {
 		}
 	}
 
+	@Override
+	public String toString() {
+		return getClass().getSimpleName();
+	}
+
 	private abstract class Finder extends AbstractStringFinder {
 
 		protected final long finalstate;

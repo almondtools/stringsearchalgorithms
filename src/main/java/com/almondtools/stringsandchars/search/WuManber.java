@@ -143,6 +143,11 @@ public class WuManber implements StringSearchAlgorithm {
 		return minLength;
 	}
 
+	@Override
+	public String toString() {
+		return getClass().getSimpleName();
+	}
+
 	private abstract class Finder extends BufferedStringFinder {
 
 		protected CharProvider chars;

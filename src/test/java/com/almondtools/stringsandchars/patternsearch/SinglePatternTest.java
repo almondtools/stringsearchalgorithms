@@ -20,7 +20,8 @@ public class SinglePatternTest {
 	public SinglePatternSearchRule searcher = new SinglePatternSearchRule(
 		new BPGlushkov.Factory(),
 		new MultiFactorRE.Factory(new AhoCorasick.Factory(), new GlushkovPrefixExtender.Factory(), 2),
-		new MultiFactorRE.Factory(new AhoCorasick.Factory(), new GlushkovFactorExtender.Factory(), 2));
+		new MultiFactorRE.Factory(new AhoCorasick.Factory(), new GlushkovFactorExtender.Factory(), 2)
+		);
 
 	@Test
 	@SearchFor("ab")
@@ -468,6 +469,16 @@ public class SinglePatternTest {
 		assertThat(finder.findAll(), contains(
 			new StringMatch(1, 3, "ab"),
 			new StringMatch(3, 5, "bc")));
+	}
+
+	@Test
+	@SearchFor("gacatagacattttagacataaaagacatagacaa|atagacaacatagacatagacatagacatagacatagacataga")
+	public void testLongPattern() throws Exception {
+		StringFinder finder = searcher.createSearcher("gcgcgcgcgacatagacattttagacataaaagacatagacaagcgcgcgcatagacaacatagacatagacatagacatagacatagacatagagcgcgcgcgc", LONGEST_MATCH, NON_OVERLAP);
+
+		assertThat(finder.findAll(), contains(
+			new StringMatch(8, 43, "gacatagacattttagacataaaagacatagacaa"),
+			new StringMatch(51, 95, "atagacaacatagacatagacatagacatagacatagacataga")));
 	}
 
 }

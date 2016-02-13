@@ -61,6 +61,11 @@ public class BPGlushkov implements StringSearchAlgorithm {
 		return minLength;
 	}
 
+	@Override
+	public String toString() {
+		return getClass().getSimpleName();
+	}
+
 	private class Finder extends BufferedStringFinder {
 
 		private boolean longestMatch;

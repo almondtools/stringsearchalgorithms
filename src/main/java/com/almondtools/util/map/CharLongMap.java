@@ -1,5 +1,7 @@
 package com.almondtools.util.map;
 
+import static com.almondtools.util.map.HashFunction.NULL;
+
 import java.util.Map;
 
 public class CharLongMap {
@@ -17,7 +19,13 @@ public class CharLongMap {
 
 	private void computeKeysAndValues(Map<Character, Long> map) {
 		int len = map.size();
-		if (len == 0) {
+		if (h == NULL) {
+			keys = new char[len];
+			Character[] objectkeys = map.keySet().toArray(new Character[0]);
+			for (int i = 0; i < objectkeys.length; i++) {
+				keys[i] = objectkeys[i];
+			}
+		} else if (len == 0) {
 			keys = new char[1];
 			values = new long[1];
 			values[0] = defaultValue;
@@ -55,6 +63,25 @@ public class CharLongMap {
 		return defaultValue;
 	}
 
+	@Override
+	public String toString() {
+		StringBuilder buffer = new StringBuilder();
+		buffer.append("{\n");
+		if (keys.length > 0) {
+			char key = keys[0];
+			long value = get(key);
+			buffer.append(key).append(": ").append(value);
+			
+		}
+		for (int i = 1; i < keys.length; i++) {
+			char key = keys[i];
+			long value = get(key);
+			buffer.append(",\n").append(key).append(": ").append(value);
+		}
+		buffer.append("\n}");
+		return buffer.toString();
+	}
+
 	public static class Builder extends MinimalPerfectMapBuilder<Character, Long, CharLongMap> {
 
 		public Builder(Long defaultValue) {
@@ -77,7 +104,7 @@ public class CharLongMap {
 		private Map<Character, Long> map;
 
 		public Fallback(Map<Character, Long> map, Long defaultValue) {
-			super(new HashFunction(new int[] { 0 }, 0, 0), map, defaultValue);
+			super(NULL, map, defaultValue);
 			this.map = map;
 		}
 

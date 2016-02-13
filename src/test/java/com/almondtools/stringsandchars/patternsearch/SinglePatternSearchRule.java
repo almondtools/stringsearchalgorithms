@@ -85,7 +85,7 @@ public class SinglePatternSearchRule implements TestRule {
 	private String computeMessage(Map<StringSearchAlgorithm, String> failures) {
 		StringBuilder buffer = new StringBuilder();
 		for (Map.Entry<StringSearchAlgorithm, String> entry : failures.entrySet()) {
-			buffer.append("in algorithm <").append(entry.getKey().getClass().getSimpleName()).append(">: ").append(entry.getValue()).append("\n");
+			buffer.append("in algorithm <").append(entry.getKey().toString()).append(">: ").append(entry.getValue()).append("\n");
 		}
 		return buffer.toString();
 	}

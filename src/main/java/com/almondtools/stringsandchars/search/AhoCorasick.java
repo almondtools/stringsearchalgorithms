@@ -83,6 +83,11 @@ public class AhoCorasick implements StringSearchAlgorithm {
 			}
 		}
 	}
+	
+	@Override
+	public String toString() {
+		return getClass().getSimpleName();
+	}
 
 	private abstract class Finder extends BufferedStringFinder {
 		protected CharProvider chars;

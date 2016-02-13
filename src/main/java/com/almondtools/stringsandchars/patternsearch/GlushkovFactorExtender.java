@@ -158,6 +158,11 @@ public class GlushkovFactorExtender implements FactorExtender {
 		}
 	}
 
+	@Override
+	public String toString() {
+		return getClass().getSimpleName();
+	}
+
 	public static class Factory implements FactorExtenderFactory {
 
 		@Override

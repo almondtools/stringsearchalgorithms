@@ -64,7 +64,7 @@ public abstract class MinimalPerfectMapBuilder<T, S, U> {
 
 	protected void computeFunctions(int maxTries, double c) throws HashBuildException {
 		m = entries.size();
-		n = 1 + (int) (m * c);
+		n = 1 + (int) (((double) m) * c);
 
 		Random r = new Random(17);
 		for (int i = 0; i < maxTries; i++) {
@@ -139,7 +139,7 @@ public abstract class MinimalPerfectMapBuilder<T, S, U> {
 			if (assignedNodes.get(w)) {
 				int edge = next + g[w];
 				if (edge >= m) {
-					throw new HashBuildException();
+					throw new HashBuildException("assignment failed");
 				}
 				if (assignedEdges.get(edge)) {
 					return false;
@@ -183,7 +183,7 @@ public abstract class MinimalPerfectMapBuilder<T, S, U> {
 			int[] edge = doubleHash(h, k);
 			boolean success = graph.addEdge(edge[0], edge[1]);
 			if (!success) {
-				throw new HashBuildException();
+				throw new HashBuildException("duplicate edge in graph");
 			}
 		}
 		return graph;

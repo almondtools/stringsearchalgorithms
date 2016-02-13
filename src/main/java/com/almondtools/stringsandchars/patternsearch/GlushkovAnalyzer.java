@@ -11,10 +11,8 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Queue;
 import java.util.Set;
 
 import com.almondtools.stringsandchars.regex.AlternativesNode;
@@ -226,11 +224,11 @@ public class GlushkovAnalyzer implements RegexNodeVisitor<Void> {
 
 		BitSet finals = initial();
 
-		CharObjectMap<BitSet> emittingChar = reachableByChar(options);
+		CharObjectMap<BitSet> reachableByChar = reachableByChar(options);
 
-		BitSetObjectMap<BitSet> reachableByState = sourceableByState(emittingChar, options);
+		BitSetObjectMap<BitSet> reachableByState = sourceableByState(reachableByChar, options);
 
-		return new DualGlushkovAutomaton(initial, finals, emittingChar, reachableByState);
+		return new DualGlushkovAutomaton(initial, finals, reachableByChar, reachableByState);
 	}
 
 	public int minLength() {
@@ -291,48 +289,78 @@ public class GlushkovAnalyzer implements RegexNodeVisitor<Void> {
 
 	}
 
-	private BitSetObjectMap<BitSet> sourceableByState(CharObjectMap<BitSet> emittingChar, GlushkovAnalyzerOption... options) {
+	private BitSetObjectMap<BitSet> sourceableByState(CharObjectMap<BitSet> reachableByChar, GlushkovAnalyzerOption... options) {
 		BitSet defaultValue = SELF_LOOP.in(options) ? finals() : new BitSet(len);
 		BitSet start = FACTORS.in(options) ? all() : finals();
 
 		BitSetObjectMap.Builder<BitSet> sourceable = new BitSetObjectMap.Builder<>(defaultValue);
-		List<BitSet> allFinals = powerSet(start);
-		allFinals.remove(new BitSet(len));
+		List<BitSet> allFinals = allFinals(start, reachableByChar, options);
 		for (BitSet finals : allFinals) {
-			sourceableByState(finals, len, sourceable, emittingChar, defaultValue);
+			sourceableByState(finals, len, sourceable, reachableByChar, defaultValue);
 		}
 		return sourceable.perfectMinimal();
 	}
 
-	private List<BitSet> powerSet(BitSet set) {
-		Queue<Integer> ints = new LinkedList<>();
-		int next = -1;
-		while ((next = set.nextSetBit(next + 1)) >= 0) {
-			ints.add(next);
-		}
-		return buildPowerSet(ints, set.size());
+	private List<BitSet> allFinals(BitSet initial, CharObjectMap<BitSet> reachableByChar, GlushkovAnalyzerOption... options) {
+		BitSet start = FACTORS.in(options) ? all() : initial();
+		BitSet defaultValue = SELF_LOOP.in(options) ? initial() : new BitSet(len);
+		
+		Collection<BitSet> possible = possibleStartsByState(start, reachableByChar, defaultValue);
+		
+		return filterPossiblesStartsByChar(initial, reachableByChar, possible);
 	}
 
-	private List<BitSet> buildPowerSet(Queue<Integer> ints, int size) {
-		if (ints.isEmpty()) {
-			List<BitSet> result = new ArrayList<BitSet>();
-			result.add(new BitSet(size));
-			return result;
-		}
-		int bit = ints.remove();
-		List<BitSet> base = buildPowerSet(ints, size);
-		List<BitSet> result = new ArrayList<BitSet>(base.size() * 2);
-		for (BitSet b : base) {
-			BitSet off = (BitSet) b.clone();
-			result.add(off);
-			BitSet on = (BitSet) b.clone();
-			on.set(bit);
-			result.add(on);
-		}
-		return result;
+	private Collection<BitSet> possibleStartsByState(BitSet next, CharObjectMap<BitSet> reachableByChar, BitSet defaultValue) {
+		Map<BitSet, BitSet> possible = new LinkedHashMap<>();
+		possibleStartsByState(possible, next, reachableByChar, defaultValue);
+		return possible.values();
 	}
 
-	private void sourceableByState(BitSet d, int len, MinimalPerfectMapBuilder<BitSet, BitSet, BitSetObjectMap<BitSet>> sourceable, CharObjectMap<BitSet> emittingChar, BitSet defaultValue) {
+	private void possibleStartsByState(Map<BitSet, BitSet> possible, BitSet next, CharObjectMap<BitSet> reachableByChar, BitSet defaultValue) {
+		if (possible.get(next) == null) {
+			possibleStartsByState(next, possible, reachableByChar, defaultValue);
+		}
+		next = or(next, initial());
+		if (possible.get(next) == null) {
+			possibleStartsByState(next, possible, reachableByChar, defaultValue);
+		}
+	}
+
+	private void possibleStartsByState(BitSet d, Map<BitSet, BitSet> possible, CharObjectMap<BitSet> reachableByChar, BitSet defaultValue) {
+		BitSet td = possible.get(d);
+		if (td == null) {
+			td = (BitSet) defaultValue.clone();
+			possible.put(d, td);
+		}
+		for (int i = 0; i < len; i++) {
+			if (d.get(i)) {
+				td.or(bits(len, follow(i)));
+			}
+		}
+		BitSet n = (BitSet) td.clone();
+		for (char c : alphabet) {
+			BitSet next = and(n, reachableByChar.get(c));
+			possibleStartsByState(possible, next, reachableByChar, defaultValue);
+		}
+	}
+
+	private List<BitSet> filterPossiblesStartsByChar(BitSet initial, CharObjectMap<BitSet> reachableByChar, Collection<BitSet> possible) {
+		Set<BitSet> filteredPossible = new LinkedHashSet<>();
+		for (BitSet value : possible) {
+			BitSet finalValue = (BitSet) initial.clone();
+			finalValue.and(value);
+			for (char c : alphabet) {
+				BitSet charFilter = reachableByChar.get(c);
+				BitSet state = and(finalValue, charFilter);
+				if (!state.isEmpty()) {
+					filteredPossible.add(state);
+				}
+			}
+		}
+		return new ArrayList<>(filteredPossible);
+	}
+
+	private void sourceableByState(BitSet d, int len, MinimalPerfectMapBuilder<BitSet, BitSet, BitSetObjectMap<BitSet>> sourceable, CharObjectMap<BitSet> reachableByChar, BitSet defaultValue) {
 		BitSet td = sourceable.get(d);
 		if (td == defaultValue) {
 			td = (BitSet) defaultValue.clone();
@@ -346,9 +374,9 @@ public class GlushkovAnalyzer implements RegexNodeVisitor<Void> {
 
 		BitSet n = (BitSet) td.clone();
 		for (char c : alphabet) {
-			BitSet next = and(n, emittingChar.get(c));
+			BitSet next = and(n, reachableByChar.get(c));
 			if (sourceable.get(next) == defaultValue) {
-				sourceableByState(next, len, sourceable, emittingChar, defaultValue);
+				sourceableByState(next, len, sourceable, reachableByChar, defaultValue);
 			}
 		}
 
@@ -601,6 +629,12 @@ public class GlushkovAnalyzer implements RegexNodeVisitor<Void> {
 	private BitSet and(BitSet b1, BitSet b2) {
 		BitSet bitSet = (BitSet) b1.clone();
 		bitSet.and(b2);
+		return bitSet;
+	}
+
+	private BitSet or(BitSet b1, BitSet b2) {
+		BitSet bitSet = (BitSet) b1.clone();
+		bitSet.or(b2);
 		return bitSet;
 	}
 

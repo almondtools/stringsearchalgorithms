@@ -70,6 +70,11 @@ public class SetHorspool implements StringSearchAlgorithm {
 		return minLength;
 	}
 
+	@Override
+	public String toString() {
+		return getClass().getSimpleName();
+	}
+
 	private class NextMatchFinder extends Finder {
 
 		public NextMatchFinder(CharProvider chars, StringFinderOption... options) {

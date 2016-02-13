@@ -135,6 +135,17 @@ public class MultiFactorRE implements StringSearchAlgorithm {
 	public int getPatternLength() {
 		return minLength;
 	}
+	
+	@Override
+	public String toString() {
+		Set<String> factors = new LinkedHashSet<>();
+		for (List<FactorExtender> matchExtenders : extenders.values()) {
+			for (FactorExtender matchExtender : matchExtenders) {
+				factors.add(matchExtender.toString());
+			}
+		}
+		return getClass().getSimpleName() + "<" + searchAlgorithm.toString() + ", " + factors + ">";
+	}
 
 	private class Finder extends BufferedStringFinder {
 

@@ -3,6 +3,8 @@ package com.almondtools.util.map;
 
 public class HashFunction {
 
+	public static final HashFunction NULL = new HashFunction(new int[] { 0 }, 0, 0);
+
 	private final int[] g;
 	private final int n;
 	private final int seed1;
@@ -19,27 +21,15 @@ public class HashFunction {
 		int[] hashes = doubleHash(key);
 		return g[hashes[0]] + g[hashes[1]];
 	}
-
+	
 	public int[] doubleHash(long[] key) {
-		int h1 = 1;
-		for (long k : key)  {
-			int k1 = (int) (k & 0x00ff);
-			int k2 = (int) (k >>> 32);
-			h1 = (h1 * seed1) ^ k1;
-			h1 = (h1 * seed1) ^ k2;
-		}
-		h1 %= n;
+		
+		int h1 = hash(key, seed1) % n;
 		if (h1 < 0) {
 			h1 += n;
 		}
 
-		int h2 = 1;
-		for (long k : key)  {
-			int k1 = (int) (k & 0x00ff);
-			int k2 = (int) (k >>> 32);
-			h2 = (h2 * seed2) ^ k1;
-			h2 = (h2 * seed2) ^ k2;
-		}
+		int h2 = hash(key, seed2) % n;
 		h2 %= n;
 		if (h2 < 0) {
 			h2 += n;
@@ -57,12 +47,12 @@ public class HashFunction {
 	}
 
 	public int[] doubleHash(int key) {
-		int h1 = (key ^ seed1) % n;
+		int h1 = hash(key,seed1) % n;
 		if (h1 < 0) {
 			h1 += n;
 		}
 
-		int h2 = (key ^ seed2) % n;
+		int h2 = hash(key,seed2) % n;
 		if (h2 < 0) {
 			h2 += n;
 		}
@@ -71,6 +61,31 @@ public class HashFunction {
 		}
 
 		return new int[] { h1, h2 };
+	}
+	
+	private static final int hash(long[] key, int seed) {
+		int hash = seed;
+		for (int i = 0; i < key.length; i++) {
+			seed += i;
+			hash ^= hash(key[i], seed);
+		}
+		return hash;
+	}
+	private static final int hash(long key, int seed) {
+		key ^= key >> 23;
+		key *= 0x2127599bf4325c37L;
+		key ^= key >> 47;
+		return hash((int) (key ^ key >>> 32), seed);
+	}
+
+	private static final int hash(int key, int seed) {
+		key ^= seed;
+		key += (key <<  15) ^ 0xffffcd7d;
+		key ^= (key >>> 10);
+		key += (key <<   3);
+		key ^= (key >>>  6);
+		key += (key <<   2) + (key << 14);
+		return key ^ (key >>> 16);
 	}
 
 }
