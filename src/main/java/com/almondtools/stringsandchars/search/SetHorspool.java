@@ -235,14 +235,14 @@ public class SetHorspool implements StringSearchAlgorithm {
 		}
 
 		private static CharIntMap computeCharacterShift(List<char[]> patterns, int minLength) {
-			CharIntMap.Builder mapBuilder = new CharIntMap.Builder(minLength);
+			CharIntMap map = new CharIntMap(minLength);
 			for (char[] pattern : patterns) {
 				for (int i = 0; i < pattern.length - 1; i++) {
-					int value = mapBuilder.get(pattern[i]);
-					mapBuilder.put(pattern[i], min(value, pattern.length - i - 1));
+					int value = map.get(pattern[i]);
+					map.put(pattern[i], min(value, pattern.length - i - 1));
 				}
 			}
-			return mapBuilder.perfectMinimal();
+			return map;
 		}
 
 		@Override

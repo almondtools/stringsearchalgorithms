@@ -34,7 +34,6 @@ import com.almondtools.stringsandchars.regex.StringNode;
 import com.almondtools.stringsandchars.regex.UnboundedLoopNode;
 import com.almondtools.util.map.BitSetObjectMap;
 import com.almondtools.util.map.CharObjectMap;
-import com.almondtools.util.map.MinimalPerfectMapBuilder;
 
 public class GlushkovAnalyzer implements RegexNodeVisitor<Void> {
 
@@ -244,7 +243,7 @@ public class GlushkovAnalyzer implements RegexNodeVisitor<Void> {
 	private CharObjectMap<BitSet> reachableByChar(GlushkovAnalyzerOption... options) {
 		BitSet defaultValue = SELF_LOOP.in(options) ? initial() : new BitSet(len);
 
-		CharObjectMap.Builder<BitSet> reachable = new CharObjectMap.Builder<BitSet>(defaultValue);
+		CharObjectMap<BitSet> reachable = new CharObjectMap<BitSet>(defaultValue);
 		for (int i = 1; i < len; i++) {
 			for (char c : chars[i].chars()) {
 				BitSet b = reachable.get(c);
@@ -255,19 +254,19 @@ public class GlushkovAnalyzer implements RegexNodeVisitor<Void> {
 				b.set(i);
 			}
 		}
-		return reachable.perfectMinimal();
+		return reachable;
 	}
 
 	private BitSetObjectMap<BitSet> reachableByState(CharObjectMap<BitSet> reachableByChar, GlushkovAnalyzerOption... options) {
 		BitSet defaultValue = SELF_LOOP.in(options) ? initial() : new BitSet(len);
 		BitSet start = FACTORS.in(options) ? all() : initial();
 
-		BitSetObjectMap.Builder<BitSet> reachable = new BitSetObjectMap.Builder<>(defaultValue);
+		BitSetObjectMap<BitSet> reachable = new BitSetObjectMap<>(defaultValue);
 		reachableByState(start, reachable, reachableByChar, defaultValue);
-		return reachable.perfectMinimal();
+		return reachable;
 	}
 
-	private void reachableByState(BitSet d, MinimalPerfectMapBuilder<BitSet, BitSet, BitSetObjectMap<BitSet>> reachable, CharObjectMap<BitSet> reachableByChar, BitSet defaultValue) {
+	private void reachableByState(BitSet d, BitSetObjectMap<BitSet> reachable, CharObjectMap<BitSet> reachableByChar, BitSet defaultValue) {
 		BitSet td = reachable.get(d);
 		if (td == defaultValue) {
 			td = (BitSet) defaultValue.clone();
@@ -293,12 +292,12 @@ public class GlushkovAnalyzer implements RegexNodeVisitor<Void> {
 		BitSet defaultValue = SELF_LOOP.in(options) ? finals() : new BitSet(len);
 		BitSet start = FACTORS.in(options) ? all() : finals();
 
-		BitSetObjectMap.Builder<BitSet> sourceable = new BitSetObjectMap.Builder<>(defaultValue);
+		BitSetObjectMap<BitSet> sourceable = new BitSetObjectMap<>(defaultValue);
 		List<BitSet> allFinals = allFinals(start, reachableByChar, options);
 		for (BitSet finals : allFinals) {
 			sourceableByState(finals, len, sourceable, reachableByChar, defaultValue);
 		}
-		return sourceable.perfectMinimal();
+		return sourceable;
 	}
 
 	private List<BitSet> allFinals(BitSet initial, CharObjectMap<BitSet> reachableByChar, GlushkovAnalyzerOption... options) {
@@ -360,7 +359,7 @@ public class GlushkovAnalyzer implements RegexNodeVisitor<Void> {
 		return new ArrayList<>(filteredPossible);
 	}
 
-	private void sourceableByState(BitSet d, int len, MinimalPerfectMapBuilder<BitSet, BitSet, BitSetObjectMap<BitSet>> sourceable, CharObjectMap<BitSet> reachableByChar, BitSet defaultValue) {
+	private void sourceableByState(BitSet d, int len, BitSetObjectMap<BitSet> sourceable, CharObjectMap<BitSet> reachableByChar, BitSet defaultValue) {
 		BitSet td = sourceable.get(d);
 		if (td == defaultValue) {
 			td = (BitSet) defaultValue.clone();

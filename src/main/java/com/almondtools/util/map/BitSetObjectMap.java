@@ -1,65 +1,142 @@
 package com.almondtools.util.map;
 
-import static com.almondtools.util.map.HashFunction.NULL;
-
 import java.util.BitSet;
-import java.util.Map;
 
-public class BitSetObjectMap<T> {
+public class BitSetObjectMap<T> extends TuneableMap {
 
-	private HashFunction h;
+	private static final BitSet NULL_KEY = null;
+
+	private float loadFactor;
+	private int mask;
+	private int expandAt;
+	private int size;
+
 	private BitSet[] keys;
 	private T[] values;
 	private T defaultValue;
+	private T nullValue;
 
-	public BitSetObjectMap(HashFunction h, Map<BitSet, T> map, T defaultValue) {
-		this.h = h;
-		this.defaultValue = defaultValue;
-		computeKeysAndValues(map);
+	public BitSetObjectMap(T defaultValue) {
+		this(DEFAULT_SIZE, DEFAULT_LOAD, defaultValue);
 	}
 
 	@SuppressWarnings("unchecked")
-	private void computeKeysAndValues(Map<BitSet, T> map) {
-		int len = map.size();
-		if (h == NULL) {
-			keys = map.keySet().toArray(new BitSet[0]);
-		} else if (len == 0) {
-			keys = new BitSet[1];
-			keys[0] = new BitSet(0);
-			values = (T[]) new Object[1];
-			values[0] = defaultValue;
-		} else {
-			keys = new BitSet[len];
-			values = (T[]) new Object[len];
-			for (Map.Entry<BitSet, T> entry : map.entrySet()) {
-				BitSet key = entry.getKey();
-				T value = entry.getValue();
+	public BitSetObjectMap(int initialSize, float loadFactor, T defaultValue) {
+		this.loadFactor = loadFactor;
+		this.mask = mask(initialSize, loadFactor);
+		this.expandAt = initialSize;
+		this.size = 0;
+		this.keys = new BitSet[mask + 1];
+		this.values = (T[]) new Object[mask + 1];
+		this.defaultValue = defaultValue;
+		this.nullValue = defaultValue;
+	}
 
-				int i = h.hash(key.toLongArray());
-
-				keys[i] = key;
-				values[i] = value;
+	public BitSet[] keys() {
+		int size = this.size;
+		if (nullValue != defaultValue) {
+			size++;
+		}
+		BitSet[] keys = new BitSet[size];
+		int pos = 0;
+		for (BitSet c : this.keys) {
+			if (c != NULL_KEY && c != null) {
+				keys[pos] = c;
+				pos++;
 			}
 		}
-	}
-	
-	public BitSet[] keys() {
+		if (nullValue != defaultValue && pos < keys.length) {
+			keys[pos] = NULL_KEY;
+		}
 		return keys;
 	}
 
-	public T get(BitSet value) {
-		int i = h.hash(value.toLongArray());
-		if (i >= keys.length) {
+	public BitSetObjectMap<T> add(BitSet key, T value) {
+		put(key, value);
+		return this;
+	}
+
+	public void put(BitSet key, T value) {
+		if (key == NULL_KEY) {
+			nullValue = value;
+			return;
+		}
+		int slot = hash(key.hashCode()) & mask;
+		while (keys[slot] != NULL_KEY && keys[slot] != null && !keys[slot].equals(key)) {
+			slot = (slot + 1) & mask;
+		}
+		if (keys[slot] == NULL_KEY) {
+			size++;
+		}
+		keys[slot] = key;
+		values[slot] = value;
+		if (size > expandAt) {
+			expand(size * 2);
+		}
+	}
+
+	public T get(BitSet key) {
+		if (key == NULL_KEY) {
+			return nullValue;
+		}
+		int slot = hash(key.hashCode()) & mask;
+		while (keys[slot] != NULL_KEY && keys[slot] != null && !keys[slot].equals(key)) {
+			slot = (slot + 1) & mask;
+		}
+		if (keys[slot] == NULL_KEY) {
 			return defaultValue;
-		} else if (keys[i].equals(value)) {
-			return values[i];
 		} else {
-			return defaultValue;
+			return values[slot];
 		}
 	}
 
 	public T getDefaultValue() {
 		return defaultValue;
+	}
+	
+	@SuppressWarnings("unchecked")
+	private void expand(int size) {
+		int mask = mask(size, this.loadFactor);
+		
+		BitSet[] oldkeys = this.keys;
+		T[] oldvalues = this.values;
+		
+		BitSet[] keys = new BitSet[mask + 1];
+		T[] values = (T[]) new Object[mask + 1];
+
+		int[] delayed = new int[this.size];
+		int pos = 0;
+		
+		for (int i = 0; i < oldkeys.length; i++) {
+			BitSet key = oldkeys[i];
+			if (key != NULL_KEY && key != null) {
+				T value = oldvalues[i];
+				int slot = hash(key.hashCode()) & mask;
+				if (keys[slot] == NULL_KEY || keys[slot] == null) {
+					keys[slot] = key;
+					values[slot] = value;
+				} else {
+					delayed[pos] = i;
+					pos++;
+				}
+			}
+		}
+		for (int i = 0; i < pos; i++) {
+			int j = delayed[i];
+			BitSet key = oldkeys[j];
+			T value = oldvalues[j];
+			int slot = hash(key.hashCode()) & mask;
+			while (keys[slot] != key && keys[slot] != NULL_KEY) {
+				slot = (slot + 1) & mask;
+			}
+			keys[slot] = key;
+			values[slot] = value;
+		}
+
+		this.expandAt = size;
+		this.mask = mask;
+		this.keys = keys;
+		this.values = values;
 	}
 
 	@Override
@@ -68,13 +145,13 @@ public class BitSetObjectMap<T> {
 		buffer.append("{\n");
 		if (keys.length > 0) {
 			BitSet key = keys[0];
-			T value = get(key);
+			T value = values[0];
 			buffer.append(toString(key)).append(": ").append(value);
 			
 		}
 		for (int i = 1; i < keys.length; i++) {
 			BitSet key = keys[i];
-			T value = get(key);
+			T value = values[0];
 			buffer.append(",\n").append(toString(key)).append(": ").append(value);
 		}
 		buffer.append("\n}");
@@ -94,51 +171,6 @@ public class BitSetObjectMap<T> {
 			}
 		}
 		return buffer.toString();
-	}
-
-	public static class Builder<T> extends MinimalPerfectMapBuilder<BitSet, T, BitSetObjectMap<T>> implements KeySerializer<BitSet> {
-
-		public Builder(T defaultValue) {
-			super(defaultValue);
-			withKeySerializer(this);
-		}
-
-		@Override
-		public long[] toLongArray(BitSet object) {
-			return object.toLongArray();
-		}
-
-		@Override
-		public BitSetObjectMap<T> perfectMinimal() {
-			try {
-				computeFunctions(100, 1.55);
-				return new BitSetObjectMap<T>(getH(), getEntries(), getDefaultValue());
-			} catch (HashBuildException e) {
-				return new Fallback<T>(getEntries(), getDefaultValue());
-			}
-		}
-
-	}
-
-	private static class Fallback<T> extends BitSetObjectMap<T> {
-
-		private Map<BitSet, T> map;
-
-		public Fallback(Map<BitSet, T> map, T defaultValue) {
-			super(NULL, map, defaultValue);
-			this.map = map;
-		}
-
-		@Override
-		public T get(BitSet key) {
-			T value = map.get(key);
-			if (value == null) {
-				return getDefaultValue();
-			} else {
-				return value;
-			}
-		}
-
 	}
 
 }

@@ -1,66 +1,138 @@
 package com.almondtools.util.map;
 
-import static com.almondtools.util.map.HashFunction.NULL;
+public class CharLongMap extends TuneableMap {
 
-import java.util.Map;
+	private static final char NULL_KEY = 0;
 
-public class CharLongMap {
+	private float loadFactor;
+	private int mask;
+	private int expandAt;
+	private int size;
 
-	private HashFunction h;
 	private char[] keys;
 	private long[] values;
 	private long defaultValue;
+	private long nullValue;
 
-	public CharLongMap(HashFunction h, Map<Character, Long> map, Long defaultValue) {
-		this.h = h;
-		this.defaultValue = defaultValue;
-		computeKeysAndValues(map);
+	public CharLongMap(long defaultValue) {
+		this(DEFAULT_SIZE, DEFAULT_LOAD, defaultValue);
 	}
 
-	private void computeKeysAndValues(Map<Character, Long> map) {
-		int len = map.size();
-		if (h == NULL) {
-			keys = new char[len];
-			Character[] objectkeys = map.keySet().toArray(new Character[0]);
-			for (int i = 0; i < objectkeys.length; i++) {
-				keys[i] = objectkeys[i];
-			}
-		} else if (len == 0) {
-			keys = new char[1];
-			values = new long[1];
-			values[0] = defaultValue;
-		} else {
-			keys = new char[len];
-			values = new long[len];
-			for (Map.Entry<Character, Long> entry : map.entrySet()) {
-				char key = entry.getKey();
-				long value = entry.getValue();
-
-				int i = h.hash(key);
-
-				keys[i] = key;
-				values[i] = value;
-			}
-		}
+	public CharLongMap(int initialSize, float loadFactor, long defaultValue) {
+		this.loadFactor = loadFactor;
+		this.mask = mask(initialSize, loadFactor);
+		this.expandAt = initialSize;
+		this.size = 0;
+		this.keys = new char[mask + 1];
+		this.values = new long[mask + 1];
+		this.defaultValue = defaultValue;
+		this.nullValue = defaultValue;
 	}
 
 	public char[] keys() {
+		int size = this.size;
+		if (nullValue != defaultValue) {
+			size++;
+		}
+		char[] keys = new char[size];
+		int pos = 0;
+		for (char c : this.keys) {
+			if (c != NULL_KEY) {
+				keys[pos] = c;
+				pos++;
+			}
+		}
+		if (nullValue != defaultValue && pos < keys.length) {
+			keys[pos] = NULL_KEY;
+		}
 		return keys;
 	}
 
-	public long get(char value) {
-		int i = h.hash(value);
-		if (i >= keys.length) {
+	public CharLongMap add(char key, long value) {
+		put(key, value);
+		return this;
+	}
+
+	public void put(char key, long value) {
+		if (key == NULL_KEY) {
+			nullValue = value;
+			return;
+		}
+		int slot = hash(key) & mask;
+		while (keys[slot] != key && keys[slot] != NULL_KEY) {
+			slot = (slot + 1) & mask;
+		}
+		if (keys[slot] == NULL_KEY) {
+			size++;
+		}
+		keys[slot] = key;
+		values[slot] = value;
+		if (size > expandAt) {
+			expand(size * 2);
+		}
+	}
+
+	public long get(char key) {
+		if (key == NULL_KEY) {
+			return nullValue;
+		}
+		int slot = hash(key) & mask;
+		while (keys[slot] != key && keys[slot] != NULL_KEY) {
+			slot = (slot + 1) & mask;
+		}
+		if (keys[slot] == NULL_KEY) {
 			return defaultValue;
-		} else if (keys[i] == value) {
-			return values[i];
 		} else {
-			return defaultValue;
+			return values[slot];
 		}
 	}
 
 	public long getDefaultValue() {
 		return defaultValue;
+	}
+
+	private void expand(int size) {
+		int mask = mask(size, this.loadFactor);
+		
+		char[] oldkeys = this.keys;
+		long[] oldvalues = this.values;
+		
+		char[] keys = new char[mask + 1];
+		long[] values = new long[mask + 1];
+
+		int[] delayed = new int[this.size];
+		int pos = 0;
+		
+		for (int i = 0; i < oldkeys.length; i++) {
+			char key = oldkeys[i];
+			if (key != NULL_KEY) {
+				long value = oldvalues[i];
+				int slot = hash(key) & mask;
+				if (keys[slot] == NULL_KEY) {
+					keys[slot] = key;
+					values[slot] = value;
+				} else {
+					delayed[pos] = i;
+					pos++;
+				}
+			}
+		}
+		for (int i = 0; i <= pos; i++) {
+			int j = delayed[i];
+			char key = oldkeys[j];
+			long value = oldvalues[j];
+			int slot = hash(key) & mask;
+			while (keys[slot] != key && keys[slot] != NULL_KEY) {
+				slot = (slot + 1) & mask;
+			}
+			keys[slot] = key;
+			values[slot] = value;
+		}
+
+		this.expandAt = size;
+		this.mask = mask;
+		this.keys = keys;
+		this.values = values;
 	}
 
 	@Override
@@ -69,54 +141,16 @@ public class CharLongMap {
 		buffer.append("{\n");
 		if (keys.length > 0) {
 			char key = keys[0];
-			long value = get(key);
+			long value = values[0];
 			buffer.append(key).append(": ").append(value);
-			
+
 		}
 		for (int i = 1; i < keys.length; i++) {
 			char key = keys[i];
-			long value = get(key);
+			long value = values[0];
 			buffer.append(",\n").append(key).append(": ").append(value);
 		}
 		buffer.append("\n}");
 		return buffer.toString();
-	}
-
-	public static class Builder extends MinimalPerfectMapBuilder<Character, Long, CharLongMap> {
-
-		public Builder(Long defaultValue) {
-			super(defaultValue);
-		}
-
-		public CharLongMap perfectMinimal() {
-			try {
-				computeFunctions(100, 1.15);
-				return new CharLongMap(getH(), getEntries(), getDefaultValue());
-			} catch (HashBuildException e) {
-				return new Fallback(getEntries(), getDefaultValue());
-			}
-		}
-
-	}
-
-	private static class Fallback extends CharLongMap {
-
-		private Map<Character, Long> map;
-
-		public Fallback(Map<Character, Long> map, Long defaultValue) {
-			super(NULL, map, defaultValue);
-			this.map = map;
-		}
-
-		@Override
-		public long get(char key) {
-			Long value = map.get(key);
-			if (value == null) {
-				return getDefaultValue();
-			} else {
-				return value;
-			}
-		}
-
 	}
 }

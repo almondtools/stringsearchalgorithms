@@ -1,66 +1,138 @@
 package com.almondtools.util.map;
 
-import static com.almondtools.util.map.HashFunction.NULL;
+public class CharIntMap extends TuneableMap {
 
-import java.util.Map;
+	private static final char NULL_KEY = 0;
 
-public class CharIntMap {
+	private float loadFactor;
+	private int mask;
+	private int expandAt;
+	private int size;
 
-	private HashFunction h;
 	private char[] keys;
 	private int[] values;
 	private int defaultValue;
+	private int nullValue;
 
-	public CharIntMap(HashFunction h, Map<Character, Integer> map, Integer defaultValue) {
-		this.h = h;
-		this.defaultValue = defaultValue;
-		computeKeysAndValues(map);
+	public CharIntMap(int defaultValue) {
+		this(DEFAULT_SIZE, DEFAULT_LOAD, defaultValue);
 	}
 
-	private void computeKeysAndValues(Map<Character, Integer> map) {
-		int len = map.size();
-		if (h == NULL) {
-			keys = new char[len];
-			Character[] objectkeys = map.keySet().toArray(new Character[0]);
-			for (int i = 0; i < objectkeys.length; i++) {
-				keys[i] = objectkeys[i];
-			}
-		} else if (len == 0) {
-			keys = new char[1];
-			values = new int[1];
-			values[0] = defaultValue;
-		} else {
-			keys = new char[len];
-			values = new int[len];
-			for (Map.Entry<Character, Integer> entry : map.entrySet()) {
-				char key = entry.getKey();
-				int value = entry.getValue();
-
-				int i = h.hash(key);
-
-				keys[i] = key;
-				values[i] = value;
-			}
-		}
+	public CharIntMap(int initialSize, float loadFactor, int defaultValue) {
+		this.loadFactor = loadFactor;
+		this.mask = mask(initialSize, loadFactor);
+		this.expandAt = initialSize;
+		this.size = 0;
+		this.keys = new char[mask + 1];
+		this.values = new int[mask + 1];
+		this.defaultValue = defaultValue;
+		this.nullValue = defaultValue;
 	}
 
 	public char[] keys() {
+		int size = this.size;
+		if (nullValue != defaultValue) {
+			size++;
+		}
+		char[] keys = new char[size];
+		int pos = 0;
+		for (char c : this.keys) {
+			if (c != NULL_KEY) {
+				keys[pos] = c;
+				pos++;
+			}
+		}
+		if (nullValue != defaultValue && pos < keys.length) {
+			keys[pos] = NULL_KEY;
+		}
 		return keys;
 	}
 
-	public int get(char value) {
-		int i = h.hash(value);
-		if (i >= keys.length) {
+	public CharIntMap add(char key, int value) {
+		put(key, value);
+		return this;
+	}
+
+	public void put(char key, int value) {
+		if (key == NULL_KEY) {
+			nullValue = value;
+			return;
+		}
+		int slot = hash(key) & mask;
+		while (keys[slot] != key && keys[slot] != NULL_KEY) {
+			slot = (slot + 1) & mask;
+		}
+		if (keys[slot] == NULL_KEY) {
+			size++;
+		}
+		keys[slot] = key;
+		values[slot] = value;
+		if (size > expandAt) {
+			expand(size * 2);
+		}
+	}
+
+	public int get(char key) {
+		if (key == NULL_KEY) {
+			return nullValue;
+		}
+		int slot = hash(key) & mask;
+		while (keys[slot] != key && keys[slot] != NULL_KEY) {
+			slot = (slot + 1) & mask;
+		}
+		if (keys[slot] == NULL_KEY) {
 			return defaultValue;
-		} else if (keys[i] == value) {
-			return values[i];
 		} else {
-			return defaultValue;
+			return values[slot];
 		}
 	}
 
 	public int getDefaultValue() {
 		return defaultValue;
+	}
+
+	private void expand(int size) {
+		int mask = mask(size, this.loadFactor);
+		
+		char[] oldkeys = this.keys;
+		int[] oldvalues = this.values;
+		
+		char[] keys = new char[mask + 1];
+		int[] values = new int[mask + 1];
+
+		int[] delayed = new int[this.size];
+		int pos = 0;
+		
+		for (int i = 0; i < oldkeys.length; i++) {
+			char key = oldkeys[i];
+			if (key != NULL_KEY) {
+				int value = oldvalues[i];
+				int slot = hash(key) & mask;
+				if (keys[slot] == NULL_KEY) {
+					keys[slot] = key;
+					values[slot] = value;
+				} else {
+					delayed[pos] = i;
+					pos++;
+				}
+			}
+		}
+		for (int i = 0; i <= pos; i++) {
+			int j = delayed[i];
+			char key = oldkeys[j];
+			int value = oldvalues[j];
+			int slot = hash(key) & mask;
+			while (keys[slot] != key && keys[slot] != NULL_KEY) {
+				slot = (slot + 1) & mask;
+			}
+			keys[slot] = key;
+			values[slot] = value;
+		}
+
+		this.expandAt = size;
+		this.mask = mask;
+		this.keys = keys;
+		this.values = values;
 	}
 
 	@Override
@@ -69,56 +141,16 @@ public class CharIntMap {
 		buffer.append("{\n");
 		if (keys.length > 0) {
 			char key = keys[0];
-			int value = get(key);
+			int value = values[0];
 			buffer.append(key).append(": ").append(value);
-			
+
 		}
 		for (int i = 1; i < keys.length; i++) {
 			char key = keys[i];
-			int value = get(key);
+			int value = values[0];
 			buffer.append(",\n").append(key).append(": ").append(value);
 		}
 		buffer.append("\n}");
 		return buffer.toString();
 	}
-
-	public static class Builder extends MinimalPerfectMapBuilder<Character, Integer, CharIntMap> {
-
-		public Builder(Integer defaultValue) {
-			super(defaultValue);
-		}
-
-		@Override
-		public CharIntMap perfectMinimal() {
-			try {
-				computeFunctions(100, 1.15);
-				return new CharIntMap(getH(), getEntries(), getDefaultValue());
-			} catch (HashBuildException e) {
-				return new Fallback(getEntries(), getDefaultValue());
-			}
-		}
-
-	}
-
-	private static class Fallback extends CharIntMap {
-
-		private Map<Character, Integer> map;
-
-		public Fallback(Map<Character, Integer> map, Integer defaultValue) {
-			super(NULL, map, defaultValue);
-			this.map = map;
-		}
-
-		@Override
-		public int get(char key) {
-			Integer value = map.get(key);
-			if (value == null) {
-				return getDefaultValue();
-			} else {
-				return value;
-			}
-		}
-
-	}
-
 }

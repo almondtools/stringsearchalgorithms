@@ -168,11 +168,11 @@ public class Sunday implements StringSearchAlgorithm {
 		}
 
 		private static CharIntMap computeCharacterShift(char[] pattern) {
-			CharIntMap.Builder mapBuilder = new CharIntMap.Builder(pattern.length);
+			CharIntMap map = new CharIntMap(pattern.length);
 			for (int i = 0; i < pattern.length; i++) {
-				mapBuilder.put(pattern[i], pattern.length - i);
+				map.put(pattern[i], pattern.length - i);
 			}
-			return mapBuilder.perfectMinimal();
+			return map;
 		}
 
 		@Override

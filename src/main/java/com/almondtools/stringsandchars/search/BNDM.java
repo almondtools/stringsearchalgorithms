@@ -275,14 +275,14 @@ public class BNDM implements StringSearchAlgorithm {
 		}
 
 		private static CharLongMap computeStates(char[] pattern) {
-			CharLongMap.Builder mapBuilder = new CharLongMap.Builder(0l);
+			CharLongMap map = new CharLongMap(0l);
 			for (int i = 0; i < pattern.length; i++) {
 				char c = pattern[i];
 				int j = pattern.length - i - 1;
-				long newState = mapBuilder.get(c) | (1l << j);
-				mapBuilder.put(c, newState);
+				long newState = map.get(c) | (1l << j);
+				map.put(c, newState);
 			}
-			return mapBuilder.perfectMinimal();
+			return map;
 		}
 
 		@Override
@@ -359,20 +359,20 @@ public class BNDM implements StringSearchAlgorithm {
 
 		private static CharObjectMap<long[]> computeStates(char[] pattern) {
 			long[] zero = computeZero(pattern.length);
-			CharObjectMap.Builder<long[]> mapBuilder = new CharObjectMap.Builder<>(zero);
+			CharObjectMap<long[]> map = new CharObjectMap<>(zero);
 			for (int i = 0; i < pattern.length; i++) {
 				char c = pattern[i];
 				int j = pattern.length - i - 1;
 				int slot = ((pattern.length - 1) / 64) - j / 64;
 				int offset = j % 64;
-				long[] newState = mapBuilder.get(c);
+				long[] newState = map.get(c);
 				if (newState == zero) {
 					newState = computeZero(pattern.length);
 				}
 				newState[slot] |= 1l << offset;
-				mapBuilder.put(c, newState);
+				map.put(c, newState);
 			}
-			return mapBuilder.perfectMinimal();
+			return map;
 		}
 
 		@Override
