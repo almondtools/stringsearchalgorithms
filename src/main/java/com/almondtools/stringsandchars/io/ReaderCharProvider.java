@@ -39,9 +39,9 @@ public class ReaderCharProvider implements CharProvider {
 		absolutePos = start;
 	}
 
-	private void read(int buffersToRead) {
+	private int read(int buffersToRead) {
 		if (buffersToRead <= 0) {
-			return;
+			return 0;
 		}
 		try {
 			int buffersAlreadyRead = topIndex - currentIndex;
@@ -82,15 +82,21 @@ public class ReaderCharProvider implements CharProvider {
 			}
 			if (buffersToRead > 0) {
 				throw new OutOfBufferException();
+			} else if (buffersToSkip > 0) {
+				return buffersToSkip + bufferNumber;
+			} else if (buffersToShift > 0) {
+				return buffersToShift;
+			} else {
+				return 0;
 			}
 		} catch (IOException e) {
 			throw new IORuntimeException(e);
 		}
 	}
 
-	private void readAhead(int buffersToRead) {
+	private int readAhead(int buffersToRead) {
 		if (buffersToRead <= 0) {
-			return;
+			return 0;
 		}
 		try {
 			int freeBuffers = bufferNumber - topIndex - 1;
@@ -119,6 +125,8 @@ public class ReaderCharProvider implements CharProvider {
 			}
 			if (buffersToRead > 0) {
 				throw new OutOfBufferException();
+			} else {
+				return buffersToShift;
 			}
 		} catch (IOException e) {
 			throw new IORuntimeException(e);
@@ -135,8 +143,8 @@ public class ReaderCharProvider implements CharProvider {
 		if (expectedIndex <= topIndex) {
 			currentIndex = expectedIndex;
 		} else {
-			read(expectedIndex - currentIndex);
-			currentIndex = topIndex;
+			int indexShift = read(expectedIndex - topIndex);
+			currentIndex = expectedIndex - indexShift;
 		}
 		char c = buffers[currentIndex][currentPos];
 		currentPos++;
@@ -153,15 +161,21 @@ public class ReaderCharProvider implements CharProvider {
 	public char lookahead(int pos) {
 		int expectedPos = currentPos + pos;
 		int expectedIndex = currentIndex;
+		while (expectedPos < 0) {
+			expectedPos += bufferSize;
+			expectedIndex--;
+		}
 		while (expectedPos >= bufferSize) {
 			expectedPos -= bufferSize;
 			expectedIndex++;
 		}
-		if (expectedIndex > topIndex) {
-			readAhead(expectedIndex - topIndex);
+		if (expectedIndex < 0) {
+			throw new OutOfBufferException();
+		} else if (expectedIndex > topIndex) {
+			int indexShift = readAhead(expectedIndex - topIndex);
+			expectedIndex -= indexShift;
 		}
-		char c = buffers[expectedIndex][expectedPos];
-		return c;
+		return buffers[expectedIndex][expectedPos];
 	}
 
 	@Override
@@ -194,11 +208,17 @@ public class ReaderCharProvider implements CharProvider {
 			expectedPos += bufferSize;
 			expectedIndex--;
 		}
+		while (expectedPos >= bufferSize) {
+			expectedPos -= bufferSize;
+			expectedIndex++;
+		}
 		if (expectedIndex < 0) {
 			throw new OutOfBufferException();
+		} else if (expectedIndex > topIndex) {
+			int indexShift = readAhead(expectedIndex - topIndex);
+			expectedIndex -= indexShift;
 		}
-		char c = buffers[expectedIndex][expectedPos];
-		return c;
+		return buffers[expectedIndex][expectedPos];
 	}
 
 	@Override
@@ -210,26 +230,28 @@ public class ReaderCharProvider implements CharProvider {
 	public void move(long pos) {
 		long relativePos = pos - absolutePos;
 		long expectedPos = (long) currentPos + relativePos;
+		int expectedIndex = currentIndex;
+		while (expectedPos < 0) {
+			expectedPos += bufferSize;
+			expectedIndex--;
+		}
+		while (expectedPos >= bufferSize) {
+			expectedPos -= bufferSize;
+			expectedIndex++;
+		}
 
-		if (relativePos > 0) {
-			int buffersToRead = (int) (expectedPos / (long) bufferSize);
-			read(buffersToRead);
-			currentIndex = topIndex;
-			currentPos = (int) (expectedPos % bufferSize);
+		if (expectedIndex < 0) {
+			throw new OutOfBufferException();
+		} else if (relativePos > 0) {
+			int buffersToRead = expectedIndex - topIndex;
+			int indexShift = read(buffersToRead);
+			currentIndex = expectedIndex - indexShift;
+			currentPos = (int) expectedPos;
 			absolutePos = pos;
 		} else {
-			int expectedIndex = currentIndex;
-			while (expectedPos < 0 && expectedIndex > -1) {
-				expectedPos += bufferSize;
-				expectedIndex--;
-			}
-			if (expectedIndex < 0) {
-				throw new OutOfBufferException();
-			} else {
-				currentIndex = expectedIndex;
-				currentPos = (int) expectedPos;
-				absolutePos = pos;
-			}
+			currentIndex = expectedIndex;
+			currentPos = (int) expectedPos;
+			absolutePos = pos;
 		}
 	}
 
@@ -268,12 +290,14 @@ public class ReaderCharProvider implements CharProvider {
 			expectedIndex++;
 		}
 		if (expectedIndex > topIndex) {
-			readAhead(expectedIndex - topIndex);
+			int indexShift = readAhead(expectedIndex - topIndex);
+			expectedIndex -= indexShift;
 		}
 		if (expectedIndex == topIndex && expectedPos == topPos && topPos == bufferSize) {
-			readAhead(1);
-		} 
-		
+			int indexShift = readAhead(1);
+			expectedIndex -= indexShift;
+		}
+
 		if (topPos == -1 && expectedIndex >= topIndex) {
 			return true;
 		} else if (topPos == -1 && expectedIndex == topIndex - 1 && expectedPos == bufferSize) {
@@ -300,9 +324,7 @@ public class ReaderCharProvider implements CharProvider {
 			throw new OutOfBufferException();
 		}
 		if (expectedIndex > topIndex) {
-			int oldIndex = currentIndex;
-			readAhead(expectedIndex - topIndex);
-			int indexShift = oldIndex - currentIndex;
+			int indexShift = readAhead(expectedIndex - topIndex);
 			expectedIndex -= indexShift;
 		}
 
@@ -346,9 +368,7 @@ public class ReaderCharProvider implements CharProvider {
 			throw new OutOfBufferException();
 		}
 		if (expectedEndIndex > topIndex) {
-			int oldIndex = currentIndex;
-			readAhead(expectedEndIndex - topIndex);
-			int indexShift = oldIndex - currentIndex;
+			int indexShift = readAhead(expectedEndIndex - topIndex);
 			expectedStartIndex -= indexShift;
 			expectedEndIndex -= indexShift;
 		}
@@ -356,7 +376,9 @@ public class ReaderCharProvider implements CharProvider {
 		int betweenLen = (int) len;
 		char[] between = new char[betweenLen];
 
-		if (expectedStartIndex == expectedEndIndex) {
+		if (betweenLen == 0) {
+			//do nothing
+		} else if (expectedStartIndex == expectedEndIndex) {
 			System.arraycopy(buffers[expectedStartIndex], (int) expectedStartPos, between, 0, (int) (expectedEndPos - expectedStartPos));
 		} else {
 			int to = 0;

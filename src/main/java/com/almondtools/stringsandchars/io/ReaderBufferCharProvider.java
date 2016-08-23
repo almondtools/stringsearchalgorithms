@@ -4,7 +4,7 @@ import java.io.IOException;
 import java.io.Reader;
 import java.nio.CharBuffer;
 
-public class OldReaderCharProvider implements CharProvider {
+public class ReaderBufferCharProvider implements CharProvider {
 
 	private static final long NO_MARK = Long.MIN_VALUE;
 
@@ -18,7 +18,7 @@ public class OldReaderCharProvider implements CharProvider {
 
 	private int state;
 
-	public OldReaderCharProvider(Reader input, long start, int buffer, int reverseBuffers) {
+	public ReaderBufferCharProvider(Reader input, long start, int buffer, int reverseBuffers) {
 		this.input = input;
 		this.chunk = buffer;
 		this.capacity = buffer * (reverseBuffers + 1);

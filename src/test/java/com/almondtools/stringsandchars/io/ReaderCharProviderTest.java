@@ -436,5 +436,5 @@ public class ReaderCharProviderTest {
 		assertThat(provider.finished(0), is(true));
 		assertThat(provider.finished(1), is(true));
 	}
-	
+
 }
