@@ -52,6 +52,31 @@
   </div>
               <div class="container">
                   <section>
+              <h2>Why should I use Strings And Chars?</h2>
+              <div class="row">
+              <div class="col-md-8">
+                  <p>                  <a href="https://en.wikipedia.org/wiki/String_searching_algorithm">
+    String searching
+  </a> is about finding a pattern in a longer text.
+                The support of the Java Standard API for searching strings is limited - one may get an impression   <a href="http://blog.amygdalum.net/en/string-searching-using-the-java-api/">
+    here
+  </a>.
+                There exist many algorithms that process text more efficiently. Yet the majority of these algorithms is only described in papers or books or listed on websites (and the language they are specified is usually C) 
+                - and not available as library (in Java).  </p>
+              <p>                StringsAndChars provides a Java library of various algorithms to support you in string searching - supporting single patterns and multi patterns. While most algorithms outperform the naive algorithm provided by 
+                the Java-API (via       <code >String.indexOf</code>), the performance of the algorithms differs in the dimensions of:
+                  <ul>
+                          <li>size of the alphabet (e.g. {A,C,G,T} vs [A-Za-z])</li>
+                      <li>size of the pattern (e.g. CG vs ACGCTACGACGCTTTTTACGAC)</li>
+                      <li>the number of patterns to match in one pass</li>
+  </ul>
+                Some heuristics how to choose the best algorithm for your scenario will be presented in a   <a href="#chooseAlgorithm">
+    later chapter
+  </a>. </p>
+  </div>
+  </div>
+  </section>
+              <section>
               <h2>Usage</h2>
               <div class="row">
               <div class="col-md-push-8 col-md-4">
@@ -131,7 +156,7 @@ StringFinder finder = stringSearch.createFinder(text, LONGEST_MATCH, NON_OVERLAP
 
 
   </section>
-              <section>
+              <section id="chooseAlgorithm">
               <h2>Choosing the Best Algorithm</h2>
           <div class="row">
                   <div class="col-md-8">
