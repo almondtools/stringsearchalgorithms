@@ -1,10 +1,10 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
-	<groupId>com.github.almondtools</groupId>
-	<artifactId>stringsandchars</artifactId>
-	<version>0.2.23-SNAPSHOT</version>
+	<groupId>net.amygdalum</groupId>
+	<artifactId>stringsearchalgorithms</artifactId>
+	<version>0.3.1-SNAPSHOT</version>
 	<name>${project.groupId}:${project.artifactId}</name>
-	<url>https://github.com/almondtools/stringsandchars</url>
+	<url>http://stringsearchalgorithms.amygdalum.net/</url>
 	<licenses>
 		<license>
 			<name>GNU LESSER GENERAL PUBLIC LICENSE (LGPL)</name>
@@ -156,5 +156,5 @@
 			</build>
 		</profile>
 	</profiles>
-	<description>Searching and Matching Strings and Chars with efficient algorithms.</description>
+	<description>Searching and Matching Strings with efficient algorithms.</description>
 </project>
