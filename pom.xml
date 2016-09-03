@@ -20,9 +20,9 @@
 		</developer>
 	</developers>
 	<scm>
-		<connection>scm:git:git@github.com:almondtools/stringsandchars.git</connection>
-		<developerConnection>scm:git:git@github.com:almondtools/stringsandchars.git</developerConnection>
-		<url>git@github.com:almondtools/stringsandchars.git</url>
+		<connection>scm:git:git@github.com:almondtools/stringsearchalgorithms.git</connection>
+		<developerConnection>scm:git:git@github.com:almondtools/stringsearchalgorithms.git</developerConnection>
+		<url>git@github.com:almondtools/stringsearchalgorithms.git</url>
 		<tag>HEAD</tag>
 	</scm>
 	<distributionManagement>
