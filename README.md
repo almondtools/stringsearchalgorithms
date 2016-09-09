@@ -1,6 +1,6 @@
 [StringSearchAlgorithms](http://almondtools.github.io/stringsearchalgorithms/)
 ===============
-StringAndChars is a library for exact string matching algorithms (maybe later also approximate or complex string matching algorithms).
+StringSearchAlgorithms (StringAndChars) is a library for exact string matching algorithms (maybe later also approximate or complex string matching algorithms).
 
 This Readme contains technical infos to the project (e.g. Problems, Roadmap or the State of Work)
 
