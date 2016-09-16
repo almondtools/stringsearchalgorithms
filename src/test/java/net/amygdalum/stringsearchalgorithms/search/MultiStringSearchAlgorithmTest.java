@@ -25,6 +25,7 @@ public class MultiStringSearchAlgorithmTest {
 	public MultiStringSearchRule searcher = new MultiStringSearchRule(
 		new AhoCorasick.Factory(),
 		new SetHorspool.Factory(),
+		new SetHorspool.Factory(true),
 		new WuManber.Factory(),
 		new SetBackwardOracleMatching.Factory());
 

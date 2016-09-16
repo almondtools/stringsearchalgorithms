@@ -18,14 +18,20 @@ public class Sunday implements StringSearchAlgorithm {
 	private CharShift charShift;
 
 	public Sunday(String pattern) {
-		this.pattern = pattern.toCharArray();
-		this.patternLength = this.pattern.length;
-		this.charShift = computeShift(this.pattern);
+		this(pattern, false);
 	}
 
-	private static CharShift computeShift(char[] pattern) {
+	public Sunday(String pattern, boolean relaxed) {
+		this.pattern = pattern.toCharArray();
+		this.patternLength = this.pattern.length;
+		this.charShift = computeShift(this.pattern, relaxed);
+	}
+
+	private static CharShift computeShift(char[] pattern, boolean relaxed) {
 		if (isCompactRange(pattern)) {
 			return new QuickShift(pattern);
+		} else if (relaxed) {
+			return new RelaxedShift(pattern);
 		} else {
 			return new SmartShift(pattern);
 		}
@@ -117,9 +123,19 @@ public class Sunday implements StringSearchAlgorithm {
 
 	public static class Factory implements StringSearchAlgorithmFactory {
 
+		private boolean relaxed;
+
+		public Factory() {
+			this(false);
+		}
+		
+		public Factory(boolean relaxed) {
+			this.relaxed = relaxed;
+		}
+
 		@Override
 		public StringSearchAlgorithm of(String pattern) {
-			return new Sunday(pattern);
+			return new Sunday(pattern, relaxed);
 		}
 
 	}
@@ -155,6 +171,36 @@ public class Sunday implements StringSearchAlgorithm {
 				return defaultShift;
 			}
 			return characterShift[c - minChar];
+		}
+
+	}
+
+	private static class RelaxedShift implements CharShift {
+
+		private int[] characterShift;
+
+		public RelaxedShift(char[] pattern) {
+			this.characterShift = computeCharacterShift(pattern);
+		}
+
+		private static int[] computeCharacterShift(char[] pattern) {
+			int[] characters = new int[256];
+			for (int i = 0; i < characters.length; i++) {
+				characters[i] = pattern.length + 1;
+			}
+			for (int i = 0; i < pattern.length; i++) {
+				int index = pattern[i] % 256;
+				int newShift = pattern.length - i;
+				if (newShift < characters[index]) {
+					characters[index] = newShift;
+				}
+			}
+			return characters;
+		}
+
+		@Override
+		public int getShift(char c) {
+			return characterShift[c %256];
 		}
 
 	}

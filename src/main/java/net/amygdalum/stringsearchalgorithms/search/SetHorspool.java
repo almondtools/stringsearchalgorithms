@@ -27,16 +27,22 @@ public class SetHorspool implements StringSearchAlgorithm {
 	private CharShift charShift;
 
 	public SetHorspool(Collection<String> patterns) {
+		this(patterns, false);
+	}
+
+	public SetHorspool(Collection<String> patterns, boolean relaxed) {
 		List<char[]> charpatterns = toCharArray(patterns);
 		this.trie = computeTrie(charpatterns);
 		this.minLength = minLength(charpatterns);
 		this.maxLength = maxLength(charpatterns);
-		this.charShift = computeCharacterShift(charpatterns, minLength);
+		this.charShift = computeCharacterShift(charpatterns, minLength, relaxed);
 	}
 
-	private CharShift computeCharacterShift(List<char[]> charpatterns, int minLength) {
+	private CharShift computeCharacterShift(List<char[]> charpatterns, int minLength, boolean relaxed) {
 		if (isCompactRange(charpatterns, minLength)) {
 			return new QuickShift(charpatterns, minLength);
+		} else if (relaxed) {
+			return new RelaxedShift(charpatterns, minLength);
 		} else {
 			return new SmartShift(charpatterns, minLength);
 		}
@@ -182,9 +188,19 @@ public class SetHorspool implements StringSearchAlgorithm {
 
 	public static class Factory implements MultiStringSearchAlgorithmFactory {
 
+		private boolean relaxed;
+
+		public Factory() {
+			this(false);
+		}
+		
+		public Factory(boolean relaxed) {
+			this.relaxed = relaxed;
+		}
+		
 		@Override
 		public StringSearchAlgorithm of(Collection<String> patterns) {
-			return new SetHorspool(patterns);
+			return new SetHorspool(patterns, relaxed);
 		}
 
 	}
@@ -222,6 +238,38 @@ public class SetHorspool implements StringSearchAlgorithm {
 				return defaultShift;
 			}
 			return characterShift[c - minChar];
+		}
+
+	}
+
+	private static class RelaxedShift implements CharShift {
+
+		private int[] characterShift;
+
+		public RelaxedShift(List<char[]> charpatterns, int minLength) {
+			this.characterShift = computeCharacterShift(charpatterns, minLength);
+		}
+
+		private static int[] computeCharacterShift(List<char[]> patterns, int minLength) {
+			int[] characters = new int[256];
+			for (int i = 0; i < characters.length; i++) {
+				characters[i] = minLength;
+			}
+			for (char[] pattern : patterns) {
+				for (int i = 0; i < pattern.length - 1; i++) {
+					int index = pattern[i] % 256;
+					int newShift = pattern.length - i - 1;
+					if (newShift < characters[index]) {
+						characters[index] = newShift;
+					}
+				}
+			}
+			return characters;
+		}
+
+		@Override
+		public int getShift(char c) {
+			return characterShift[c % 256];
 		}
 
 	}

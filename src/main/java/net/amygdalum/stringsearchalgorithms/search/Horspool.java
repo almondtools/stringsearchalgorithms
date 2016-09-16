@@ -18,14 +18,20 @@ public class Horspool implements StringSearchAlgorithm {
 	private CharShift charShift;
 
 	public Horspool(String pattern) {
-		this.pattern = pattern.toCharArray();
-		this.patternLength = this.pattern.length;
-		this.charShift = computeShift(this.pattern);
+		this(pattern, false);
 	}
 
-	private static CharShift computeShift(char[] pattern) {
+	public Horspool(String pattern, boolean relaxed) {
+		this.pattern = pattern.toCharArray();
+		this.patternLength = this.pattern.length;
+		this.charShift = computeShift(this.pattern, relaxed);
+	}
+
+	private static CharShift computeShift(char[] pattern, boolean relaxed) {
 		if (isCompactRange(pattern)) {
 			return new QuickShift(pattern);
+		} else if (relaxed) {
+			return new RelaxedShift(pattern);
 		} else {
 			return new SmartShift(pattern);
 		}
@@ -101,10 +107,20 @@ public class Horspool implements StringSearchAlgorithm {
 	}
 
 	public static class Factory implements StringSearchAlgorithmFactory {
+		
+		private boolean relaxed;
+
+		public Factory() {
+			this(false);
+		}
+		
+		public Factory(boolean relaxed) {
+			this.relaxed = relaxed;
+		}
 
 		@Override
 		public StringSearchAlgorithm of(String pattern) {
-			return new Horspool(pattern);
+			return new Horspool(pattern, relaxed);
 		}
 
 	}
@@ -140,6 +156,36 @@ public class Horspool implements StringSearchAlgorithm {
 				return defaultShift;
 			}
 			return characterShift[c - minChar];
+		}
+
+	}
+
+	private static class RelaxedShift implements CharShift {
+
+		private int[] characterShift;
+
+		public RelaxedShift(char[] pattern) {
+			this.characterShift = computeCharacterShift(pattern);
+		}
+
+		private static int[] computeCharacterShift(char[] pattern) {
+			int[] characters = new int[256];
+			for (int i = 0; i < characters.length; i++) {
+				characters[i] = pattern.length;
+			}
+			for (int i = 0; i < pattern.length - 1; i++) {
+				int index = pattern[i] % 256;
+				int newShift = pattern.length - i - 1;
+				if (newShift < characters[index]) {
+					characters[index] = newShift;
+				}
+			}
+			return characters;
+		}
+
+		@Override
+		public int getShift(char c) {
+			return characterShift[c % 256];
 		}
 
 	}

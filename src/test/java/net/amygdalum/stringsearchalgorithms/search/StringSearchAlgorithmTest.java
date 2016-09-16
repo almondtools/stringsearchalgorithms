@@ -27,7 +27,9 @@ public class StringSearchAlgorithmTest {
 		new ShiftAnd.Factory(),
 		new KnuthMorrisPratt.Factory(),
 		new Horspool.Factory(),
+		new Horspool.Factory(true),
 		new Sunday.Factory(),
+		new Sunday.Factory(true),
 		new BNDM.Factory(),
 		new BOM.Factory());
 
