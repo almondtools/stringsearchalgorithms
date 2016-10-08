@@ -156,5 +156,15 @@
 			</build>
 		</profile>
 	</profiles>
-	<description>Searching and Matching Strings with efficient algorithms.</description>
+	<description>Searching and Matching Strings with efficient algorithms:
+- Knuth-Morris-Pratt
+- Shift-And
+- Boyer-Moore-Horspool
+- Sunday (QuickSearch)
+- BNDM
+- BOM
+- Aho-Corasick
+- Set-Horspool
+- Wu-Manber
+- Set-BOM</description>
 </project>
