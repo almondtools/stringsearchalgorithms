@@ -1,6 +1,7 @@
 package net.amygdalum.stringsearchalgorithms.search;
 
 import static java.util.Arrays.copyOfRange;
+import static net.amygdalum.stringsearchalgorithms.search.TrieNode.revert;
 import static net.amygdalum.util.text.CharUtils.minLength;
 import static net.amygdalum.util.text.StringUtils.toCharArray;
 
@@ -36,7 +37,7 @@ public class SetBackwardOracleMatching implements StringSearchAlgorithm {
 		for (char[] pattern : charpatterns) {
 			char[] prefix = copyOfRange(pattern, 0, length);
 			boolean terminate = pattern.length == prefix.length;
-			TrieNode<List<String>> node = trie.extendReverse(prefix, 0);
+			TrieNode<List<String>> node = trie.extend(revert(prefix), 0);
 			if (terminate) {
 				node.setMatch(new String(prefix));
 			}

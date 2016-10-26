@@ -1,5 +1,7 @@
 package net.amygdalum.stringsearchalgorithms.search;
 
+import static net.amygdalum.stringsearchalgorithms.search.TrieNode.revert;
+
 import java.util.ArrayList;
 import java.util.IdentityHashMap;
 import java.util.LinkedList;
@@ -26,7 +28,7 @@ public class BOM implements StringSearchAlgorithm {
 
 	private static TrieNode<String> computeTrie(char[] pattern, int length) {
 		TrieNode<String> trie = new TrieNode<>();
-		TrieNode<String> node = trie.extendReverse(pattern, 0);
+		TrieNode<String> node = trie.extend(revert(pattern), 0);
 		node.setMatch(new String(pattern));
 		computeOracle(trie);
 		return trie;

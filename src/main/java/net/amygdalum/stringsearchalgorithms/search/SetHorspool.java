@@ -2,6 +2,7 @@ package net.amygdalum.stringsearchalgorithms.search;
 
 import static java.lang.Math.min;
 import static net.amygdalum.stringsearchalgorithms.search.MatchOption.LONGEST_MATCH;
+import static net.amygdalum.stringsearchalgorithms.search.TrieNode.revert;
 import static net.amygdalum.util.text.CharUtils.computeMaxChar;
 import static net.amygdalum.util.text.CharUtils.computeMinChar;
 import static net.amygdalum.util.text.CharUtils.maxLength;
@@ -57,7 +58,8 @@ public class SetHorspool implements StringSearchAlgorithm {
 	private static TrieNode<Void> computeTrie(List<char[]> charpatterns) {
 		TrieNode<Void> trie = new TrieNode<>();
 		for (char[] pattern : charpatterns) {
-			trie.extendReverse(pattern);
+			TrieNode<Void> node = trie.extend(revert(pattern), 0);
+			node.setMatch(new String(pattern));
 		}
 		return trie;
 	}

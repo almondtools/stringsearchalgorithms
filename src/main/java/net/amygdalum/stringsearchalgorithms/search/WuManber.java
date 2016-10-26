@@ -1,6 +1,7 @@
 package net.amygdalum.stringsearchalgorithms.search;
 
 import static net.amygdalum.stringsearchalgorithms.search.MatchOption.LONGEST_MATCH;
+import static net.amygdalum.stringsearchalgorithms.search.TrieNode.revert;
 import static net.amygdalum.util.text.CharUtils.computeMaxChar;
 import static net.amygdalum.util.text.CharUtils.computeMinChar;
 import static net.amygdalum.util.text.CharUtils.maxLength;
@@ -112,7 +113,8 @@ public class WuManber implements StringSearchAlgorithm {
 				trie = new TrieNode<>();
 				hash[hashKey] = trie;
 			}
-			trie.extendReverse(pattern);
+			TrieNode<Void> node = trie.extend(revert(pattern), 0);
+			node.setMatch(new String(pattern));
 		}
 		return hash;
 	}

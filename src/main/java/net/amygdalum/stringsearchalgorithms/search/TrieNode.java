@@ -1,6 +1,5 @@
 package net.amygdalum.stringsearchalgorithms.search;
 
-import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -47,16 +46,6 @@ public class TrieNode<T> {
 		this.attached = attached;
 	}
 
-	public TrieNode<T> extendReverse(char[] chars) {
-		TrieNode<T> node = extendReverse(chars, 0);
-		node.setMatch(new String(chars));
-		return node;
-	}
-
-	public TrieNode<T> extendReverse(char[] chars, int i) {
-		return extend(revert(chars), i);
-	}
-
 	public static char[] revert(char[] chars) {
 		final int ri = chars.length - 1;
 		char[] reversechars = new char[chars.length];
@@ -76,12 +65,11 @@ public class TrieNode<T> {
 		if (i >= chars.length) {
 			return this;
 		}
-		TrieNode<T> toExtend = findNodeToExtend(Arrays.copyOf(chars, i + 1));
+		TrieNode<T> toExtend = findNodeToExtend(chars[i]);
 		return toExtend.extend(chars, i + 1);
 	}
 
-	private TrieNode<T> findNodeToExtend(char[] chars) {
-		char current = chars[chars.length - 1];
+	private TrieNode<T> findNodeToExtend(char current) {
 		TrieNode<T> node = nexts.get(current);
 		if (node == null) {
 			node = new TrieNode<>();
