@@ -5,21 +5,75 @@ import java.util.Map;
 
 public class TrieNode<T> {
 
-	private Map<Character, TrieNode<T>> nexts;
+	private int min;
+	private int max;
+	private TrieNode<T>[] nexts;
+	private Map<Character, TrieNode<T>> nextMap;
 	private TrieNode<T> fallback;
 	private String match;
 	private T attached;
 
 	public TrieNode() {
-		this.nexts = new LinkedHashMap<>();
+		this.nexts = trieNodes(4);
+		this.min = 0;
+		this.max = 3;
+	}
+
+	@SuppressWarnings("unchecked")
+	private static <T> TrieNode<T>[] trieNodes(int len) {
+		return new TrieNode[len];
 	}
 
 	public void addNext(char c, TrieNode<T> node) {
-		nexts.put(c, node);
+		if (nexts != null) {
+			if (c >= min && c <= max) {
+				nexts[(int) (c - min)] = node;
+				return;
+			}
+			int newMin = c < min ? c : min;
+			int newMax = c > max ? c : max;
+			int newLen = newMax - newMin + 1;
+			if (newLen <= 256) {
+				TrieNode<T>[] newNexts = trieNodes(newLen);
+				int newOffset = min - newMin;
+				for (int i = 0; i < nexts.length; i++) {
+					newNexts[i + newOffset] = nexts[i];
+				}
+				newNexts[(int) (c - newMin)] = node;
+				min = newMin;
+				max = newMax;
+				nexts = newNexts;
+				return;
+			}
+		}
+		if (nextMap == null) {
+			nextMap = new LinkedHashMap<>();
+			for (int i = 0; i < nexts.length; i++) {
+				TrieNode<T> nodeToMap = nexts[i];
+				char charToMap = (char) (min + i);
+				if (nodeToMap != null) {
+					nextMap.put(charToMap, nodeToMap);
+				}
+			}
+			nexts = null;
+		}
+		nextMap.put(c, node);
 	}
 
 	public Map<Character, TrieNode<T>> getNexts() {
-		return nexts;
+		if (nextMap != null) {
+			return nextMap;
+		} else {
+			Map<Character, TrieNode<T>> map = new LinkedHashMap<>();
+			for (int i = 0; i < nexts.length; i++) {
+				TrieNode<T> nodeToMap = nexts[i];
+				char charToMap = (char) (min + i);
+				if (nodeToMap != null) {
+					map.put(charToMap, nodeToMap);
+				}
+			}
+			return map;
+		}
 	}
 
 	public void addFallback(TrieNode<T> fallback) {
@@ -70,16 +124,25 @@ public class TrieNode<T> {
 	}
 
 	private TrieNode<T> findNodeToExtend(char current) {
-		TrieNode<T> node = nexts.get(current);
+		TrieNode<T> node = nextNode(current);
 		if (node == null) {
 			node = new TrieNode<>();
-			nexts.put(current, node);
+			addNext(current, node);
 		}
 		return node;
 	}
 
 	public TrieNode<T> nextNode(char c) {
-		return nexts.get(c);
+		if (nextMap != null) {
+			return nextMap.get(c);
+		} else {
+			int index = c - min;
+			if (index >= nexts.length || index < 0) {
+				return null;
+			} else {
+				return nexts[index];
+			}
+		}
 	}
 
 	public TrieNode<T> nextNode(char[] chars) {
