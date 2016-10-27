@@ -1,5 +1,10 @@
 package net.amygdalum.util.map;
 
+import static java.util.Arrays.sort;
+
+import java.util.ConcurrentModificationException;
+import java.util.Iterator;
+import java.util.NoSuchElementException;
 
 public class CharObjectMap<T> extends TuneableMap {
 
@@ -47,6 +52,7 @@ public class CharObjectMap<T> extends TuneableMap {
 		if (nullValue != defaultValue && pos < keys.length) {
 			keys[pos] = NULL_KEY;
 		}
+		sort(keys);
 		return keys;
 	}
 
@@ -91,6 +97,10 @@ public class CharObjectMap<T> extends TuneableMap {
 
 	public T getDefaultValue() {
 		return defaultValue;
+	}
+
+	public Iterable<Entry> entries() {
+		return new EntryIterable();
 	}
 
 	@SuppressWarnings("unchecked")
@@ -138,7 +148,7 @@ public class CharObjectMap<T> extends TuneableMap {
 		this.values = values;
 	}
 
-@Override
+	@Override
 	public String toString() {
 		StringBuilder buffer = new StringBuilder();
 		buffer.append("{\n");
@@ -146,7 +156,7 @@ public class CharObjectMap<T> extends TuneableMap {
 			char key = keys[0];
 			T value = values[0];
 			buffer.append(key).append(": ").append(value);
-			
+
 		}
 		for (int i = 1; i < keys.length; i++) {
 			char key = keys[i];
@@ -155,6 +165,77 @@ public class CharObjectMap<T> extends TuneableMap {
 		}
 		buffer.append("\n}");
 		return buffer.toString();
+	}
+
+	public class EntryIterable implements Iterable<CharObjectMap<T>.Entry> {
+
+		@Override
+		public Iterator<CharObjectMap<T>.Entry> iterator() {
+			return new EntryIterator();
+		}
+	}
+
+	public class EntryIterator implements Iterator<CharObjectMap<T>.Entry> {
+
+		private int index;
+		private int currentKey;
+		private int fixedSize;
+		private Entry entry;
+
+		public EntryIterator() {
+			this.index = 0;
+			this.currentKey = -1;
+			this.fixedSize = size;
+			this.entry = new Entry();
+		}
+		
+		@Override
+		public boolean hasNext() {
+			if (size != fixedSize) {
+				throw new ConcurrentModificationException();
+			}
+			return index < fixedSize;
+		}
+
+		@Override
+		public CharObjectMap<T>.Entry next() {
+			if (size != fixedSize) {
+				throw new ConcurrentModificationException();
+			}
+			while (currentKey < keys.length - 1) {
+				currentKey++;
+				char c = keys[currentKey];
+				if (c != NULL_KEY) {
+					entry.key = keys[currentKey];
+					entry.value = values[currentKey];
+					index++;
+					return entry;
+				}
+			}
+			if (nullValue != defaultValue) {
+				entry.key = NULL_KEY;
+				entry.value = nullValue;
+				index++;
+				return entry;
+			}
+			throw new NoSuchElementException();
+		}
+
+		@Override
+		public void remove() {
+			if (currentKey < 0 || currentKey >= keys.length) {
+				throw new NoSuchElementException();
+			}
+			keys[currentKey] = NULL_KEY;
+			values[currentKey] = defaultValue;
+		}
+	}
+
+	public class Entry {
+
+		public char key;
+		public T value;
+
 	}
 
 }

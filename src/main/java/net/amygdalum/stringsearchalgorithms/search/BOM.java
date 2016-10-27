@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.Queue;
 
 import net.amygdalum.stringsearchalgorithms.io.CharProvider;
+import net.amygdalum.util.map.CharObjectMap;
 
 /**
  * An implementation of the String Search Algorithm BOM (Backward Oracle Matching).
@@ -49,9 +50,9 @@ public class BOM implements StringSearchAlgorithm {
 
 	private static List<TrieNode<String>> process(TrieNode<String> parent, Map<TrieNode<String>, TrieNode<String>> oracle, TrieNode<String> init) {
 		List<TrieNode<String>> nexts = new ArrayList<>();
-		for (Map.Entry<Character, TrieNode<String>> entry : parent.getNexts().entrySet()) {
-			char c = entry.getKey();
-			TrieNode<String> trie = entry.getValue();
+		for (CharObjectMap<TrieNode<String>>.Entry entry : parent.getNexts().entries()) {
+			char c = entry.key;
+			TrieNode<String> trie = entry.value;
 
 			TrieNode<String> down = oracle.get(parent);
 			while (down != null && down.nextNode(c) == null) {

@@ -8,10 +8,10 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.Queue;
 
 import net.amygdalum.stringsearchalgorithms.io.CharProvider;
+import net.amygdalum.util.map.CharObjectMap;
 
 /**
  * An implementation of the Aho-Corasick Algorithm.
@@ -56,9 +56,9 @@ public class AhoCorasick implements StringSearchAlgorithm {
 		worklist.add(trie);
 		while (!worklist.isEmpty()) {
 			TrieNode<Void> current = worklist.remove();
-			for (Map.Entry<Character, TrieNode<Void>> next : current.getNexts().entrySet()) {
-				TrieNode<Void> nextTrie = next.getValue();
-				computeSupport(current, next.getKey(), nextTrie, trie);
+			for (CharObjectMap<TrieNode<Void>>.Entry next : current.getNexts().entries()) {
+				TrieNode<Void> nextTrie = next.value;
+				computeSupport(current, next.key, nextTrie, trie);
 				worklist.add(nextTrie);
 			}
 		}

@@ -1,14 +1,13 @@
 package net.amygdalum.stringsearchalgorithms.search;
 
-import java.util.LinkedHashMap;
-import java.util.Map;
+import net.amygdalum.util.map.CharObjectMap;
 
 public class TrieNode<T> {
 
 	private int min;
 	private int max;
 	private TrieNode<T>[] nexts;
-	private Map<Character, TrieNode<T>> nextMap;
+	private CharObjectMap<TrieNode<T>> nextMap;
 	private TrieNode<T> fallback;
 	private String match;
 	private T attached;
@@ -47,7 +46,7 @@ public class TrieNode<T> {
 			}
 		}
 		if (nextMap == null) {
-			nextMap = new LinkedHashMap<>();
+			nextMap = new CharObjectMap<>(null);
 			for (int i = 0; i < nexts.length; i++) {
 				TrieNode<T> nodeToMap = nexts[i];
 				char charToMap = (char) (min + i);
@@ -60,11 +59,11 @@ public class TrieNode<T> {
 		nextMap.put(c, node);
 	}
 
-	public Map<Character, TrieNode<T>> getNexts() {
+	public CharObjectMap<TrieNode<T>> getNexts() {
 		if (nextMap != null) {
 			return nextMap;
 		} else {
-			Map<Character, TrieNode<T>> map = new LinkedHashMap<>();
+			CharObjectMap<TrieNode<T>> map = new CharObjectMap<>(null);
 			for (int i = 0; i < nexts.length; i++) {
 				TrieNode<T> nodeToMap = nexts[i];
 				char charToMap = (char) (min + i);

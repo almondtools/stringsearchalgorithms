@@ -1,9 +1,8 @@
 package net.amygdalum.stringsearchalgorithms.search;
 
+import static com.almondtools.conmatch.datatypes.PrimitiveArrayMatcher.charArrayContaining;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.nullValue;
-import static org.hamcrest.Matchers.containsInAnyOrder;
-import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.sameInstance;
 import static org.junit.Assert.assertThat;
 
@@ -153,11 +152,11 @@ public class TrieNodeTest {
 		trieNode.extend("C".toCharArray());
 		trieNode.extend("BC".toCharArray());
 
-		assertThat(trieNode.getNexts().keySet(), containsInAnyOrder('B','C'));
+		assertThat(trieNode.getNexts().keys(), charArrayContaining('B','C'));
 		assertThat(trieNode.getNexts().get('B').getMatch(), equalTo("B"));
 		assertThat(trieNode.getNexts().get('B').nextNode('C').getMatch(), equalTo("BC"));
 		assertThat(trieNode.getNexts().get('C').getMatch(), equalTo("C"));
-		assertThat(trieNode.getNexts().get('C').getNexts().keySet(), empty());
+		assertThat(trieNode.getNexts().get('C').getNexts().keys(), charArrayContaining());
 	}
 
 	@Test

@@ -15,6 +15,7 @@ import java.util.Map;
 import java.util.Queue;
 
 import net.amygdalum.stringsearchalgorithms.io.CharProvider;
+import net.amygdalum.util.map.CharObjectMap;
 
 /**
  * An implementation of the Set Backward Oracle Matching Algorithm.
@@ -62,9 +63,9 @@ public class SetBackwardOracleMatching implements StringSearchAlgorithm {
 
 	private static List<TrieNode<List<String>>> process(TrieNode<List<String>> parent, Map<TrieNode<List<String>>, TrieNode<List<String>>> oracle, TrieNode<List<String>> init) {
 		List<TrieNode<List<String>>> nexts = new ArrayList<>();
-		for (Map.Entry<Character, TrieNode<List<String>>> entry : parent.getNexts().entrySet()) {
-			char c = entry.getKey();
-			TrieNode<List<String>> trie = entry.getValue();
+		for (CharObjectMap<TrieNode<List<String>>>.Entry entry : parent.getNexts().entries()) {
+			char c = entry.key;
+			TrieNode<List<String>> trie = entry.value;
 
 			TrieNode<List<String>> down = oracle.get(parent);
 			while (down != null && down.nextNode(c) == null) {
