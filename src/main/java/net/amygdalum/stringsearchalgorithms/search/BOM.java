@@ -50,7 +50,7 @@ public class BOM implements StringSearchAlgorithm {
 
 	private static List<TrieNode<String>> process(TrieNode<String> parent, Map<TrieNode<String>, TrieNode<String>> oracle, TrieNode<String> init) {
 		List<TrieNode<String>> nexts = new ArrayList<>();
-		for (CharObjectMap<TrieNode<String>>.Entry entry : parent.getNexts().entries()) {
+		for (CharObjectMap<TrieNode<String>>.Entry entry : parent.getNexts().cursor()) {
 			char c = entry.key;
 			TrieNode<String> trie = entry.value;
 

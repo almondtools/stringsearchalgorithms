@@ -99,7 +99,7 @@ public class CharObjectMap<T> extends TuneableMap {
 		return defaultValue;
 	}
 
-	public Iterable<Entry> entries() {
+	public Iterable<Entry> cursor() {
 		return new EntryIterable();
 	}
 
@@ -194,7 +194,7 @@ public class CharObjectMap<T> extends TuneableMap {
 			if (size != fixedSize) {
 				throw new ConcurrentModificationException();
 			}
-			return index < fixedSize;
+			return index < fixedSize || index == fixedSize && nullValue != defaultValue;
 		}
 
 		@Override

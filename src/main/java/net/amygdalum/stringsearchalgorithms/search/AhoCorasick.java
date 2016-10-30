@@ -56,7 +56,7 @@ public class AhoCorasick implements StringSearchAlgorithm {
 		worklist.add(trie);
 		while (!worklist.isEmpty()) {
 			TrieNode<Void> current = worklist.remove();
-			for (CharObjectMap<TrieNode<Void>>.Entry next : current.getNexts().entries()) {
+			for (CharObjectMap<TrieNode<Void>>.Entry next : current.getNexts().cursor()) {
 				TrieNode<Void> nextTrie = next.value;
 				computeSupport(current, next.key, nextTrie, trie);
 				worklist.add(nextTrie);

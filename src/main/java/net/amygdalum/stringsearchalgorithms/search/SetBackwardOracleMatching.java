@@ -63,7 +63,7 @@ public class SetBackwardOracleMatching implements StringSearchAlgorithm {
 
 	private static List<TrieNode<List<String>>> process(TrieNode<List<String>> parent, Map<TrieNode<List<String>>, TrieNode<List<String>>> oracle, TrieNode<List<String>> init) {
 		List<TrieNode<List<String>>> nexts = new ArrayList<>();
-		for (CharObjectMap<TrieNode<List<String>>>.Entry entry : parent.getNexts().entries()) {
+		for (CharObjectMap<TrieNode<List<String>>>.Entry entry : parent.getNexts().cursor()) {
 			char c = entry.key;
 			TrieNode<List<String>> trie = entry.value;
 
