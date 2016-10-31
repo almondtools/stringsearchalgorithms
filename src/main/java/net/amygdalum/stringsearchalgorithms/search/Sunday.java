@@ -69,7 +69,9 @@ public class Sunday implements StringSearchAlgorithm {
 
 		@Override
 		public void skipTo(long pos) {
-			chars.move(pos);
+			if (pos > chars.current()) {
+				chars.move(pos);
+			}
 		}
 
 		@Override
@@ -128,7 +130,7 @@ public class Sunday implements StringSearchAlgorithm {
 		public Factory() {
 			this(false);
 		}
-		
+
 		public Factory(boolean relaxed) {
 			this.relaxed = relaxed;
 		}
@@ -200,7 +202,7 @@ public class Sunday implements StringSearchAlgorithm {
 
 		@Override
 		public int getShift(char c) {
-			return characterShift[c %256];
+			return characterShift[c % 256];
 		}
 
 	}

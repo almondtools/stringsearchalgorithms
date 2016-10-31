@@ -127,7 +127,9 @@ public class SetBackwardOracleMatching implements StringSearchAlgorithm {
 
 		@Override
 		public void skipTo(long pos) {
-			chars.move(pos);
+			if (pos > chars.current()) {
+				chars.move(pos);
+			}
 			buffer.clear();
 		}
 

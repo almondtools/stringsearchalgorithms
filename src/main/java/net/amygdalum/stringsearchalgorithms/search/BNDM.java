@@ -98,7 +98,9 @@ public class BNDM implements StringSearchAlgorithm {
 
 		@Override
 		public void skipTo(long pos) {
-			chars.move(pos);
+			if (pos > chars.current()) {
+				chars.move(pos);
+			}
 			state = activeStates;
 		}
 
@@ -152,7 +154,9 @@ public class BNDM implements StringSearchAlgorithm {
 
 		@Override
 		public void skipTo(long pos) {
-			chars.move(pos);
+			if (pos > chars.current()) {
+				chars.move(pos);
+			}
 			init(state);
 		}
 

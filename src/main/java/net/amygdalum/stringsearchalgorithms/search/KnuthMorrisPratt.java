@@ -68,7 +68,9 @@ public class KnuthMorrisPratt implements StringSearchAlgorithm {
 
 		@Override
 		public void skipTo(long pos) {
-			chars.move(pos);
+			if (pos > chars.current()) {
+				chars.move(pos);
+			}
 			patternPointer = 0;
 		}
 

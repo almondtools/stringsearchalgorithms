@@ -89,7 +89,9 @@ public class BPGlushkov implements StringSearchAlgorithm {
 		public void skipTo(long pos) {
 			long last = removeMatchesBefore(pos);
 			border = last;
-			chars.move(last);
+			if (last > chars.current()) {
+				chars.move(last);
+			}
 		}
 
 		@Override

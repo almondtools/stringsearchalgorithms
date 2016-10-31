@@ -69,7 +69,9 @@ public class Horspool implements StringSearchAlgorithm {
 
 		@Override
 		public void skipTo(long pos) {
-			chars.move(pos);
+			if (pos > chars.current()) {
+				chars.move(pos);
+			}
 		}
 
 		@Override
@@ -107,13 +109,13 @@ public class Horspool implements StringSearchAlgorithm {
 	}
 
 	public static class Factory implements StringSearchAlgorithmFactory {
-		
+
 		private boolean relaxed;
 
 		public Factory() {
 			this(false);
 		}
-		
+
 		public Factory(boolean relaxed) {
 			this.relaxed = relaxed;
 		}

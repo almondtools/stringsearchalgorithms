@@ -95,7 +95,9 @@ public class ShiftAnd implements StringSearchAlgorithm {
 
 		@Override
 		public void skipTo(long pos) {
-			chars.move(pos);
+			if (pos > chars.current()) {
+				chars.move(pos);
+			}
 			state = 0;
 		}
 
@@ -127,7 +129,9 @@ public class ShiftAnd implements StringSearchAlgorithm {
 
 		@Override
 		public void skipTo(long pos) {
-			chars.move(pos);
+			if (pos > chars.current()) {
+				chars.move(pos);
+			}
 			fill(state, 0l);
 		}
 

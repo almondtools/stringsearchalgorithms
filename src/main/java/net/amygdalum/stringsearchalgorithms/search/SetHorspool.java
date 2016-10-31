@@ -133,7 +133,9 @@ public class SetHorspool implements StringSearchAlgorithm {
 		@Override
 		public void skipTo(long pos) {
 			long last = removeMatchesBefore(pos);
-			chars.move(last);
+			if (last > chars.current()) {
+				chars.move(last);
+			}
 		}
 
 		protected StringMatch createMatch(int patternPointer, String s) {
@@ -195,11 +197,11 @@ public class SetHorspool implements StringSearchAlgorithm {
 		public Factory() {
 			this(false);
 		}
-		
+
 		public Factory(boolean relaxed) {
 			this.relaxed = relaxed;
 		}
-		
+
 		@Override
 		public StringSearchAlgorithm of(Collection<String> patterns) {
 			return new SetHorspool(patterns, relaxed);
