@@ -162,7 +162,9 @@ public class WuManber implements StringSearchAlgorithm {
 		@Override
 		public void skipTo(long pos) {
 			long last = removeMatchesBefore(pos);
-			chars.move(last);
+			if (last > chars.current()) {
+				chars.move(last);
+			}
 		}
 
 		protected StringMatch createMatch(int patternPointer, String s) {
