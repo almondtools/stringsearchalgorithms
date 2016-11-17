@@ -201,17 +201,19 @@ public class ReverseCharProviderTest {
 
 	@Test
 	public void testFinished() throws Exception {
-		ReverseCharProvider provider = new ReverseCharProvider(new StringCharProvider("dcba", 2));
+		ReverseCharProvider provider = new ReverseCharProvider(new StringCharProvider("dcba", 3));
 		
 		assertThat(provider.finished(1), is(false));
-		assertThat(provider.finished(2), is(true));
+		assertThat(provider.finished(2), is(false));
+		assertThat(provider.finished(3), is(true));
 	}
 
 	@Test
 	public void testFinishedNotChangesState() throws Exception {
-		ReverseCharProvider provider = new ReverseCharProvider(new StringCharProvider("dcba", 2));
+		ReverseCharProvider provider = new ReverseCharProvider(new StringCharProvider("dcba", 3));
 		
-		assertThat(provider.finished(2), is(true));
+		assertThat(provider.finished(3), is(true));
+		assertThat(provider.finished(2), is(false));
 		assertThat(provider.finished(1), is(false));
 	}
 	

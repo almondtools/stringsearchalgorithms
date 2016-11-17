@@ -71,7 +71,7 @@ public class ReverseCharProvider implements CharProvider {
 
 	@Override
 	public boolean finished(int i) {
-		return chars.finished(i);
+		return chars.current() <= i;
 	}
 	
 	@Override
