@@ -1,5 +1,7 @@
 package net.amygdalum.stringsearchalgorithms.io;
 
+import static java.nio.charset.StandardCharsets.UTF_16LE;
+
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 import java.nio.charset.CharacterCodingException;
@@ -7,7 +9,6 @@ import java.nio.charset.Charset;
 import java.nio.charset.CharsetDecoder;
 import java.nio.charset.CharsetEncoder;
 import java.nio.charset.CodingErrorAction;
-import java.nio.charset.StandardCharsets;
 
 public class StringByteProvider implements ByteProvider {
 
@@ -18,7 +19,7 @@ public class StringByteProvider implements ByteProvider {
 	private int mark;
 
 	public StringByteProvider(String input, int start) {
-		this(input, start, StandardCharsets.UTF_16LE);
+		this(input, start, UTF_16LE);
 	}
 
 	public StringByteProvider(String input, int start, Charset charset) {

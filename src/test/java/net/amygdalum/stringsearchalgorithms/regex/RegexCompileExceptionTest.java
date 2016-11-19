@@ -5,8 +5,6 @@ import static org.junit.Assert.assertThat;
 
 import org.junit.Test;
 
-import net.amygdalum.stringsearchalgorithms.regex.RegexCompileException;
-
 public class RegexCompileExceptionTest {
 
 	@Test

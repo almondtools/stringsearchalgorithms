@@ -16,11 +16,6 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 
-import net.amygdalum.stringsearchalgorithms.regex.CompClassNode;
-import net.amygdalum.stringsearchalgorithms.regex.DefinedCharNode;
-import net.amygdalum.stringsearchalgorithms.regex.RangeCharNode;
-import net.amygdalum.stringsearchalgorithms.regex.RegexNodeVisitor;
-
 @RunWith(MockitoJUnitRunner.class)
 public class CompClassNodeTest {
 

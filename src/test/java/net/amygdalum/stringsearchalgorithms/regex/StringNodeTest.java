@@ -13,9 +13,6 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 
-import net.amygdalum.stringsearchalgorithms.regex.RegexNodeVisitor;
-import net.amygdalum.stringsearchalgorithms.regex.StringNode;
-
 
 @RunWith(MockitoJUnitRunner.class)
 public class StringNodeTest {

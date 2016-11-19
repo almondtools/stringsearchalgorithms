@@ -16,12 +16,6 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 
-import net.amygdalum.stringsearchalgorithms.regex.DefinedCharNode;
-import net.amygdalum.stringsearchalgorithms.regex.RangeCharNode;
-import net.amygdalum.stringsearchalgorithms.regex.RegexNodeVisitor;
-import net.amygdalum.stringsearchalgorithms.regex.SingleCharNode;
-import net.amygdalum.stringsearchalgorithms.regex.SpecialCharClassNode;
-
 @RunWith(MockitoJUnitRunner.class)
 public class SpecialCharClassNodeTest {
 

@@ -10,9 +10,6 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
-import net.amygdalum.stringsearchalgorithms.io.OutOfBufferException;
-import net.amygdalum.stringsearchalgorithms.io.ReaderBufferCharProvider;
-
 public class ReaderBufferCharProviderTest {
 
 	@Rule

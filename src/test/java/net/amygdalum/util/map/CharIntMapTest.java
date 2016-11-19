@@ -6,8 +6,6 @@ import static org.junit.Assert.assertThat;
 
 import org.junit.Test;
 
-import net.amygdalum.util.map.CharIntMap;
-
 public class CharIntMapTest {
 
 	private int DEFAULT_VALUE = 42;

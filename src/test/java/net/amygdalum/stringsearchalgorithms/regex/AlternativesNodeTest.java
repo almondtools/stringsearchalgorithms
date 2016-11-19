@@ -15,12 +15,6 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 
-import net.amygdalum.stringsearchalgorithms.regex.AlternativesNode;
-import net.amygdalum.stringsearchalgorithms.regex.EmptyNode;
-import net.amygdalum.stringsearchalgorithms.regex.RegexNode;
-import net.amygdalum.stringsearchalgorithms.regex.RegexNodeVisitor;
-import net.amygdalum.stringsearchalgorithms.regex.SingleCharNode;
-
 
 @RunWith(MockitoJUnitRunner.class)
 public class AlternativesNodeTest {

@@ -12,9 +12,6 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 
-import net.amygdalum.stringsearchalgorithms.regex.EmptyNode;
-import net.amygdalum.stringsearchalgorithms.regex.RegexNodeVisitor;
-
 
 @RunWith(MockitoJUnitRunner.class)
 public class EmptyNodeTest {

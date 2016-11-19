@@ -7,8 +7,6 @@ import static org.junit.Assert.assertThat;
 
 import org.junit.Test;
 
-import net.amygdalum.stringsearchalgorithms.regex.RegexParserOption;
-
 public class RegexParserOptionTest {
 
 	@Test

@@ -12,8 +12,6 @@ import static org.junit.Assert.assertThat;
 
 import org.junit.Test;
 
-import net.amygdalum.util.text.CharUtils;
-
 
 public class CharUtilsTest {
 	

@@ -16,11 +16,6 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 
-import net.amygdalum.stringsearchalgorithms.regex.RegexNode;
-import net.amygdalum.stringsearchalgorithms.regex.RegexNodeVisitor;
-import net.amygdalum.stringsearchalgorithms.regex.SingleCharNode;
-import net.amygdalum.stringsearchalgorithms.regex.UnboundedLoopNode;
-
 @RunWith(MockitoJUnitRunner.class)
 public class UnboundedLoopNodeTest {
 

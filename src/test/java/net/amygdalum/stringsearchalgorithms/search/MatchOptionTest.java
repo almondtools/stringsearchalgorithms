@@ -7,9 +7,6 @@ import static org.junit.Assert.assertThat;
 
 import org.junit.Test;
 
-import net.amygdalum.stringsearchalgorithms.search.MatchOption;
-import net.amygdalum.stringsearchalgorithms.search.StringFinderOption;
-
 
 public class MatchOptionTest {
 

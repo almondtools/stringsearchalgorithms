@@ -10,8 +10,6 @@ import static org.junit.Assert.assertThat;
 
 import org.junit.Test;
 
-import net.amygdalum.stringsearchalgorithms.search.StringMatch;
-
 
 public class StringMatchTest {
 

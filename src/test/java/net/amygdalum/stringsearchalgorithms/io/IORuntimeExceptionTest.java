@@ -7,8 +7,6 @@ import java.io.FileNotFoundException;
 
 import org.junit.Test;
 
-import net.amygdalum.stringsearchalgorithms.io.IORuntimeException;
-
 
 public class IORuntimeExceptionTest {
 

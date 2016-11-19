@@ -6,8 +6,6 @@ import static org.junit.Assert.assertThat;
 
 import org.junit.Test;
 
-import net.amygdalum.util.map.CharLongMap;
-
 public class CharLongMapTest {
 
 	private long DEFAULT_VALUE = 42l;
