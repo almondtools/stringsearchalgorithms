@@ -1,4 +1,4 @@
-package net.amygdalum.stringsearchalgorithms.search.chars;
+package net.amygdalum.stringsearchalgorithms.search.bytes;
 
 import static java.util.Arrays.asList;
 
@@ -11,8 +11,8 @@ import org.junit.rules.TestRule;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 
-import net.amygdalum.stringsearchalgorithms.io.CharProvider;
-import net.amygdalum.stringsearchalgorithms.io.StringCharProvider;
+import net.amygdalum.stringsearchalgorithms.io.ByteProvider;
+import net.amygdalum.stringsearchalgorithms.io.StringByteProvider;
 import net.amygdalum.stringsearchalgorithms.search.SearchFor;
 import net.amygdalum.stringsearchalgorithms.search.StringFinder;
 import net.amygdalum.stringsearchalgorithms.search.StringFinderOption;
@@ -21,11 +21,11 @@ public class MultiStringSearchRule implements TestRule {
 
 	private StringSearchAlgorithm algorithm;
 	private List<MultiStringSearchAlgorithmFactory> algorithmFactories;
-
+	
 	public MultiStringSearchRule(MultiStringSearchAlgorithmFactory... algorithmFactories) {
 		this.algorithmFactories = asList(algorithmFactories);
 	}
-
+	
 	private List<StringSearchAlgorithm> getAlgorithms(String[] patterns) {
 		List<StringSearchAlgorithm> algorithms = new ArrayList<>();
 		for (MultiStringSearchAlgorithmFactory algorithmFactory : algorithmFactories) {
@@ -89,13 +89,13 @@ public class MultiStringSearchRule implements TestRule {
 	}
 
 	public StringFinder createSearcher(String chars, StringFinderOption... options) {
-		return createSearcher(new StringCharProvider(chars, 0), options);
+		return createSearcher(new StringByteProvider(chars, 0), options);
 	}
-
-	public StringFinder createSearcher(CharProvider chars, StringFinderOption... options) {
-		return algorithm.createFinder(chars, options);
+	
+	public StringFinder createSearcher(ByteProvider bytes, StringFinderOption... options) {
+		return algorithm.createFinder(bytes, options);
 	}
-
+	
 	public StringSearchAlgorithm getAlgorithm() {
 		return algorithm;
 	}

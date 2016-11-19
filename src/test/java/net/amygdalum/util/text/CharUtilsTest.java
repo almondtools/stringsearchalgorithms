@@ -7,6 +7,10 @@ import static net.amygdalum.util.text.CharUtils.before;
 import static net.amygdalum.util.text.CharUtils.charToString;
 import static net.amygdalum.util.text.CharUtils.computeMaxChar;
 import static net.amygdalum.util.text.CharUtils.computeMinChar;
+import static net.amygdalum.util.text.CharUtils.lastIndexOf;
+import static net.amygdalum.util.text.CharUtils.maxLength;
+import static net.amygdalum.util.text.CharUtils.minLength;
+import static net.amygdalum.util.text.CharUtils.revert;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.junit.Assert.assertThat;
 
@@ -55,6 +59,27 @@ public class CharUtilsTest {
 		assertThat(computeMaxChar(new char[]{'b','a'}), equalTo('b'));
 		assertThat(computeMaxChar(asList(new char[]{'a','d'}, new char[]{'b','c'})), equalTo('d'));
 		assertThat(computeMaxChar(asList(new char[]{'b','c'}, new char[]{'a','d'})), equalTo('d'));
+	}
+
+	@Test
+	public void testMinMaxLength() throws Exception {
+		assertThat(minLength(asList(new char[]{'a','b'}, new char[]{'a','b','c'})), equalTo(2));
+		assertThat(maxLength(asList(new char[]{'a','b'}, new char[]{'a','b','c'})), equalTo(3));
+	}
+
+	@Test
+	public void testLastIndexOf() throws Exception {
+		assertThat(lastIndexOf(new char[]{}, new char[]{1}), equalTo(-1));
+		assertThat(lastIndexOf(new char[]{0}, new char[]{1}), equalTo(-1));
+		assertThat(lastIndexOf(new char[]{0}, new char[]{0}), equalTo(0));
+		assertThat(lastIndexOf(new char[]{0,0}, new char[]{0}), equalTo(1));
+		assertThat(lastIndexOf(new char[]{0,1}, new char[]{0}), equalTo(0));
+		assertThat(lastIndexOf(new char[]{1,1}, new char[]{0}), equalTo(-1));
+	}
+
+	@Test
+	public void testRevert() throws Exception {
+		assertThat(revert("AB".toCharArray()), equalTo("BA".toCharArray()));
 	}
 
 }

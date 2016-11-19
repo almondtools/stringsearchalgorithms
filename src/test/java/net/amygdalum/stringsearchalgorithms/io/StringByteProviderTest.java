@@ -151,7 +151,7 @@ public class StringByteProviderTest {
 	@Test
 	public void testSliceDoesNotConsume() throws Exception {
 		StringByteProvider provider = new StringByteProvider("abcd", 0);
-		assertThat(provider.slice(2, 6), equalTo("bc"));
+		assertThat(provider.slice(2, 6).getString(), equalTo("bc"));
 		assertThat(provider.current(), equalTo(0l));
 	}
 

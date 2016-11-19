@@ -2,11 +2,11 @@ package net.amygdalum.stringsearchalgorithms.search.chars;
 
 import static java.lang.Math.min;
 import static net.amygdalum.stringsearchalgorithms.search.MatchOption.LONGEST_MATCH;
-import static net.amygdalum.stringsearchalgorithms.search.chars.TrieNode.revert;
 import static net.amygdalum.util.text.CharUtils.computeMaxChar;
 import static net.amygdalum.util.text.CharUtils.computeMinChar;
 import static net.amygdalum.util.text.CharUtils.maxLength;
 import static net.amygdalum.util.text.CharUtils.minLength;
+import static net.amygdalum.util.text.CharUtils.revert;
 import static net.amygdalum.util.text.StringUtils.toCharArray;
 
 import java.util.Collection;

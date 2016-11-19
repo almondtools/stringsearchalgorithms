@@ -1,11 +1,14 @@
 package net.amygdalum.util.text;
 
 import static com.almondtools.conmatch.conventions.UtilityClassMatcher.isUtilityClass;
+import static com.almondtools.conmatch.datatypes.PrimitiveArrayMatcher.byteArrayContaining;
 import static com.almondtools.conmatch.datatypes.PrimitiveArrayMatcher.charArrayContaining;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static net.amygdalum.util.text.StringUtils.join;
 import static net.amygdalum.util.text.StringUtils.reverse;
+import static net.amygdalum.util.text.StringUtils.toByteArray;
 import static net.amygdalum.util.text.StringUtils.toCharArray;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.Matchers.contains;
@@ -69,6 +72,12 @@ public class StringUtilsTest {
 	@Test
 	public void testToCharArray() throws Exception {
 		assertThat(toCharArray(asList("ab", "cd")), contains(charArrayContaining('a', 'b'), charArrayContaining('c','d')));
+	}
+
+	@SuppressWarnings("unchecked")
+	@Test
+	public void testToByteArray() throws Exception {
+		assertThat(toByteArray(asList("ab", "cd"), UTF_8), contains(byteArrayContaining((byte) 'a', (byte) 'b'), byteArrayContaining((byte) 'c',(byte) 'd')));
 	}
 
 }

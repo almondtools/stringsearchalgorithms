@@ -137,7 +137,7 @@ public class ReverseByteProviderTest {
 	@Test
 	public void testSliceDoesNotConsume() throws Exception {
 		ReverseByteProvider provider = new ReverseByteProvider(new StringByteProvider("dcba", 4));
-		assertThat(provider.slice(6, 2), equalTo("bc"));
+		assertThat(provider.slice(6, 2).getBytes(), equalTo(new byte[] { 'b' >> 8, 'b', 'c' >> 8 , 'c', }));
 		assertThat(provider.current(), equalTo(4l));
 	}
 

@@ -1,11 +1,12 @@
 package net.amygdalum.stringsearchalgorithms.search.chars;
 
 import static java.util.Arrays.copyOfRange;
-import static net.amygdalum.stringsearchalgorithms.search.chars.TrieNode.revert;
 import static net.amygdalum.util.text.CharUtils.minLength;
+import static net.amygdalum.util.text.CharUtils.revert;
 import static net.amygdalum.util.text.StringUtils.toCharArray;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.IdentityHashMap;
 import java.util.Iterator;
@@ -86,16 +87,16 @@ public class SetBackwardOracleMatching implements StringSearchAlgorithm {
 
 	private static void computeTerminals(TrieNode<List<String>> trie, List<char[]> patterns, int minLength) {
 		for (char[] pattern : patterns) {
-			String stringPattern = new String(pattern);
-			String prefix = stringPattern.substring(0, minLength);
-			TrieNode<List<String>> terminal = trie.nextNode(TrieNode.revert(prefix.toCharArray()));
+			char[] prefix = Arrays.copyOfRange(pattern, 0, minLength);
+			TrieNode<List<String>> terminal = trie.nextNode(revert(prefix));
 			List<String> terminalPatterns = terminal.getAttached();
 			if (terminalPatterns == null) {
 				terminalPatterns = new ArrayList<>();
 				terminal.setAttached(terminalPatterns);
-				terminalPatterns.add(prefix);
+				terminalPatterns.add(new String(prefix));
 			}
-			terminalPatterns.add(stringPattern.substring(minLength));
+			char[] tail = Arrays.copyOfRange(pattern, minLength, pattern.length);
+			terminalPatterns.add(new String(tail));
 		}
 	}
 

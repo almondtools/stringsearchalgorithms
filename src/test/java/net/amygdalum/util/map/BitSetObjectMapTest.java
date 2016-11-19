@@ -8,8 +8,6 @@ import java.util.BitSet;
 
 import org.junit.Test;
 
-import net.amygdalum.util.map.BitSetObjectMap;
-
 public class BitSetObjectMapTest {
 
 	private String DEFAULT_VALUE = "42";

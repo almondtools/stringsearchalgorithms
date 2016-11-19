@@ -4,7 +4,7 @@ import java.util.List;
 
 /**
  * an interface for generic string search.
- * StringFinders are generated from a StringSearchAlgorithm together with a CharProvider (which is the document to search in).
+ * StringFinders are generated from a StringSearchAlgorithm together with a Char/ByteProvider (which is the document to search in).
  */
 public interface StringFinder {
 

@@ -1,0 +1,160 @@
+package net.amygdalum.stringsearchalgorithms.search.bytes;
+
+import static java.nio.charset.StandardCharsets.UTF_16LE;
+import static net.amygdalum.stringsearchalgorithms.search.bytes.Encoding.encode;
+
+import java.nio.charset.Charset;
+
+import net.amygdalum.stringsearchalgorithms.io.ByteProvider;
+import net.amygdalum.stringsearchalgorithms.search.AbstractStringFinder;
+import net.amygdalum.stringsearchalgorithms.search.StringFinder;
+import net.amygdalum.stringsearchalgorithms.search.StringFinderOption;
+import net.amygdalum.stringsearchalgorithms.search.StringMatch;
+
+/**
+ * An implementation of the String Search Algorithm of Sunday.
+ * 
+ * This algorithm takes a single pattern as input and generates a finder which can find this pattern in documents
+ */
+public class Sunday implements StringSearchAlgorithm {
+
+	private byte[] pattern;
+	private int patternLength;
+	private ByteShift byteShift;
+
+	public Sunday(String pattern, Charset charset) {
+		this.pattern = encode(pattern, charset);
+		this.patternLength = this.pattern.length;
+		this.byteShift = computeShift(this.pattern);
+	}
+
+	private static ByteShift computeShift(byte[] pattern) {
+		return new QuickShift(pattern);
+	}
+
+	@Override
+	public int getPatternLength() {
+		return patternLength;
+	}
+
+	@Override
+	public StringFinder createFinder(ByteProvider bytes, StringFinderOption... options) {
+		return new Finder(bytes, options);
+	}
+
+	@Override
+	public String toString() {
+		return getClass().getSimpleName();
+	}
+
+	private class Finder extends AbstractStringFinder {
+
+		private ByteProvider bytes;
+
+		public Finder(ByteProvider bytes, StringFinderOption... options) {
+			super(options);
+			this.bytes = bytes;
+		}
+
+		@Override
+		public void skipTo(long pos) {
+			if (pos > bytes.current()) {
+				bytes.move(pos);
+			}
+		}
+
+		@Override
+		public StringMatch findNext() {
+			final int lookahead = patternLength - 1;
+			next: while (!bytes.finished(lookahead)) {
+				int patternPointer = lookahead;
+				byte nextByte = bytes.lookahead(patternPointer);
+				if (pattern[patternPointer] == nextByte) {
+					while (patternPointer > 0) {
+						patternPointer--;
+						if (pattern[patternPointer] != bytes.lookahead(patternPointer)) {
+							if (!bytes.finished(patternPointer + 1)) {
+								byte afterNextByte = bytes.lookahead(patternPointer + 1);
+								bytes.forward(byteShift.getShift(afterNextByte));
+							} else {
+								bytes.finish();
+							}
+							continue next;
+						}
+					}
+					if (patternPointer == 0) {
+						StringMatch match = createMatch();
+						if (!bytes.finished(patternPointer + 1)) {
+							byte afterNextByte = bytes.lookahead(patternPointer + 1);
+							bytes.forward(byteShift.getShift(afterNextByte));
+						} else {
+							bytes.finish();
+						}
+						return match;
+					}
+				} else {
+					if (!bytes.finished(patternPointer + 1)) {
+						byte afterNextByte = bytes.lookahead(patternPointer + 1);
+						bytes.forward(byteShift.getShift(afterNextByte));
+					} else {
+						bytes.finish();
+					}
+				}
+			}
+			return null;
+		}
+
+		private StringMatch createMatch() {
+			long start = bytes.current();
+			long end = start + patternLength;
+			String s = bytes.slice(start, end).getString();
+			return new StringMatch(start, end, s);
+		}
+	}
+
+	public static class Factory implements StringSearchAlgorithmFactory {
+
+		private Charset charset;
+
+		public Factory() {
+			this(UTF_16LE);
+		}
+
+		public Factory(Charset charset) {
+			this.charset = charset;
+		}
+
+		@Override
+		public StringSearchAlgorithm of(String pattern) {
+			return new Sunday(pattern, charset);
+		}
+
+	}
+
+	private static class QuickShift implements ByteShift {
+
+		private int[] byteShift;
+
+		public QuickShift(byte[] pattern) {
+			this.byteShift = computeByteShift(pattern);
+		}
+
+		private static int[] computeByteShift(byte[] pattern) {
+			int[] bytes = new int[256];
+			for (int i = 0; i < bytes.length; i++) {
+				bytes[i] = pattern.length + 1;
+			}
+			for (int i = 0; i < pattern.length; i++) {
+				bytes[pattern[i] & 0xff] = pattern.length - i;
+			}
+			return bytes;
+		}
+
+		@Override
+		public int getShift(byte b) {
+			return byteShift[b & 0xff];
+		}
+
+	}
+
+}

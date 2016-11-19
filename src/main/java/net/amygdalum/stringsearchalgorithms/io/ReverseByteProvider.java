@@ -1,5 +1,6 @@
 package net.amygdalum.stringsearchalgorithms.io;
 
+import net.amygdalum.util.text.ByteString;
 
 public class ReverseByteProvider implements ByteProvider {
 
@@ -87,8 +88,8 @@ public class ReverseByteProvider implements ByteProvider {
 	}
 
 	@Override
-	public String slice(long start, long end) {
-		return new StringBuilder(bytes.slice(end, start)).reverse().toString();
+	public ByteString slice(long start, long end) {
+		return bytes.slice(end, start).revert();
 	}
 
 	@Override

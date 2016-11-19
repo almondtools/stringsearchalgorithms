@@ -8,6 +8,29 @@ public final class CharUtils {
 	private CharUtils() {
 	}
 
+	public static char[] revert(char[] chars) {
+		final int ri = chars.length - 1;
+		char[] reversechars = new char[chars.length];
+		for (int i = 0; i < reversechars.length; i++) {
+			reversechars[i] = chars[ri - i];
+		}
+		return reversechars;
+	}
+
+	public static int lastIndexOf(char[] pattern, char[] block) {
+		nextPos:for (int i = pattern.length - block.length; i >= 0; i--) {
+			for (int j = block.length - 1; j >= 0; j--) {
+				if (pattern[j + i] == block[j]) {
+					continue;
+				} else {
+					continue nextPos;
+				}
+			}
+			return i; 
+		}
+		return -1;
+	}
+
 	public static boolean isAsciiPrintable(char ch) {
 		return ch >= 32 && ch < 127;
 	}

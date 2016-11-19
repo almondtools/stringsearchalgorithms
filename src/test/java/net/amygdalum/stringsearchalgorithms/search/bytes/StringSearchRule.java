@@ -1,4 +1,4 @@
-package net.amygdalum.stringsearchalgorithms.search.chars;
+package net.amygdalum.stringsearchalgorithms.search.bytes;
 
 import static java.util.Arrays.asList;
 
@@ -11,29 +11,25 @@ import org.junit.rules.TestRule;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 
-import net.amygdalum.stringsearchalgorithms.io.CharProvider;
-import net.amygdalum.stringsearchalgorithms.io.StringCharProvider;
+import net.amygdalum.stringsearchalgorithms.io.ByteProvider;
+import net.amygdalum.stringsearchalgorithms.io.StringByteProvider;
 import net.amygdalum.stringsearchalgorithms.search.SearchFor;
 import net.amygdalum.stringsearchalgorithms.search.StringFinder;
 import net.amygdalum.stringsearchalgorithms.search.StringFinderOption;
 
-public class MultiStringSearchRule implements TestRule {
+public class StringSearchRule implements TestRule {
 
 	private StringSearchAlgorithm algorithm;
-	private List<MultiStringSearchAlgorithmFactory> algorithmFactories;
+	private List<StringSearchAlgorithmFactory> algorithmFactories;
 
-	public MultiStringSearchRule(MultiStringSearchAlgorithmFactory... algorithmFactories) {
+	public StringSearchRule(StringSearchAlgorithmFactory... algorithmFactories) {
 		this.algorithmFactories = asList(algorithmFactories);
 	}
 
-	private List<StringSearchAlgorithm> getAlgorithms(String[] patterns) {
+	private List<StringSearchAlgorithm> getAlgorithms(String pattern) {
 		List<StringSearchAlgorithm> algorithms = new ArrayList<>();
-		for (MultiStringSearchAlgorithmFactory algorithmFactory : algorithmFactories) {
-			try {
-				algorithms.add(algorithmFactory.of(asList(patterns)));
-			} catch (Throwable e) {
-				throw new RuntimeException("In mode " + algorithmFactory.getClass().getEnclosingClass().getSimpleName() + ": " + e.getMessage(), e);
-			}
+		for (StringSearchAlgorithmFactory algorithmFactory : algorithmFactories) {
+			algorithms.add(algorithmFactory.of(pattern));
 		}
 		return algorithms;
 	}
@@ -43,12 +39,12 @@ public class MultiStringSearchRule implements TestRule {
 		return new Statement() {
 			@Override
 			public void evaluate() throws Throwable {
-				String[] patterns = extractPattern(description);
-				List<StringSearchAlgorithm> algorithms = getAlgorithms(patterns);
+				String pattern = extractPattern(description);
+				List<StringSearchAlgorithm> algorithms = getAlgorithms(pattern);
 				Map<StringSearchAlgorithm, String> failures = new IdentityHashMap<StringSearchAlgorithm, String>();
 				StackTraceElement[] stackTrace = null;
 				for (StringSearchAlgorithm algorithm : algorithms) {
-					MultiStringSearchRule.this.algorithm = algorithm;
+					StringSearchRule.this.algorithm = algorithm;
 					try {
 						base.evaluate();
 					} catch (AssertionError e) {
@@ -72,12 +68,16 @@ public class MultiStringSearchRule implements TestRule {
 		};
 	}
 
-	private String[] extractPattern(final Description description) throws AssertionError {
+	private String extractPattern(final Description description) throws AssertionError {
 		SearchFor searchFor = description.getAnnotation(SearchFor.class);
 		if (searchFor == null) {
 			throw new AssertionError("expected @SearchFor annotation");
 		}
-		return searchFor.value();
+		String[] pattern = searchFor.value();
+		if (pattern.length != 1) {
+			throw new AssertionError("expected exactly one pattern");
+		}
+		return pattern[0];
 	}
 
 	private String computeMessage(Map<StringSearchAlgorithm, String> failures) {
@@ -89,11 +89,11 @@ public class MultiStringSearchRule implements TestRule {
 	}
 
 	public StringFinder createSearcher(String chars, StringFinderOption... options) {
-		return createSearcher(new StringCharProvider(chars, 0), options);
+		return createSearcher(new StringByteProvider(chars, 0), options);
 	}
-
-	public StringFinder createSearcher(CharProvider chars, StringFinderOption... options) {
-		return algorithm.createFinder(chars, options);
+	
+	public StringFinder createSearcher(ByteProvider bytes, StringFinderOption... options) {
+		return algorithm.createFinder(bytes, options);
 	}
 
 	public StringSearchAlgorithm getAlgorithm() {

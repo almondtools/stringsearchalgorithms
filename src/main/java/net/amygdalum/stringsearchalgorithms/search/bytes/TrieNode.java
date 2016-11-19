@@ -1,13 +1,13 @@
-package net.amygdalum.stringsearchalgorithms.search.chars;
+package net.amygdalum.stringsearchalgorithms.search.bytes;
 
-import net.amygdalum.util.map.CharObjectMap;
+import net.amygdalum.util.map.ByteObjectMap;
 
 public class TrieNode<T> {
 
 	private int min;
 	private int max;
 	private TrieNode<T>[] nexts;
-	private CharObjectMap<TrieNode<T>> nextMap;
+	private ByteObjectMap<TrieNode<T>> nextMap;
 	private TrieNode<T> fallback;
 	private T attached;
 
@@ -22,14 +22,14 @@ public class TrieNode<T> {
 		return new TrieNode[len];
 	}
 
-	public void addNext(char c, TrieNode<T> node) {
+	public void addNext(byte b, TrieNode<T> node) {
 		if (nexts != null) {
-			if (c >= min && c <= max) {
-				nexts[(int) (c - min)] = node;
+			if (b >= min && b <= max) {
+				nexts[(int) (b - min)] = node;
 				return;
 			}
-			int newMin = c < min ? c : min;
-			int newMax = c > max ? c : max;
+			int newMin = b < min ? b : min;
+			int newMax = b > max ? b : max;
 			int newLen = newMax - newMin + 1;
 			if (newLen <= 256) {
 				TrieNode<T>[] newNexts = trieNodes(newLen);
@@ -37,7 +37,7 @@ public class TrieNode<T> {
 				for (int i = 0; i < nexts.length; i++) {
 					newNexts[i + newOffset] = nexts[i];
 				}
-				newNexts[(int) (c - newMin)] = node;
+				newNexts[(int) (b - newMin)] = node;
 				min = newMin;
 				max = newMax;
 				nexts = newNexts;
@@ -45,29 +45,29 @@ public class TrieNode<T> {
 			}
 		}
 		if (nextMap == null) {
-			nextMap = new CharObjectMap<>(null);
+			nextMap = new ByteObjectMap<>(null);
 			for (int i = 0; i < nexts.length; i++) {
 				TrieNode<T> nodeToMap = nexts[i];
-				char charToMap = (char) (min + i);
+				byte byteToMap = (byte) (min + i);
 				if (nodeToMap != null) {
-					nextMap.put(charToMap, nodeToMap);
+					nextMap.put(byteToMap, nodeToMap);
 				}
 			}
 			nexts = null;
 		}
-		nextMap.put(c, node);
+		nextMap.put(b, node);
 	}
 
-	public CharObjectMap<TrieNode<T>> getNexts() {
+	public ByteObjectMap<TrieNode<T>> getNexts() {
 		if (nextMap != null) {
 			return nextMap;
 		} else {
-			CharObjectMap<TrieNode<T>> map = new CharObjectMap<>(null);
+			ByteObjectMap<TrieNode<T>> map = new ByteObjectMap<>(null);
 			for (int i = 0; i < nexts.length; i++) {
 				TrieNode<T> nodeToMap = nexts[i];
-				char charToMap = (char) (min + i);
+				byte byteToMap = (byte) (min + i);
 				if (nodeToMap != null) {
-					map.put(charToMap, nodeToMap);
+					map.put(byteToMap, nodeToMap);
 				}
 			}
 			return map;
@@ -90,21 +90,21 @@ public class TrieNode<T> {
 		this.attached = attached;
 	}
 
-	public TrieNode<T> extend(char[] chars, T attach) {
-		TrieNode<T> node = extend(chars, 0);
+	public TrieNode<T> extend(byte[] bytes, T attach) {
+		TrieNode<T> node = extend(bytes, 0);
 		node.setAttached(attach);
 		return node;
 	}
 
-	public TrieNode<T> extend(char[] chars, int i) {
-		if (i >= chars.length) {
+	public TrieNode<T> extend(byte[] bytes, int i) {
+		if (i >= bytes.length) {
 			return this;
 		}
-		TrieNode<T> toExtend = findNodeToExtend(chars[i]);
-		return toExtend.extend(chars, i + 1);
+		TrieNode<T> toExtend = findNodeToExtend(bytes[i]);
+		return toExtend.extend(bytes, i + 1);
 	}
 
-	private TrieNode<T> findNodeToExtend(char current) {
+	private TrieNode<T> findNodeToExtend(byte current) {
 		TrieNode<T> node = nextNode(current);
 		if (node == null) {
 			node = new TrieNode<>();
@@ -113,11 +113,11 @@ public class TrieNode<T> {
 		return node;
 	}
 
-	public TrieNode<T> nextNode(char c) {
+	public TrieNode<T> nextNode(byte b) {
 		if (nextMap != null) {
-			return nextMap.get(c);
+			return nextMap.get(b);
 		} else {
-			int index = c - min;
+			int index = b - min;
 			if (index >= nexts.length || index < 0) {
 				return null;
 			} else {
@@ -126,10 +126,10 @@ public class TrieNode<T> {
 		}
 	}
 
-	public TrieNode<T> nextNode(char[] chars) {
+	public TrieNode<T> nextNode(byte[] bytes) {
 		TrieNode<T> current = this;
-		for (char c : chars) {
-			current = current.nextNode(c);
+		for (byte b : bytes) {
+			current = current.nextNode(b);
 			if (current == null) {
 				return null;
 			}

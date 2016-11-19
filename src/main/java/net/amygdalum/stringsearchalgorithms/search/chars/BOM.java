@@ -1,6 +1,6 @@
 package net.amygdalum.stringsearchalgorithms.search.chars;
 
-import static net.amygdalum.stringsearchalgorithms.search.chars.TrieNode.revert;
+import static net.amygdalum.util.text.CharUtils.revert;
 
 import java.util.ArrayList;
 import java.util.IdentityHashMap;

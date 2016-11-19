@@ -1,5 +1,7 @@
 package net.amygdalum.stringsearchalgorithms.io;
 
+import net.amygdalum.util.text.ByteString;
+
 public interface ByteProvider {
 
 	byte next();
@@ -54,7 +56,7 @@ public interface ByteProvider {
 	 * @return the String between start and end
 	 * @see #current()   
 	 */
-	String slice(long start, long end);
+	ByteString slice(long start, long end);
 
 	void forward(int i);
 	void finish();

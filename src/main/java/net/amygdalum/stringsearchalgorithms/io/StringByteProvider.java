@@ -1,20 +1,21 @@
 package net.amygdalum.stringsearchalgorithms.io;
 
+import static java.lang.Math.max;
 import static java.nio.charset.StandardCharsets.UTF_16LE;
 
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 import java.nio.charset.CharacterCodingException;
 import java.nio.charset.Charset;
-import java.nio.charset.CharsetDecoder;
 import java.nio.charset.CharsetEncoder;
-import java.nio.charset.CodingErrorAction;
+
+import net.amygdalum.util.text.ByteString;
 
 public class StringByteProvider implements ByteProvider {
 
 	private static final int NO_MARK = -1;
 
-	private CharsetDecoder decoder;
+	private Charset charset;
 	private ByteBuffer encoded;
 	private int mark;
 
@@ -24,7 +25,7 @@ public class StringByteProvider implements ByteProvider {
 
 	public StringByteProvider(String input, int start, Charset charset) {
 		this.encoded = encode(charset, input);
-		this.decoder = charset.newDecoder().onMalformedInput(CodingErrorAction.REPLACE);
+		this.charset = charset;
 		this.encoded.position((int) start);
 		this.mark = NO_MARK;
 	}
@@ -114,6 +115,9 @@ public class StringByteProvider implements ByteProvider {
 	public byte[] between(long start, long end) {
 		int len = (int) (end - start);
 		byte[] between = new byte[len];
+		if (len == 0) {
+			return between;
+		}
 		int limit = encoded.limit();
 		int pos = encoded.position();
 		encoded.position((int) start);
@@ -125,35 +129,36 @@ public class StringByteProvider implements ByteProvider {
 	}
 
 	@Override
-	public String slice(long start, long end) {
+	public ByteString slice(long start, long end) {
 		int limit = encoded.limit();
 		int pos = encoded.position();
 		encoded.position((int) start);
 		encoded.limit((int) end);
-		ByteBuffer slice = encoded.slice();
+		byte[] slice = new byte[(int) max(0, end - start)];
+		encoded.get(slice);
 		encoded.position(pos);
 		encoded.limit(limit);
-		try {
-			return decoder.decode(slice).toString();
-		} catch (CharacterCodingException e) {
-			return null;
-		}
+
+		return new ByteString(slice, charset);
 	}
 
 	@Override
 	public String toString() {
 		long splitPoint = current();
-		StringBuilder buffer = new StringBuilder(slice(0, splitPoint));
-		
-		if (buffer.length() > 0 && buffer.charAt(buffer.length() - 1) == decoder.replacement().charAt(0)) {
-			buffer.deleteCharAt(buffer.length() - 1);
+		ByteString slice = slice(0, splitPoint);
+		StringBuilder buffer = new StringBuilder(slice.getMappablePrefix());
+
+		if (!slice.isMappable()) {
 			buffer.append("~|~");
-			splitPoint++;
+			while (splitPoint < encoded.limit() && !slice(splitPoint, encoded.limit()).isMappable()) {
+				splitPoint++;
+			}
 		} else {
 			buffer.append('|');
 		}
+		
 		if (splitPoint < encoded.limit()) {
-			buffer.append(slice(splitPoint, encoded.limit()));
+			buffer.append(slice(splitPoint, encoded.limit()).getMappableSuffix());
 		}
 		return buffer.toString();
 	}

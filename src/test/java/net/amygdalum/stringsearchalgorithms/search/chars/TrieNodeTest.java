@@ -177,9 +177,4 @@ public class TrieNodeTest {
 		assertThat(trieNode.nextNode("ab".toCharArray()), nullValue());
 	}
 
-	@Test
-	public void testRevert() throws Exception {
-		assertThat(TrieNode.revert("AB".toCharArray()), equalTo("BA".toCharArray()));
-	}
-
 }

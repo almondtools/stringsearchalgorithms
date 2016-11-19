@@ -1,14 +1,13 @@
-package net.amygdalum.stringsearchalgorithms.search.chars;
+package net.amygdalum.stringsearchalgorithms.search.bytes;
 
+import static java.nio.charset.StandardCharsets.UTF_16LE;
 import static net.amygdalum.stringsearchalgorithms.search.MatchOption.LONGEST_MATCH;
-import static net.amygdalum.util.text.CharUtils.computeMaxChar;
-import static net.amygdalum.util.text.CharUtils.computeMinChar;
-import static net.amygdalum.util.text.CharUtils.lastIndexOf;
-import static net.amygdalum.util.text.CharUtils.maxLength;
-import static net.amygdalum.util.text.CharUtils.minLength;
-import static net.amygdalum.util.text.CharUtils.revert;
-import static net.amygdalum.util.text.StringUtils.toCharArray;
+import static net.amygdalum.util.text.ByteUtils.lastIndexOf;
+import static net.amygdalum.util.text.ByteUtils.maxLength;
+import static net.amygdalum.util.text.ByteUtils.minLength;
+import static net.amygdalum.util.text.ByteUtils.revert;
 
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -16,11 +15,13 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import net.amygdalum.stringsearchalgorithms.io.CharProvider;
+import net.amygdalum.stringsearchalgorithms.io.ByteProvider;
 import net.amygdalum.stringsearchalgorithms.search.BufferedStringFinder;
 import net.amygdalum.stringsearchalgorithms.search.StringFinder;
 import net.amygdalum.stringsearchalgorithms.search.StringFinderOption;
 import net.amygdalum.stringsearchalgorithms.search.StringMatch;
+import net.amygdalum.util.text.ByteString;
+import net.amygdalum.util.text.StringUtils;
 
 /**
  * An implementation of the Wu-Manber Algorithm.
@@ -34,27 +35,23 @@ public class WuManber implements StringSearchAlgorithm {
 	private static final int SHIFT_SIZE = 255;
 	private static final int HASH_SIZE = 127;
 
-	private char minChar;
-	private char maxChar;
 	private int minLength;
 	private int maxLength;
 	private int block;
 	private int[] shift;
-	private TrieNode<String>[] hash;
+	private TrieNode<ByteString>[] hash;
 
-	public WuManber(Collection<String> patterns) {
-		List<char[]> charpatterns = toCharArray(patterns);
-		this.maxChar = computeMaxChar(charpatterns);
-		this.minChar = computeMinChar(charpatterns);
-		this.minLength = minLength(charpatterns);
-		this.maxLength = maxLength(charpatterns);
-		this.block = blockSize(minLength, minChar, maxChar, charpatterns.size());
-		this.shift = computeShift(charpatterns, block, minLength);
-		this.hash = computeHash(charpatterns, block);
+	public WuManber(Collection<String> patterns, Charset charset) {
+		List<byte[]> bytepatterns = StringUtils.toByteArray(patterns,charset);
+		this.minLength = minLength(bytepatterns);
+		this.maxLength = maxLength(bytepatterns);
+		this.block = blockSize(minLength, bytepatterns.size());
+		this.shift = computeShift(bytepatterns, block, minLength);
+		this.hash = computeHash(bytepatterns, block, charset);
 	}
 
-	private static int blockSize(int minLength, char minChar, char maxChar, int patterns) {
-		int optSize = (int) Math.ceil(Math.log(2 * minLength * patterns) / Math.log(maxChar - minChar));
+	private static int blockSize(int minLength, int patterns) {
+		int optSize = (int) Math.ceil(Math.log(2 * minLength * patterns) / Math.log(256));
 		if (optSize <= 0) {
 			return 1;
 		} else if (optSize > minLength) {
@@ -64,23 +61,23 @@ public class WuManber implements StringSearchAlgorithm {
 		}
 	}
 
-	private static int[] computeShift(List<char[]> patterns, int block, int minLength) {
+	private static int[] computeShift(List<byte[]> patterns, int block, int minLength) {
 		int[] shift = new int[SHIFT_SIZE];
 		for (int i = 0; i < shift.length; i++) {
 			shift[i] = minLength - block + 1;
 		}
-		List<char[]> patternStrings = new ArrayList<>();
-		Set<char[]> blocks = new HashSet<>();
-		for (char[] pattern : patterns) {
+		List<byte[]> patternStrings = new ArrayList<>();
+		Set<byte[]> blocks = new HashSet<>();
+		for (byte[] pattern : patterns) {
 			patternStrings.add(pattern);
 			for (int i = 0; i < pattern.length + 1 - block; i++) {
 				blocks.add(Arrays.copyOfRange(pattern, i, i + block));
 			}
 		}
-		for (char[] currentBlock : blocks) {
+		for (byte[] currentBlock : blocks) {
 			int shiftKey = shiftHash(currentBlock);
 			int shiftBy = shift[shiftKey];
-			for (char[] pattern : patternStrings) {
+			for (byte[] pattern : patternStrings) {
 				int rightMost = pattern.length - lastIndexOf(pattern, currentBlock) - block;
 				if (rightMost >= 0 && rightMost < shiftBy) {
 					shiftBy = rightMost;
@@ -91,10 +88,10 @@ public class WuManber implements StringSearchAlgorithm {
 		return shift;
 	}
 
-	public static int shiftHash(char[] block) {
+	public static int shiftHash(byte[] block) {
 		int result = 1;
-		for (char c : block) {
-			result = SHIFT_SEED * result + c;
+		for (byte b : block) {
+			result = SHIFT_SEED * result + b;
 		}
 		int hash = result % SHIFT_SIZE;
 		if (hash < 0) {
@@ -104,26 +101,26 @@ public class WuManber implements StringSearchAlgorithm {
 	}
 
 	@SuppressWarnings("unchecked")
-	private static TrieNode<String>[] computeHash(List<char[]> charpatterns, int block) {
-		TrieNode<String>[] hash = new TrieNode[HASH_SIZE];
-		for (char[] pattern : charpatterns) {
-			char[] lastBlock = Arrays.copyOfRange(pattern, pattern.length - block, pattern.length);
+	private static TrieNode<ByteString>[] computeHash(List<byte[]> bytepatterns, int block, Charset charset) {
+		TrieNode<ByteString>[] hash = new TrieNode[HASH_SIZE];
+		for (byte[] pattern : bytepatterns) {
+			byte[] lastBlock = Arrays.copyOfRange(pattern, pattern.length - block, pattern.length);
 			int hashKey = hashHash(lastBlock);
-			TrieNode<String> trie = hash[hashKey];
+			TrieNode<ByteString> trie = hash[hashKey];
 			if (trie == null) {
 				trie = new TrieNode<>();
 				hash[hashKey] = trie;
 			}
-			TrieNode<String> node = trie.extend(revert(pattern), 0);
-			node.setAttached(new String(pattern));
+			TrieNode<ByteString> node = trie.extend(revert(pattern), 0);
+			node.setAttached(new ByteString(pattern, charset));
 		}
 		return hash;
 	}
 
-	public static int hashHash(char[] block) {
+	public static int hashHash(byte[] block) {
 		int result = 1;
-		for (char c : block) {
-			result = HASH_SEED * result + c;
+		for (byte b : block) {
+			result = HASH_SEED * result + b;
 		}
 		int hash = result % HASH_SIZE;
 		if (hash < 0) {
@@ -133,11 +130,11 @@ public class WuManber implements StringSearchAlgorithm {
 	}
 
 	@Override
-	public StringFinder createFinder(CharProvider chars, StringFinderOption... options) {
+	public StringFinder createFinder(ByteProvider bytes, StringFinderOption... options) {
 		if (LONGEST_MATCH.in(options)) {
-			return new LongestMatchFinder(chars, options);
+			return new LongestMatchFinder(bytes, options);
 		} else {
-			return new NextMatchFinder(chars, options);
+			return new NextMatchFinder(bytes, options);
 		}
 	}
 
@@ -153,33 +150,33 @@ public class WuManber implements StringSearchAlgorithm {
 
 	private abstract class Finder extends BufferedStringFinder {
 
-		protected CharProvider chars;
+		protected ByteProvider bytes;
 
-		public Finder(CharProvider chars, StringFinderOption... options) {
+		public Finder(ByteProvider bytes, StringFinderOption... options) {
 			super(options);
-			this.chars = chars;
+			this.bytes = bytes;
 		}
 
 		@Override
 		public void skipTo(long pos) {
 			long last = removeMatchesBefore(pos);
-			if (last > chars.current()) {
-				chars.move(last);
+			if (last > bytes.current()) {
+				bytes.move(last);
 			}
 		}
 
-		protected StringMatch createMatch(int patternPointer, String s) {
-			long start = chars.current() + patternPointer;
-			long end = chars.current() + minLength;
-			return new StringMatch(start, end, s);
+		protected StringMatch createMatch(int patternPointer, ByteString s) {
+			long start = bytes.current() + patternPointer;
+			long end = bytes.current() + patternPointer + s.length();
+			return new StringMatch(start, end, s.getString());
 		}
 
 	}
 
 	private class NextMatchFinder extends Finder {
 
-		public NextMatchFinder(CharProvider chars, StringFinderOption... options) {
-			super(chars, options);
+		public NextMatchFinder(ByteProvider bytes, StringFinderOption... options) {
+			super(bytes, options);
 		}
 
 		@Override
@@ -188,19 +185,19 @@ public class WuManber implements StringSearchAlgorithm {
 				return leftMost();
 			}
 			int lookahead = minLength - 1;
-			while (!chars.finished(lookahead)) {
-				long pos = chars.current();
-				char[] lastBlock = chars.between(pos + minLength - block, pos + minLength);
+			while (!bytes.finished(lookahead)) {
+				long pos = bytes.current();
+				byte[] lastBlock = bytes.between(pos + minLength - block, pos + minLength);
 				int shiftKey = shiftHash(lastBlock);
 				int shiftBy = shift[shiftKey];
 				if (shiftBy == 0) {
 					int hashkey = hashHash(lastBlock);
-					TrieNode<String> node = hash[hashkey];
+					TrieNode<ByteString> node = hash[hashkey];
 					if (node != null) {
 						int patternPointer = lookahead;
-						node = node.nextNode(chars.lookahead(patternPointer));
+						node = node.nextNode(bytes.lookahead(patternPointer));
 						while (node != null) {
-							String match = node.getAttached();
+							ByteString match = node.getAttached();
 							if (match != null) {
 								push(createMatch(patternPointer, match));
 							}
@@ -208,15 +205,15 @@ public class WuManber implements StringSearchAlgorithm {
 							if (pos + patternPointer < 0) {
 								break;
 							}
-							node = node.nextNode(chars.lookahead(patternPointer));
+							node = node.nextNode(bytes.lookahead(patternPointer));
 						}
 					}
-					chars.next();
+					bytes.next();
 					if (!isBufferEmpty()) {
 						return leftMost();
 					}
 				} else {
-					chars.forward(shiftBy);
+					bytes.forward(shiftBy);
 				}
 			}
 			return null;
@@ -226,27 +223,27 @@ public class WuManber implements StringSearchAlgorithm {
 
 	private class LongestMatchFinder extends Finder {
 
-		public LongestMatchFinder(CharProvider chars, StringFinderOption... options) {
-			super(chars, options);
+		public LongestMatchFinder(ByteProvider bytes, StringFinderOption... options) {
+			super(bytes, options);
 		}
 
 		@Override
 		public StringMatch findNext() {
 			long lastStart = lastStartFromBuffer();
 			int lookahead = minLength - 1;
-			while (!chars.finished(lookahead)) {
-				long pos = chars.current();
-				char[] lastBlock = chars.between(pos + minLength - block, pos + minLength);
+			while (!bytes.finished(lookahead)) {
+				long pos = bytes.current();
+				byte[] lastBlock = bytes.between(pos + minLength - block, pos + minLength);
 				int shiftKey = shiftHash(lastBlock);
 				int shiftBy = shift[shiftKey];
 				if (shiftBy == 0) {
 					int hashkey = hashHash(lastBlock);
-					TrieNode<String> node = hash[hashkey];
+					TrieNode<ByteString> node = hash[hashkey];
 					if (node != null) {
 						int patternPointer = lookahead;
-						node = node.nextNode(chars.lookahead(patternPointer));
+						node = node.nextNode(bytes.lookahead(patternPointer));
 						while (node != null) {
-							String match = node.getAttached();
+							ByteString match = node.getAttached();
 							if (match != null) {
 								StringMatch stringMatch = createMatch(patternPointer, match);
 								if (lastStart < 0) {
@@ -258,15 +255,15 @@ public class WuManber implements StringSearchAlgorithm {
 							if (pos + patternPointer < 0) {
 								break;
 							}
-							node = node.nextNode(chars.lookahead(patternPointer));
+							node = node.nextNode(bytes.lookahead(patternPointer));
 						}
 					}
-					chars.next();
+					bytes.next();
 					if (bufferContainsLongestMatch(lastStart)) {
 						break;
 					}
 				} else {
-					chars.forward(shiftBy);
+					bytes.forward(shiftBy);
 				}
 			}
 			return longestLeftMost();
@@ -274,16 +271,26 @@ public class WuManber implements StringSearchAlgorithm {
 
 		public boolean bufferContainsLongestMatch(long lastStart) {
 			return !isBufferEmpty()
-				&& chars.current() - lastStart - 1 > maxLength - minLength;
+				&& bytes.current() - lastStart - 1 > maxLength - minLength;
 		}
 
 	}
 
 	public static class Factory implements MultiStringSearchAlgorithmFactory {
 
+		private Charset charset;
+
+		public Factory() {
+			this(UTF_16LE);
+		}
+
+		public Factory(Charset charset) {
+			this.charset = charset;
+		}
+
 		@Override
 		public StringSearchAlgorithm of(Collection<String> patterns) {
-			return new WuManber(patterns);
+			return new WuManber(patterns, charset);
 		}
 
 	}

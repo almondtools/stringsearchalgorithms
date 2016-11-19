@@ -1,5 +1,8 @@
 package net.amygdalum.util.text;
 
+import static net.amygdalum.stringsearchalgorithms.search.bytes.Encoding.encode;
+
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
@@ -57,6 +60,14 @@ public final class StringUtils {
 			buffer.append(iterator.next().toString());
 		}
 		return buffer.toString();
+	}
+
+	public static List<byte[]> toByteArray(Collection<String> patterns, Charset charset) {
+		List<byte[]> charpatterns = new ArrayList<byte[]>(patterns.size());
+		for (String pattern : patterns) {
+			charpatterns.add(encode(pattern, charset));
+		}
+		return charpatterns;
 	}
 
 	public static List<char[]> toCharArray(Collection<String> patterns) {
