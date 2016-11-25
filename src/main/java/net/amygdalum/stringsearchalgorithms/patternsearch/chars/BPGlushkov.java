@@ -138,14 +138,14 @@ public class BPGlushkov implements StringSearchAlgorithm {
 			while (!reverse.finished() && !state.isEmpty()) {
 				if (back.isFinal(state)) {
 					long start = reverse.current();
-					matches.add(new StringMatch(start, end, chars.slice(start, end)));
+					matches.add(createMatch(start, end));
 				}
 				char c = reverse.next();
 				state = back.next(state, c);
 			}
 			if (reverse.finished() && back.isFinal(state)) {
 				long start = reverse.current();
-				matches.add(new StringMatch(start, end, chars.slice(start, end)));
+				matches.add(createMatch(start, end));
 			}
 			reverse.move(backup);
 			if (nonEmpty) {
@@ -157,6 +157,11 @@ public class BPGlushkov implements StringSearchAlgorithm {
 			} else {
 				return matches;
 			}
+		}
+
+		public StringMatch createMatch(long start, long end) {
+			String s = chars.slice(start, end);
+			return new StringMatch(start, end, s);
 		}
 
 		private void removeEmpty(List<StringMatch> matches) {

@@ -128,7 +128,7 @@ public class AhoCorasick implements StringSearchAlgorithm {
 			return matches;
 		}
 
-		protected StringMatch createMatch(long start, long end) {
+		private StringMatch createMatch(long start, long end) {
 			String s = chars.slice(start, end);
 			return new StringMatch(start, end, s);
 		}

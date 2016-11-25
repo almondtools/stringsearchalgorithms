@@ -21,7 +21,8 @@ public class MatchBuilder implements MatchListener {
 
 	@Override
 	public void notify(long start, long end, CharProvider chars) {
-		matches.add(new StringMatch(start, end, chars.slice(start, end)));
+		String s = chars.slice(start, end);
+		matches.add(new StringMatch(start, end, s));
 	}
 	
 	public SortedSet<StringMatch> getMatches() {
