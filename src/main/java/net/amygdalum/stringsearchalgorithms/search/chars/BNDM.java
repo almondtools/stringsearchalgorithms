@@ -4,13 +4,14 @@ import static java.util.Arrays.fill;
 import static net.amygdalum.util.text.CharUtils.computeMaxChar;
 import static net.amygdalum.util.text.CharUtils.computeMinChar;
 
+import java.util.Arrays;
+
 import net.amygdalum.stringsearchalgorithms.io.CharProvider;
 import net.amygdalum.stringsearchalgorithms.search.AbstractStringFinder;
 import net.amygdalum.stringsearchalgorithms.search.StringFinder;
 import net.amygdalum.stringsearchalgorithms.search.StringFinderOption;
 import net.amygdalum.stringsearchalgorithms.search.StringMatch;
 import net.amygdalum.util.map.CharLongMap;
-import net.amygdalum.util.map.CharObjectMap;
 
 /**
  * An implementation of the String Search Algorithm BNDM (Backward Nondeterministic Dawg Matching).
@@ -70,15 +71,10 @@ public class BNDM implements StringSearchAlgorithm {
 
 	private abstract class Finder extends AbstractStringFinder {
 
-		protected final long finalstate;
-		protected final long activeStates;
-
 		protected CharProvider chars;
 
 		public Finder(CharProvider chars, StringFinderOption... options) {
 			super(options);
-			this.finalstate = 1l << ((patternLength - 1) % 64);
-			this.activeStates = (finalstate - 1) | finalstate;
 			this.chars = chars;
 		}
 
@@ -93,10 +89,15 @@ public class BNDM implements StringSearchAlgorithm {
 
 	private class LongFinder extends Finder {
 
+		protected final long finalstate;
+		protected final long activeStates;
+
 		private long state;
 
 		public LongFinder(CharProvider chars, StringFinderOption... options) {
 			super(chars, options);
+			this.finalstate = 1l << ((patternLength - 1) % 64);
+			this.activeStates = (finalstate - 1) | finalstate;
 			this.state = activeStates;
 		}
 
@@ -139,21 +140,45 @@ public class BNDM implements StringSearchAlgorithm {
 
 	private class MultiLongFinder extends Finder {
 
-		private long[] state;
+		protected final long finalstate[];
+		protected final long activeStates[];
+
+		private long state;
+		private int segment;
+		private int[] patternLengths;
 
 		public MultiLongFinder(CharProvider chars, StringFinderOption... options) {
 			super(chars, options);
-			this.state = initial(patternLength);
+			this.patternLengths = computePatternLengths();
+			this.finalstate = computeFinalStates();
+			this.activeStates = computeActiveStates();
+			this.segment = 0;
+			this.state = activeStates[segment];
 		}
 
-		private long[] initial(int patternLength) {
-			return init(new long[((patternLength - 1) / 64) + 1]);
+		private int[] computePatternLengths() {
+			int numberOfSubpatterns = ((patternLength - 1) / 64) + 1;
+			int[] patternLengths = new int[numberOfSubpatterns];
+			fill(patternLengths, 0, patternLengths.length - 1, 64);
+			patternLengths[patternLengths.length - 1] = patternLength % 64;
+			return patternLengths;
 		}
 
-		private long[] init(long[] state) {
-			fill(state, -1l);
-			state[0] = activeStates;
-			return state;
+		private long[] computeFinalStates() {
+			long[] finalStates = new long[patternLengths.length];
+			for (int i = 0; i < finalStates.length; i++) {
+				int patternLength = patternLengths[i];
+				finalStates[i] = 1l << ((patternLength - 1) % 64);
+			}
+			return finalStates;
+		}
+
+		private long[] computeActiveStates() {
+			long[] activeStates = new long[finalstate.length];
+			for (int i = 0; i < activeStates.length; i++) {
+				activeStates[i] = (finalstate[i] - 1) | finalstate[i];
+			}
+			return activeStates;
 		}
 
 		@Override
@@ -161,60 +186,53 @@ public class BNDM implements StringSearchAlgorithm {
 			if (pos > chars.current()) {
 				chars.move(pos);
 			}
-			init(state);
+			segment = 0;
+			state = activeStates[segment];
 		}
 
 		@Override
 		public StringMatch findNext() {
 			while (!chars.finished(patternLength - 1)) {
-				state = initial(patternLength);
-				int j = patternLength - 1;
-				int last = patternLength;
-				while (zero(state)) {
-					char currentChar = chars.lookahead(j);
-					long[] all = states.all(currentChar);
-					state = join(state, all);
-					if ((state[0] & finalstate) != 0l) {
+				segment = 0;
+				state = activeStates[segment];
+				int j = patternLengths[segment] - 1;
+				int[] last = new int[patternLengths.length];
+				System.arraycopy(patternLengths, 0, last, 0, patternLengths.length);
+				nextSegment: while (state != 0l) {
+					char currentChar = chars.lookahead(segment * 64 + j);
+					long single = states.select(segment, currentChar);
+					state &= single;
+					if ((state & finalstate[segment]) != 0l) {
 						if (j > 0) {
-							last = j;
-						} else {
+							last[segment] = j;
+						} else if (segment == patternLengths.length - 1) {
 							StringMatch createMatch = createMatch();
-							chars.forward(last);
+							chars.forward(max(last, segment));
 							return createMatch;
+						} else {
+							segment++;
+							state = activeStates[segment];
+							j = patternLengths[segment] - 1;
+							continue nextSegment;
 						}
 					}
 					j--;
-					state = next(state);
+					state = (state << 1) & activeStates[segment];
 				}
-				chars.forward(last);
+				chars.forward(max(last, segment));
 			}
 			return null;
 		}
 
-		private long[] next(long[] state) {
-			for (int i = 0; i < state.length; i++) {
-				int j = i + 1;
-				long leastBit = j < state.length ? state[j] >>> 63 : 0l;
-				state[i] = state[i] << 1 | leastBit;
-			}
-			state[0] &= activeStates;
-			return state;
-		}
-
-		private boolean zero(long[] state) {
-			for (int i = 0; i < state.length; i++) {
-				if (state[i] != 0l) {
-					return true;
+		private int max(int[] values, int last) {
+			int max = 0;
+			for (int i = 0; i <= last; i++) {
+				int next = values[i];
+				if (next > max) {
+					max = next;
 				}
 			}
-			return false;
-		}
-
-		private long[] join(long[] state, long[] bits) {
-			for (int i = 0; i < state.length; i++) {
-				state[i] = state[i] & bits[i];
-			}
-			return state;
+			return max;
 		}
 
 	}
@@ -228,6 +246,16 @@ public class BNDM implements StringSearchAlgorithm {
 
 	}
 
+	public interface BitMapStates {
+
+		boolean supportsSingle();
+
+		long single(char c);
+
+		long select(int i, char c);
+
+	}
+
 	private abstract static class SingleLongBitMapStates implements BitMapStates {
 
 		@Override
@@ -236,8 +264,11 @@ public class BNDM implements StringSearchAlgorithm {
 		}
 
 		@Override
-		public long[] all(char c) {
-			return new long[] { single(c) };
+		public long select(int i, char c) {
+			if (i > 0) {
+				return 0l;
+			}
+			return single(c);
 		}
 
 	}
@@ -302,10 +333,6 @@ public class BNDM implements StringSearchAlgorithm {
 
 	private abstract static class MultiLongBitMapStates implements BitMapStates {
 
-		public static long[] computeZero(int length) {
-			return new long[((length - 1) / 64) + 1];
-		}
-
 		@Override
 		public boolean supportsSingle() {
 			return false;
@@ -323,71 +350,80 @@ public class BNDM implements StringSearchAlgorithm {
 		private char minChar;
 		private char maxChar;
 		private long[][] characters;
-		private long[] zero;
 
 		public QuickMultiLongStates(char[] pattern) {
 			this.minChar = computeMinChar(pattern);
 			this.maxChar = computeMaxChar(pattern);
 			this.characters = computeStates(pattern, this.minChar, this.maxChar);
-			this.zero = computeZero(pattern.length);
 		}
 
 		private static long[][] computeStates(char[] pattern, char min, char max) {
-			long[][] characters = new long[max - min + 1][];
-			for (int c = min; c <= max; c++) {
-				characters[c - min] = computeZero(pattern.length);
+			int numberOfSubpatterns = ((pattern.length - 1) / 64) + 1;
+			long[][] characters = new long[numberOfSubpatterns][];
+			for (int i = 0; i < characters.length; i++) {
+				int start = i * 64;
+				int end = i == characters.length - 1 ? pattern.length : (i + 1) * 64;
+				char[] subpattern = Arrays.copyOfRange(pattern, start, end);
+				characters[i] = computeSubStates(subpattern, min, max);
 			}
+			return characters;
+		}
+
+		private static long[] computeSubStates(char[] pattern, char min, char max) {
+			long[] characters = new long[max - min + 1];
 			for (int i = 0; i < pattern.length; i++) {
 				char c = pattern[i];
 				int j = pattern.length - i - 1;
-				int slot = ((pattern.length - 1) / 64) - j / 64;
-				int offset = j % 64;
-				characters[c - min][slot] |= 1l << offset;
+				characters[c - min] |= 1l << j;
 			}
 			return characters;
 		}
 
 		@Override
-		public long[] all(char c) {
+		public long select(int i, char c) {
 			if (c < minChar || c > maxChar) {
-				return zero;
+				return 0l;
 			}
-			return characters[c - minChar];
+			return characters[i][c - minChar];
 		}
 
 	}
 
 	private static class SmartMultiLongStates extends MultiLongBitMapStates {
 
-		private CharObjectMap<long[]> states;
+		private CharLongMap[] states;
 
 		public SmartMultiLongStates(char[] pattern) {
 			this.states = computeStates(pattern);
 		}
 
-		private static CharObjectMap<long[]> computeStates(char[] pattern) {
-			long[] zero = computeZero(pattern.length);
-			CharObjectMap<long[]> map = new CharObjectMap<>(zero);
+		private static CharLongMap[] computeStates(char[] pattern) {
+			int numberOfSubpatterns = ((pattern.length - 1) / 64) + 1;
+			CharLongMap[] characters = new CharLongMap[numberOfSubpatterns];
+			for (int i = 0; i < characters.length; i++) {
+				int start = i * 64;
+				int end = i == characters.length - 1 ? pattern.length : (i + 1) * 64;
+				char[] subpattern = Arrays.copyOfRange(pattern, start, end);
+				characters[i] = computeSubStates(subpattern);
+			}
+			return characters;
+		}
+
+		private static CharLongMap computeSubStates(char[] pattern) {
+			CharLongMap map = new CharLongMap(0l);
 			for (int i = 0; i < pattern.length; i++) {
 				char c = pattern[i];
 				int j = pattern.length - i - 1;
-				int slot = ((pattern.length - 1) / 64) - j / 64;
-				int offset = j % 64;
-				long[] newState = map.get(c);
-				if (newState == zero) {
-					newState = computeZero(pattern.length);
-				}
-				newState[slot] |= 1l << offset;
+				long newState = map.get(c) | (1l << j);
 				map.put(c, newState);
 			}
 			return map;
 		}
 
 		@Override
-		public long[] all(char c) {
-			return states.get(c);
+		public long select(int i, char c) {
+			return states[i].get(c);
 		}
 
 	}
-
 }
