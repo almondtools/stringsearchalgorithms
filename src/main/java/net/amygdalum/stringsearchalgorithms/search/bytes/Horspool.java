@@ -10,6 +10,7 @@ import net.amygdalum.stringsearchalgorithms.search.AbstractStringFinder;
 import net.amygdalum.stringsearchalgorithms.search.StringFinder;
 import net.amygdalum.stringsearchalgorithms.search.StringFinderOption;
 import net.amygdalum.stringsearchalgorithms.search.StringMatch;
+import net.amygdalum.util.text.ByteString;
 
 /**
  * An implementation of the String Search Algorithm of Horspool.
@@ -92,8 +93,8 @@ public class Horspool implements StringSearchAlgorithm {
 		private StringMatch createMatch() {
 			long start = bytes.current();
 			long end = start + patternLength;
-			String s = bytes.slice(start, end).getString();
-			return new StringMatch(start, end, s);
+			ByteString s = bytes.slice(start, end);
+			return new StringMatch(start, end, s.getString());
 		}
 	}
 

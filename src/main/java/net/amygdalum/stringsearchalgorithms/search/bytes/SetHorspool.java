@@ -91,7 +91,9 @@ public class SetHorspool implements StringSearchAlgorithm {
 				while (node != null) {
 					ByteString match = node.getAttached();
 					if (match != null) {
-						push(createMatch(patternPointer, match));
+						long start = bytes.current() + patternPointer;
+						long end = bytes.current() + patternPointer + match.length();
+						push(createMatch(start, end));
 					}
 					patternPointer--;
 					if (pos + patternPointer < 0) {
@@ -126,10 +128,9 @@ public class SetHorspool implements StringSearchAlgorithm {
 			}
 		}
 
-		protected StringMatch createMatch(int patternPointer, ByteString s) {
-			long start = bytes.current() + patternPointer;
-			long end = bytes.current() + patternPointer + s.length();
-			return new StringMatch(start, end, s.getString());
+		protected StringMatch createMatch(long start, long end) {
+			ByteString slice = bytes.slice(start, end);
+			return new StringMatch(start, end, slice.getString());
 		}
 	}
 
@@ -151,9 +152,11 @@ public class SetHorspool implements StringSearchAlgorithm {
 				while (node != null) {
 					ByteString match = node.getAttached();
 					if (match != null) {
-						StringMatch stringMatch = createMatch(patternPointer, match);
+						long start = bytes.current() + patternPointer;
+						long end = bytes.current() + patternPointer + match.length();
+						StringMatch stringMatch = createMatch(start, end);
 						if (lastStart < 0) {
-							lastStart = stringMatch.start();
+							lastStart = start;
 						}
 						push(stringMatch);
 					}

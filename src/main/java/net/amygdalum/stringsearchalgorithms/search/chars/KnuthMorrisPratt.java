@@ -87,17 +87,17 @@ public class KnuthMorrisPratt implements StringSearchAlgorithm {
 				}
 				patternPointer++;
 				if (patternPointer >= patternLength) {
-					int match = patternPointer;
+					StringMatch match = createMatch();
 					patternPointer = next[patternPointer];
-					return createMatch(match);
+					return match;
 				}
 			}
 			return null;
 		}
 
-		private StringMatch createMatch(int match) {
+		private StringMatch createMatch() {
 			long end = chars.current();
-			long start = end - match;
+			long start = end - patternPointer;
 			String s = chars.slice(start, end);
 			return new StringMatch(start, end, s);
 		}

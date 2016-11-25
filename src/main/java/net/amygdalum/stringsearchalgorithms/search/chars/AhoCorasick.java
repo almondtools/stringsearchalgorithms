@@ -117,7 +117,8 @@ public class AhoCorasick implements StringSearchAlgorithm {
 			while (current != null) {
 				String currentMatch = current.getAttached();
 				if (currentMatch != null) {
-					StringMatch nextMatch = createMatch(end, currentMatch);
+					long start = end - currentMatch.length();
+					StringMatch nextMatch = createMatch(start, end);
 					if (!matches.contains(nextMatch)) {
 						matches.add(nextMatch);
 					}
@@ -127,8 +128,8 @@ public class AhoCorasick implements StringSearchAlgorithm {
 			return matches;
 		}
 
-		protected StringMatch createMatch(long end, String s) {
-			long start = end - s.length();
+		protected StringMatch createMatch(long start, long end) {
+			String s = chars.slice(start, end);
 			return new StringMatch(start, end, s);
 		}
 

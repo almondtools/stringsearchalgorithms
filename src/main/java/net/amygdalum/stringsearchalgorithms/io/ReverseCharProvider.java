@@ -88,7 +88,7 @@ public class ReverseCharProvider implements CharProvider {
 
 	@Override
 	public String slice(long start, long end) {
-		return new StringBuilder(chars.slice(end, start)).reverse().toString();
+		return chars.slice(end, start);
 	}
 
 	@Override

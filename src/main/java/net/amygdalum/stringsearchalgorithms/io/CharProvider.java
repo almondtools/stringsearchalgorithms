@@ -44,15 +44,14 @@ public interface CharProvider {
 	char[] between(long start, long end);
 
 	/**
-	 * This method returns the String between the given absolute positions.
+	 * This method returns the original String between the given absolute positions.
 	 * 
-	 * The arguments of slice(long,long) must be consistent with current(). 
+	 * Note that the original String might differ from the provided chars of between(long,long). 
 	 * 
 	 * @throws NegativeArraySizeException if start is after end (which is not necessarily start &lt; end)
 	 * @param start the first position
 	 * @param end the last position (exclusive)
-	 * @return the String between start and end
-	 * @see #current()   
+	 * @return the String between start and end (in the original source)
 	 */
 	String slice(long start, long end);
 

@@ -123,8 +123,9 @@ public class BOM implements StringSearchAlgorithm {
 				}
 				if (current != null && j < 0) {
 					ByteString pattern = current.getAttached();
-					long currentWindowStart = bytes.current();
-					StringMatch match = createMatch(currentWindowStart, pattern);
+					long start = bytes.current();
+					long end = start + pattern.length();
+					StringMatch match = createMatch(start, end);
 
 					bytes.next();
 					return match;
@@ -138,9 +139,9 @@ public class BOM implements StringSearchAlgorithm {
 			return null;
 		}
 
-		public StringMatch createMatch(long start, ByteString match) {
-			long end = start + match.length();
-			return new StringMatch(start, end, match.getString());
+		protected StringMatch createMatch(long start, long end) {
+			ByteString s = bytes.slice(start, end);
+			return new StringMatch(start, end, s.getString());
 		}
 
 	}

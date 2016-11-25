@@ -116,7 +116,7 @@ public class ReverseCharProviderTest {
 	@Test
 	public void testSliceDoesNotConsume() throws Exception {
 		ReverseCharProvider provider = new ReverseCharProvider(new StringCharProvider("dcba", 4));
-		assertThat(provider.slice(3, 1), equalTo("bc"));
+		assertThat(provider.slice(3, 1), equalTo("cb"));
 		assertThat(provider.current(), equalTo(4l));
 	}
 

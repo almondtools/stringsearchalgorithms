@@ -10,6 +10,7 @@ import net.amygdalum.stringsearchalgorithms.search.AbstractStringFinder;
 import net.amygdalum.stringsearchalgorithms.search.StringFinder;
 import net.amygdalum.stringsearchalgorithms.search.StringFinderOption;
 import net.amygdalum.stringsearchalgorithms.search.StringMatch;
+import net.amygdalum.util.text.ByteString;
 
 /**
  * An implementation of the String Search Algorithm of Knuth-Morris-Pratt.
@@ -92,19 +93,19 @@ public class KnuthMorrisPratt implements StringSearchAlgorithm {
 				}
 				patternPointer++;
 				if (patternPointer >= patternLength) {
-					int match = patternPointer;
+					StringMatch match = createMatch();
 					patternPointer = next[patternPointer];
-					return createMatch(match);
+					return match;
 				}
 			}
 			return null;
 		}
 
-		private StringMatch createMatch(int match) {
+		private StringMatch createMatch() {
 			long end = bytes.current();
-			long start = end - match;
-			String s = bytes.slice(start, end).getString();
-			return new StringMatch(start, end, s);
+			long start = end - patternPointer;
+			ByteString s = bytes.slice(start, end);
+			return new StringMatch(start, end, s.getString());
 		}
 	}
 

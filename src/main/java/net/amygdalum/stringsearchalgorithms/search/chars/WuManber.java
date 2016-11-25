@@ -168,9 +168,8 @@ public class WuManber implements StringSearchAlgorithm {
 			}
 		}
 
-		protected StringMatch createMatch(int patternPointer, String s) {
-			long start = chars.current() + patternPointer;
-			long end = chars.current() + minLength;
+		protected StringMatch createMatch(long start, long end) {
+			String s = chars.slice(start, end);
 			return new StringMatch(start, end, s);
 		}
 
@@ -202,7 +201,9 @@ public class WuManber implements StringSearchAlgorithm {
 						while (node != null) {
 							String match = node.getAttached();
 							if (match != null) {
-								push(createMatch(patternPointer, match));
+								long start = chars.current() + patternPointer;
+								long end = chars.current() + minLength;
+								push(createMatch(start, end));
 							}
 							patternPointer--;
 							if (pos + patternPointer < 0) {
@@ -248,9 +249,11 @@ public class WuManber implements StringSearchAlgorithm {
 						while (node != null) {
 							String match = node.getAttached();
 							if (match != null) {
-								StringMatch stringMatch = createMatch(patternPointer, match);
+								long start = chars.current() + patternPointer;
+								long end = chars.current() + minLength;
+								StringMatch stringMatch = createMatch(start, end);
 								if (lastStart < 0) {
-									lastStart = stringMatch.start();
+									lastStart = start;
 								}
 								push(stringMatch);
 							}

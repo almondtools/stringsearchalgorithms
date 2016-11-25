@@ -164,7 +164,7 @@ public class SetBackwardOracleMatching implements StringSearchAlgorithm {
 							long currentWordEnd = currentWindowEnd + suffix.length();
 							if (!bytes.finished((int) (currentWordEnd - currentWindowStart - 1))) {
 								if (suffix.equals(bytes.between(currentWindowEnd, currentWordEnd))) {
-									buffer.add(createMatch(currentWindowStart, currentWordEnd, prefix.getString() + suffix.getString()));
+									buffer.add(createMatch(currentWindowStart, currentWordEnd));
 								}
 							}
 						}
@@ -186,8 +186,9 @@ public class SetBackwardOracleMatching implements StringSearchAlgorithm {
 			return null;
 		}
 
-		public StringMatch createMatch(long start, long end, String match) {
-			return new StringMatch(start, end, match);
+		protected StringMatch createMatch(long start, long end) {
+			ByteString s = bytes.slice(start, end);
+			return new StringMatch(start, end, s.getString());
 		}
 
 	}

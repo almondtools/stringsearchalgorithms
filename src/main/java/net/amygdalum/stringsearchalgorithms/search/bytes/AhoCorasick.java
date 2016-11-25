@@ -120,7 +120,8 @@ public class AhoCorasick implements StringSearchAlgorithm {
 			while (current != null) {
 				ByteString currentMatch = current.getAttached();
 				if (currentMatch != null) {
-					StringMatch nextMatch = createMatch(end, currentMatch);
+					long start = end - currentMatch.length(); 
+					StringMatch nextMatch = createMatch(start, end);
 					if (!matches.contains(nextMatch)) {
 						matches.add(nextMatch);
 					}
@@ -130,8 +131,8 @@ public class AhoCorasick implements StringSearchAlgorithm {
 			return matches;
 		}
 
-		protected StringMatch createMatch(long end, ByteString s) {
-			long start = end - s.length(); 
+		protected StringMatch createMatch(long start, long end) {
+			ByteString s = bytes.slice(start, end);
 			return new StringMatch(start, end, s.getString());
 		}
 
