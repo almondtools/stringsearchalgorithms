@@ -148,6 +148,18 @@ public class StreamByteProviderTest {
 	}
 
 	@Test
+	public void testFinishedAfterConsuming() throws Exception {
+		StreamByteProvider provider = new StreamByteProvider(new ByteArrayInputStream("abcd".getBytes(UTF_8)), 1, 2, 1);
+		
+		provider.next();
+		provider.next();
+		provider.next();
+		
+		assertThat(provider.finished(), is(true));
+		assertThat(provider.finished(), is(true));
+	}
+
+	@Test
 	public void testLookahead() throws Exception {
 		StreamByteProvider provider = new StreamByteProvider(new ByteArrayInputStream("abcd".getBytes(UTF_8)), 0, 4, 1);
 		assertThat(provider.lookahead(), equalTo(a));

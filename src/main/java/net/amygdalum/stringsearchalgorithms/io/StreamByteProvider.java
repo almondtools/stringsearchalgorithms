@@ -284,12 +284,7 @@ public class StreamByteProvider implements ByteProvider {
 
 	@Override
 	public boolean finished() {
-		if (topPos == -1 && currentIndex == topIndex) {
-			return true;
-		} else if (topPos == -1 && currentIndex == topIndex - 1 && currentPos == bufferSize) {
-			return true;
-		}
-		return false;
+		return finished(0);
 	}
 
 	@Override
