@@ -166,14 +166,13 @@ public class ShiftAnd implements StringSearchAlgorithm {
 
 	}
 
-	public static class Factory implements StringSearchAlgorithmFactory, SupportsCharClasses<Factory> {
+	public static class Factory implements StringSearchAlgorithmFactory, SupportsCharClasses {
 
 		private CharMapping mapping;
 
 		@Override
-		public Factory withCharClasses(CharMapping mapping) {
+		public void enableCharClasses(CharMapping mapping) {
 			this.mapping = mapping;
-			return this;
 		}
 
 		@Override

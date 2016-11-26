@@ -3,6 +3,10 @@ package net.amygdalum.stringsearchalgorithms.search.chars;
 import static java.lang.Character.toLowerCase;
 import static java.lang.Character.toUpperCase;
 
+import java.util.Collection;
+import java.util.LinkedHashSet;
+import java.util.Set;
+
 import net.amygdalum.stringsearchalgorithms.io.CaseInsensitiveCharProvider;
 import net.amygdalum.stringsearchalgorithms.io.CharProvider;
 import net.amygdalum.stringsearchalgorithms.search.StringFinder;
@@ -40,10 +44,20 @@ public class CaseInsensitive implements StringSearchAlgorithm {
 	}
 
 	public static StringSearchAlgorithmFactory caseInsensitive(StringSearchAlgorithmFactory factory) {
-		if (factory instanceof SupportsCharClasses<?>) {
-			return ((SupportsCharClasses<?>) factory).withCharClasses(MAPPING);
+		if (factory instanceof SupportsCharClasses) {
+			((SupportsCharClasses) factory).enableCharClasses(MAPPING);
+			return factory;
 		} else {
 			return new Factory(factory);
+		}
+	}
+
+	public static MultiStringSearchAlgorithmFactory caseInsensitive(MultiStringSearchAlgorithmFactory factory) {
+		if (factory instanceof SupportsCharClasses) {
+			((SupportsCharClasses) factory).enableCharClasses(MAPPING);
+			return factory;
+		} else {
+			return new MultiFactory(factory);
 		}
 	}
 
@@ -68,6 +82,25 @@ public class CaseInsensitive implements StringSearchAlgorithm {
 		@Override
 		public StringSearchAlgorithm of(String pattern) {
 			String lc = pattern.toLowerCase();
+			return new CaseInsensitive(factory.of(lc));
+		}
+
+	}
+
+	public static class MultiFactory implements MultiStringSearchAlgorithmFactory {
+
+		private MultiStringSearchAlgorithmFactory factory;
+
+		private MultiFactory(MultiStringSearchAlgorithmFactory factory) {
+			this.factory = factory;
+		}
+
+		@Override
+		public StringSearchAlgorithm of(Collection<String> patterns) {
+			Set<String> lc = new LinkedHashSet<>();
+			for (String pattern : patterns) {
+				lc.add(pattern.toLowerCase());
+			}
 			return new CaseInsensitive(factory.of(lc));
 		}
 

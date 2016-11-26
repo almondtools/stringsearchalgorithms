@@ -25,7 +25,7 @@ import net.amygdalum.util.text.CharMapping;
  */
 public class BOM implements StringSearchAlgorithm {
 
-	private TrieNode<String> trie;
+	private TrieNode<char[]> trie;
 	private int patternLength;
 
 	public BOM(String pattern) {
@@ -41,58 +41,58 @@ public class BOM implements StringSearchAlgorithm {
 	}
 
 	private void applyMapping(CharMapping mapping) {
-		Set<TrieNode<String>> nodes = trie.nodes();
-		for (TrieNode<String> node : nodes) {
+		Set<TrieNode<char[]>> nodes = trie.nodes();
+		for (TrieNode<char[]> node : nodes) {
 			applyMapping(node, mapping);
 		}
 	}
 
-	private void applyMapping(TrieNode<String> node, CharMapping mapping) {
-		CharObjectMap<TrieNode<String>> nexts = node.getNexts();
+	private void applyMapping(TrieNode<char[]> node, CharMapping mapping) {
+		CharObjectMap<TrieNode<char[]>> nexts = node.getNexts();
 		node.reset();
-		for (CharObjectMap<TrieNode<String>>.Entry entry : nexts.cursor()) {
+		for (CharObjectMap<TrieNode<char[]>>.Entry entry : nexts.cursor()) {
 			char ec = entry.key;
-			TrieNode<String> next = entry.value;
+			TrieNode<char[]> next = entry.value;
 			for (char c : mapping.map(ec)) {
 				node.addNext(c, next);
 			}
 		}
 	}
 
-	private static TrieNode<String> computeTrie(char[] pattern, int length) {
-		TrieNode<String> trie = new TrieNode<>();
-		TrieNode<String> node = trie.extend(revert(pattern), 0);
-		node.setAttached(new String(pattern));
+	private static TrieNode<char[]> computeTrie(char[] pattern, int length) {
+		TrieNode<char[]> trie = new TrieNode<>();
+		TrieNode<char[]> node = trie.extend(revert(pattern), 0);
+		node.setAttached(pattern);
 		computeOracle(trie);
 		return trie;
 	}
 
-	private static void computeOracle(TrieNode<String> trie) {
-		Map<TrieNode<String>, TrieNode<String>> oracle = new IdentityHashMap<>();
-		TrieNode<String> init = trie;
+	private static void computeOracle(TrieNode<char[]> trie) {
+		Map<TrieNode<char[]>, TrieNode<char[]>> oracle = new IdentityHashMap<>();
+		TrieNode<char[]> init = trie;
 		oracle.put(init, null);
-		Queue<TrieNode<String>> worklist = new LinkedList<>();
+		Queue<TrieNode<char[]>> worklist = new LinkedList<>();
 		worklist.add(trie);
 		while (!worklist.isEmpty()) {
-			TrieNode<String> current = worklist.remove();
-			List<TrieNode<String>> nexts = process(current, oracle, init);
+			TrieNode<char[]> current = worklist.remove();
+			List<TrieNode<char[]>> nexts = process(current, oracle, init);
 			worklist.addAll(nexts);
 		}
 	}
 
-	private static List<TrieNode<String>> process(TrieNode<String> parent, Map<TrieNode<String>, TrieNode<String>> oracle, TrieNode<String> init) {
-		List<TrieNode<String>> nexts = new ArrayList<>();
-		for (CharObjectMap<TrieNode<String>>.Entry entry : parent.getNexts().cursor()) {
+	private static List<TrieNode<char[]>> process(TrieNode<char[]> parent, Map<TrieNode<char[]>, TrieNode<char[]>> oracle, TrieNode<char[]> init) {
+		List<TrieNode<char[]>> nexts = new ArrayList<>();
+		for (CharObjectMap<TrieNode<char[]>>.Entry entry : parent.getNexts().cursor()) {
 			char c = entry.key;
-			TrieNode<String> trie = entry.value;
+			TrieNode<char[]> trie = entry.value;
 
-			TrieNode<String> down = oracle.get(parent);
+			TrieNode<char[]> down = oracle.get(parent);
 			while (down != null && down.nextNode(c) == null) {
 				down.addNext(c, trie);
 				down = oracle.get(down);
 			}
 			if (down != null) {
-				TrieNode<String> next = down.nextNode(c);
+				TrieNode<char[]> next = down.nextNode(c);
 				oracle.put(trie, next);
 			} else {
 				oracle.put(trie, init);
@@ -138,16 +138,16 @@ public class BOM implements StringSearchAlgorithm {
 		public StringMatch findNext() {
 			final int lookahead = patternLength - 1;
 			while (!chars.finished(lookahead)) {
-				TrieNode<String> current = trie;
+				TrieNode<char[]> current = trie;
 				int j = lookahead;
 				while (j >= 0 && current != null) {
 					current = current.nextNode(chars.lookahead(j));
 					j--;
 				}
 				if (current != null && j < 0) {
-					String pattern = current.getAttached();
+					char[] pattern = current.getAttached();
 					long start = chars.current();
-					long end = start + pattern.length();
+					long end = start + pattern.length;
 					StringMatch match = createMatch(start, end);
 
 					chars.next();
@@ -169,14 +169,13 @@ public class BOM implements StringSearchAlgorithm {
 
 	}
 
-	public static class Factory implements StringSearchAlgorithmFactory, SupportsCharClasses<Factory> {
+	public static class Factory implements StringSearchAlgorithmFactory, SupportsCharClasses {
 
 		private CharMapping mapping;
 
 		@Override
-		public Factory withCharClasses(CharMapping mapping) {
+		public void enableCharClasses(CharMapping mapping) {
 			this.mapping = mapping;
-			return this;
 		}
 
 		@Override

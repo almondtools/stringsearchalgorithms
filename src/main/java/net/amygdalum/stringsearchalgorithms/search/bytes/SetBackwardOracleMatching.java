@@ -32,52 +32,52 @@ import net.amygdalum.util.text.ByteString;
  */
 public class SetBackwardOracleMatching implements StringSearchAlgorithm {
 
-	private TrieNode<List<ByteString>> trie;
+	private TrieNode<List<byte[]>> trie;
 	private int minLength;
 
 	public SetBackwardOracleMatching(Collection<String> patterns, Charset charset) {
 		List<byte[]> bytepatterns = toByteArray(patterns, charset);
 		this.minLength = minLength(bytepatterns);
-		this.trie = computeTrie(bytepatterns, minLength, charset);
+		this.trie = computeTrie(bytepatterns, minLength);
 	}
 
-	private static TrieNode<List<ByteString>> computeTrie(List<byte[]> bytepatterns, int length, Charset charset) {
-		TrieNode<List<ByteString>> trie = new TrieNode<>();
+	private static TrieNode<List<byte[]>> computeTrie(List<byte[]> bytepatterns, int length) {
+		TrieNode<List<byte[]>> trie = new TrieNode<>();
 		for (byte[] pattern : bytepatterns) {
 			byte[] prefix = copyOfRange(pattern, 0, length);
 			trie.extend(revert(prefix), 0);
 		}
 		computeOracle(trie);
-		computeTerminals(trie, bytepatterns, length, charset);
+		computeTerminals(trie, bytepatterns, length);
 		return trie;
 	}
 
-	private static void computeOracle(TrieNode<List<ByteString>> trie) {
-		Map<TrieNode<List<ByteString>>, TrieNode<List<ByteString>>> oracle = new IdentityHashMap<>();
-		TrieNode<List<ByteString>> init = trie;
+	private static void computeOracle(TrieNode<List<byte[]>> trie) {
+		Map<TrieNode<List<byte[]>>, TrieNode<List<byte[]>>> oracle = new IdentityHashMap<>();
+		TrieNode<List<byte[]>> init = trie;
 		oracle.put(init, null);
-		Queue<TrieNode<List<ByteString>>> worklist = new LinkedList<>();
+		Queue<TrieNode<List<byte[]>>> worklist = new LinkedList<>();
 		worklist.add(trie);
 		while (!worklist.isEmpty()) {
-			TrieNode<List<ByteString>> current = worklist.remove();
-			List<TrieNode<List<ByteString>>> nexts = process(current, oracle, init);
+			TrieNode<List<byte[]>> current = worklist.remove();
+			List<TrieNode<List<byte[]>>> nexts = process(current, oracle, init);
 			worklist.addAll(nexts);
 		}
 	}
 
-	private static List<TrieNode<List<ByteString>>> process(TrieNode<List<ByteString>> parent, Map<TrieNode<List<ByteString>>, TrieNode<List<ByteString>>> oracle, TrieNode<List<ByteString>> init) {
-		List<TrieNode<List<ByteString>>> nexts = new ArrayList<>();
-		for (ByteObjectMap<TrieNode<List<ByteString>>>.Entry entry : parent.getNexts().cursor()) {
+	private static List<TrieNode<List<byte[]>>> process(TrieNode<List<byte[]>> parent, Map<TrieNode<List<byte[]>>, TrieNode<List<byte[]>>> oracle, TrieNode<List<byte[]>> init) {
+		List<TrieNode<List<byte[]>>> nexts = new ArrayList<>();
+		for (ByteObjectMap<TrieNode<List<byte[]>>>.Entry entry : parent.getNexts().cursor()) {
 			byte c = entry.key;
-			TrieNode<List<ByteString>> trie = entry.value;
+			TrieNode<List<byte[]>> trie = entry.value;
 
-			TrieNode<List<ByteString>> down = oracle.get(parent);
+			TrieNode<List<byte[]>> down = oracle.get(parent);
 			while (down != null && down.nextNode(c) == null) {
 				down.addNext(c, trie);
 				down = oracle.get(down);
 			}
 			if (down != null) {
-				TrieNode<List<ByteString>> next = down.nextNode(c);
+				TrieNode<List<byte[]>> next = down.nextNode(c);
 				oracle.put(trie, next);
 			} else {
 				oracle.put(trie, init);
@@ -88,18 +88,18 @@ public class SetBackwardOracleMatching implements StringSearchAlgorithm {
 		return nexts;
 	}
 
-	private static void computeTerminals(TrieNode<List<ByteString>> trie, List<byte[]> patterns, int minLength, Charset charset) {
+	private static void computeTerminals(TrieNode<List<byte[]>> trie, List<byte[]> patterns, int minLength) {
 		for (byte[] pattern : patterns) {
 			byte[] prefix = Arrays.copyOfRange(pattern, 0, minLength);
-			TrieNode<List<ByteString>> terminal = trie.nextNode(revert(prefix));
-			List<ByteString> terminalPatterns = terminal.getAttached();
+			TrieNode<List<byte[]>> terminal = trie.nextNode(revert(prefix));
+			List<byte[]> terminalPatterns = terminal.getAttached();
 			if (terminalPatterns == null) {
 				terminalPatterns = new ArrayList<>();
 				terminal.setAttached(terminalPatterns);
-				terminalPatterns.add(new ByteString(prefix, charset));
+				terminalPatterns.add(prefix);
 			}
 			byte[] tail = Arrays.copyOfRange(pattern, minLength, pattern.length);
-			terminalPatterns.add(new ByteString(tail, charset));
+			terminalPatterns.add(tail);
 		}
 	}
 
@@ -144,7 +144,7 @@ public class SetBackwardOracleMatching implements StringSearchAlgorithm {
 			}
 			final int lookahead = minLength - 1;
 			next: while (!bytes.finished(lookahead)) {
-				TrieNode<List<ByteString>> current = trie;
+				TrieNode<List<byte[]>> current = trie;
 				int j = lookahead;
 				while (j >= 0 && current != null) {
 					current = current.nextNode(bytes.lookahead(j));
@@ -155,15 +155,16 @@ public class SetBackwardOracleMatching implements StringSearchAlgorithm {
 				long currentWindowEnd = currentWindowStart + minLength;
 				byte[] matchedPrefix = bytes.between(currentPos, currentWindowEnd);
 				if (current != null && j < 0) {
-					List<ByteString> patterns = current.getAttached();
-					Iterator<ByteString> iPatterns = patterns.iterator();
-					ByteString prefix = iPatterns.next();
-					if (prefix.equals(matchedPrefix)) {
+					List<byte[]> patterns = current.getAttached();
+					Iterator<byte[]> iPatterns = patterns.iterator();
+					byte[] prefix = iPatterns.next();
+					if (Arrays.equals(prefix, matchedPrefix)) {
 						while (iPatterns.hasNext()) {
-							ByteString suffix = iPatterns.next();
-							long currentWordEnd = currentWindowEnd + suffix.length();
+							byte[] suffix = iPatterns.next();
+							long currentWordEnd = currentWindowEnd + suffix.length;
 							if (!bytes.finished((int) (currentWordEnd - currentWindowStart - 1))) {
-								if (suffix.equals(bytes.between(currentWindowEnd, currentWordEnd))) {
+								byte[] matchedSuffix = bytes.between(currentWindowEnd, currentWordEnd);
+								if (Arrays.equals(suffix, matchedSuffix)) {
 									buffer.add(createMatch(currentWindowStart, currentWordEnd));
 								}
 							}

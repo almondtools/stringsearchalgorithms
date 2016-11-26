@@ -2,7 +2,7 @@ package net.amygdalum.stringsearchalgorithms.search.chars;
 
 import net.amygdalum.util.text.CharMapping;
 
-public interface SupportsCharClasses<T extends StringSearchAlgorithmFactory> {
+public interface SupportsCharClasses {
 
-	T withCharClasses(CharMapping mapping);
+	void enableCharClasses(CharMapping mapping);
 }
