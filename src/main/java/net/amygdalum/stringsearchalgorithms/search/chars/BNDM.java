@@ -1,8 +1,7 @@
 package net.amygdalum.stringsearchalgorithms.search.chars;
 
+import static java.lang.Math.max;
 import static java.util.Arrays.fill;
-import static net.amygdalum.util.text.CharUtils.computeMaxChar;
-import static net.amygdalum.util.text.CharUtils.computeMinChar;
 
 import java.util.Arrays;
 
@@ -12,6 +11,8 @@ import net.amygdalum.stringsearchalgorithms.search.StringFinder;
 import net.amygdalum.stringsearchalgorithms.search.StringFinderOption;
 import net.amygdalum.stringsearchalgorithms.search.StringMatch;
 import net.amygdalum.util.map.CharLongMap;
+import net.amygdalum.util.text.CharAlphabet;
+import net.amygdalum.util.text.CharMapping;
 
 /**
  * An implementation of the String Search Algorithm BNDM (Backward Nondeterministic Dawg Matching).
@@ -24,30 +25,30 @@ public class BNDM implements StringSearchAlgorithm {
 	private BitMapStates states;
 
 	public BNDM(String pattern) {
-		this.patternLength = pattern.length();
-		this.states = computeStates(pattern.toCharArray());
+		this(pattern, CharMapping.IDENTITY);
 	}
 
-	private static BitMapStates computeStates(char[] pattern) {
-		if (isCompactRange(pattern)) {
+	public BNDM(String pattern, CharMapping mapping) {
+		this.patternLength = pattern.length();
+		this.states = computeStates(pattern.toCharArray(), mapping);
+	}
+
+	private static BitMapStates computeStates(char[] pattern, CharMapping mapping) {
+		CharAlphabet alphabet = CharAlphabet.ranged(pattern, mapping);
+		int compactSize = max(256, pattern.length * 2);
+		if (alphabet.getRange() < compactSize) {
 			if (pattern.length > 64) {
-				return new QuickMultiLongStates(pattern);
+				return new QuickMultiLongStates(pattern, alphabet, mapping);
 			} else {
-				return new QuickSingleLongStates(pattern);
+				return new QuickSingleLongStates(pattern, alphabet, mapping);
 			}
 		} else {
 			if (pattern.length > 64) {
-				return new SmartMultiLongStates(pattern);
+				return new SmartMultiLongStates(pattern, mapping);
 			} else {
-				return new SmartSingleLongStates(pattern);
+				return new SmartSingleLongStates(pattern, mapping);
 			}
 		}
-	}
-
-	private static boolean isCompactRange(char[] pattern) {
-		char minChar = computeMinChar(pattern);
-		char maxChar = computeMaxChar(pattern);
-		return maxChar - minChar < 256 || maxChar - minChar < pattern.length * 2;
 	}
 
 	@Override
@@ -237,11 +238,23 @@ public class BNDM implements StringSearchAlgorithm {
 
 	}
 
-	public static class Factory implements StringSearchAlgorithmFactory {
+	public static class Factory implements StringSearchAlgorithmFactory, SupportsCharClasses<Factory> {
+
+		private CharMapping mapping;
+
+		@Override
+		public Factory withCharClasses(CharMapping mapping) {
+			this.mapping = mapping;
+			return this;
+		}
 
 		@Override
 		public StringSearchAlgorithm of(String pattern) {
-			return new BNDM(pattern);
+			if (mapping == null) {
+				return new BNDM(pattern);
+			} else {
+				return new BNDM(pattern, mapping);
+			}
 		}
 
 	}
@@ -279,18 +292,19 @@ public class BNDM implements StringSearchAlgorithm {
 		private char maxChar;
 		private long[] characters;
 
-		public QuickSingleLongStates(char[] pattern) {
-			this.minChar = computeMinChar(pattern);
-			this.maxChar = computeMaxChar(pattern);
-			this.characters = computeStates(pattern, this.minChar, this.maxChar);
+		public QuickSingleLongStates(char[] pattern, CharAlphabet alphabet, CharMapping mapping) {
+			this.minChar = alphabet.minChar();
+			this.maxChar = alphabet.maxChar();
+			this.characters = computeStates(pattern, mapping, this.minChar, this.maxChar);
 		}
 
-		private static long[] computeStates(char[] pattern, char min, char max) {
+		private static long[] computeStates(char[] pattern, CharMapping mapping, char min, char max) {
 			long[] characters = new long[max - min + 1];
 			for (int i = 0; i < pattern.length; i++) {
-				char c = pattern[i];
 				int j = pattern.length - i - 1;
-				characters[c - min] |= 1l << j;
+				for (char c : mapping.map(pattern[i])) {
+					characters[c - min] |= 1l << j;
+				}
 			}
 			return characters;
 		}
@@ -309,17 +323,18 @@ public class BNDM implements StringSearchAlgorithm {
 
 		private CharLongMap states;
 
-		public SmartSingleLongStates(char[] pattern) {
-			this.states = computeStates(pattern);
+		public SmartSingleLongStates(char[] pattern, CharMapping mapping) {
+			this.states = computeStates(pattern, mapping);
 		}
 
-		private static CharLongMap computeStates(char[] pattern) {
+		private static CharLongMap computeStates(char[] pattern, CharMapping mapping) {
 			CharLongMap map = new CharLongMap(0l);
 			for (int i = 0; i < pattern.length; i++) {
-				char c = pattern[i];
 				int j = pattern.length - i - 1;
-				long newState = map.get(c) | (1l << j);
-				map.put(c, newState);
+				for (char c : mapping.map(pattern[i])) {
+					long newState = map.get(c) | (1l << j);
+					map.put(c, newState);
+				}
 			}
 			return map;
 		}
@@ -351,30 +366,31 @@ public class BNDM implements StringSearchAlgorithm {
 		private char maxChar;
 		private long[][] characters;
 
-		public QuickMultiLongStates(char[] pattern) {
-			this.minChar = computeMinChar(pattern);
-			this.maxChar = computeMaxChar(pattern);
-			this.characters = computeStates(pattern, this.minChar, this.maxChar);
+		public QuickMultiLongStates(char[] pattern, CharAlphabet alphabet, CharMapping mapping) {
+			this.minChar = alphabet.minChar();
+			this.maxChar = alphabet.maxChar();
+			this.characters = computeStates(pattern, mapping, this.minChar, this.maxChar);
 		}
 
-		private static long[][] computeStates(char[] pattern, char min, char max) {
+		private static long[][] computeStates(char[] pattern, CharMapping mapping, char min, char max) {
 			int numberOfSubpatterns = ((pattern.length - 1) / 64) + 1;
 			long[][] characters = new long[numberOfSubpatterns][];
 			for (int i = 0; i < characters.length; i++) {
 				int start = i * 64;
 				int end = i == characters.length - 1 ? pattern.length : (i + 1) * 64;
 				char[] subpattern = Arrays.copyOfRange(pattern, start, end);
-				characters[i] = computeSubStates(subpattern, min, max);
+				characters[i] = computeSubStates(subpattern, mapping, min, max);
 			}
 			return characters;
 		}
 
-		private static long[] computeSubStates(char[] pattern, char min, char max) {
+		private static long[] computeSubStates(char[] pattern, CharMapping mapping, char min, char max) {
 			long[] characters = new long[max - min + 1];
 			for (int i = 0; i < pattern.length; i++) {
-				char c = pattern[i];
 				int j = pattern.length - i - 1;
-				characters[c - min] |= 1l << j;
+				for (char c : mapping.map(pattern[i])) {
+					characters[c - min] |= 1l << j;
+				}
 			}
 			return characters;
 		}
@@ -393,29 +409,30 @@ public class BNDM implements StringSearchAlgorithm {
 
 		private CharLongMap[] states;
 
-		public SmartMultiLongStates(char[] pattern) {
-			this.states = computeStates(pattern);
+		public SmartMultiLongStates(char[] pattern, CharMapping mapping) {
+			this.states = computeStates(pattern, mapping);
 		}
 
-		private static CharLongMap[] computeStates(char[] pattern) {
+		private static CharLongMap[] computeStates(char[] pattern, CharMapping mapping) {
 			int numberOfSubpatterns = ((pattern.length - 1) / 64) + 1;
 			CharLongMap[] characters = new CharLongMap[numberOfSubpatterns];
 			for (int i = 0; i < characters.length; i++) {
 				int start = i * 64;
 				int end = i == characters.length - 1 ? pattern.length : (i + 1) * 64;
 				char[] subpattern = Arrays.copyOfRange(pattern, start, end);
-				characters[i] = computeSubStates(subpattern);
+				characters[i] = computeSubStates(subpattern, mapping);
 			}
 			return characters;
 		}
 
-		private static CharLongMap computeSubStates(char[] pattern) {
+		private static CharLongMap computeSubStates(char[] pattern, CharMapping mapping) {
 			CharLongMap map = new CharLongMap(0l);
 			for (int i = 0; i < pattern.length; i++) {
-				char c = pattern[i];
 				int j = pattern.length - i - 1;
-				long newState = map.get(c) | (1l << j);
-				map.put(c, newState);
+				for (char c : mapping.map(pattern[i])) {
+					long newState = map.get(c) | (1l << j);
+					map.put(c, newState);
+				}
 			}
 			return map;
 		}
@@ -426,4 +443,5 @@ public class BNDM implements StringSearchAlgorithm {
 		}
 
 	}
+
 }

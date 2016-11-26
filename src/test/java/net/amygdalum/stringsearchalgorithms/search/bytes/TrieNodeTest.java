@@ -4,10 +4,14 @@ import static com.almondtools.conmatch.datatypes.PrimitiveArrayMatcher.byteArray
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.nullValue;
+import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.sameInstance;
 import static org.junit.Assert.assertThat;
 
+import java.util.Set;
+
 import org.junit.Test;
+
 
 public class TrieNodeTest {
 
@@ -16,6 +20,8 @@ public class TrieNodeTest {
 	private static final byte C = (byte) 0x43;
 	private static final byte a = (byte) 0x61;
 	private static final byte b = (byte) 0x62;
+	private static final byte c = (byte) 0x63;
+	private static final byte x = (byte) 0x78;
 
 	@Test
 	public void testAddNext() throws Exception {
@@ -181,6 +187,68 @@ public class TrieNodeTest {
 		assertThat(trieNode.nextNode(a), nullValue());
 		assertThat(trieNode.nextNode(new byte[] { b }), nullValue());
 		assertThat(trieNode.nextNode(new byte[] { a, b }), nullValue());
+	}
+
+	@Test
+	public void testReset() throws Exception {
+		TrieNode<String> trieNode = new TrieNode<String>();
+		trieNode.addNext(a, new TrieNode<String>());
+		trieNode.addNext(b, new TrieNode<String>());
+		
+		trieNode.reset();
+		
+		assertThat(trieNode.nextNode(a), nullValue());
+		assertThat(trieNode.nextNode(b), nullValue());
+	}
+
+	@SuppressWarnings("unchecked")
+	@Test
+	public void testNodes() throws Exception {
+		TrieNode<String> trieNode = new TrieNode<String>();
+		TrieNode<String> aNode = new TrieNode<String>();
+		TrieNode<String> bNode = new TrieNode<String>();
+		TrieNode<String> cNode = new TrieNode<String>();
+		trieNode.addNext(a, aNode);
+		trieNode.addNext(b, bNode);
+		aNode.addNext(c, cNode);
+		
+		Set<TrieNode<String>> nodes = trieNode.nodes();
+		
+		assertThat(nodes, containsInAnyOrder(trieNode, aNode, bNode, cNode));
+	}
+
+	@SuppressWarnings("unchecked")
+	@Test
+	public void testNodesGraph() throws Exception {
+		TrieNode<String> trieNode = new TrieNode<String>();
+		TrieNode<String> aNode = new TrieNode<String>();
+		TrieNode<String> bNode = new TrieNode<String>();
+		TrieNode<String> cNode = new TrieNode<String>();
+		trieNode.addNext(a, aNode);
+		trieNode.addNext(b, bNode);
+		aNode.addNext(c, cNode);
+		aNode.addNext(b, bNode);
+		
+		Set<TrieNode<String>> nodes = trieNode.nodes();
+		
+		assertThat(nodes, containsInAnyOrder(trieNode, aNode, bNode, cNode));
+	}
+
+	@SuppressWarnings("unchecked")
+	@Test
+	public void testNodesCyclicGraph() throws Exception {
+		TrieNode<String> trieNode = new TrieNode<String>();
+		TrieNode<String> aNode = new TrieNode<String>();
+		TrieNode<String> bNode = new TrieNode<String>();
+		TrieNode<String> cNode = new TrieNode<String>();
+		trieNode.addNext(a, aNode);
+		trieNode.addNext(b, bNode);
+		aNode.addNext(c, cNode);
+		aNode.addNext(x, trieNode);
+		
+		Set<TrieNode<String>> nodes = trieNode.nodes();
+		
+		assertThat(nodes, containsInAnyOrder(trieNode, aNode, bNode, cNode));
 	}
 
 }

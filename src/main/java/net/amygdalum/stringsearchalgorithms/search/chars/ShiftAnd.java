@@ -1,8 +1,7 @@
 package net.amygdalum.stringsearchalgorithms.search.chars;
 
+import static java.lang.Math.max;
 import static java.util.Arrays.fill;
-import static net.amygdalum.util.text.CharUtils.computeMaxChar;
-import static net.amygdalum.util.text.CharUtils.computeMinChar;
 
 import net.amygdalum.stringsearchalgorithms.io.CharProvider;
 import net.amygdalum.stringsearchalgorithms.search.AbstractStringFinder;
@@ -11,6 +10,8 @@ import net.amygdalum.stringsearchalgorithms.search.StringFinderOption;
 import net.amygdalum.stringsearchalgorithms.search.StringMatch;
 import net.amygdalum.util.map.CharLongMap;
 import net.amygdalum.util.map.CharObjectMap;
+import net.amygdalum.util.text.CharAlphabet;
+import net.amygdalum.util.text.CharMapping;
 
 /**
  * An implementation of the String Search Algorithm Shift-And (or Baeza-Yates–Gonnet).
@@ -23,30 +24,30 @@ public class ShiftAnd implements StringSearchAlgorithm {
 	private BitMapStates states;
 
 	public ShiftAnd(String pattern) {
-		this.patternLength = pattern.length();
-		this.states = computeStates(pattern.toCharArray());
+		this(pattern, CharMapping.IDENTITY);
 	}
 
-	private static BitMapStates computeStates(char[] pattern) {
-		if (isCompactRange(pattern)) {
+	public ShiftAnd(String pattern, CharMapping mapping) {
+		this.patternLength = pattern.length();
+		this.states = computeStates(pattern.toCharArray(), mapping);
+	}
+
+	private static BitMapStates computeStates(char[] pattern, CharMapping mapping) {
+		CharAlphabet alphabet = CharAlphabet.ranged(pattern, mapping);
+		int compactSize = max(256, pattern.length * 2);
+		if (alphabet.getRange() < compactSize) {
 			if (pattern.length > 64) {
-				return new QuickMultiLongStates(pattern);
+				return new QuickMultiLongStates(pattern, alphabet, mapping);
 			} else {
-				return new QuickSingleLongStates(pattern);
+				return new QuickSingleLongStates(pattern, alphabet, mapping);
 			}
 		} else {
 			if (pattern.length > 64) {
-				return new SmartMultiLongStates(pattern);
+				return new SmartMultiLongStates(pattern, mapping);
 			} else {
-				return new SmartSingleLongStates(pattern);
+				return new SmartSingleLongStates(pattern, mapping);
 			}
 		}
-	}
-
-	public static boolean isCompactRange(char[] pattern) {
-		char minChar = computeMinChar(pattern);
-		char maxChar = computeMaxChar(pattern);
-		return maxChar - minChar < 256 || maxChar - minChar < pattern.length * 2;
 	}
 
 	@Override
@@ -165,11 +166,23 @@ public class ShiftAnd implements StringSearchAlgorithm {
 
 	}
 
-	public static class Factory implements StringSearchAlgorithmFactory {
+	public static class Factory implements StringSearchAlgorithmFactory, SupportsCharClasses<Factory> {
+
+		private CharMapping mapping;
+
+		@Override
+		public Factory withCharClasses(CharMapping mapping) {
+			this.mapping = mapping;
+			return this;
+		}
 
 		@Override
 		public StringSearchAlgorithm of(String pattern) {
-			return new ShiftAnd(pattern);
+			if (mapping == null) {
+				return new ShiftAnd(pattern);
+			} else {
+				return new ShiftAnd(pattern, mapping);
+			}
 		}
 
 	}
@@ -179,6 +192,7 @@ public class ShiftAnd implements StringSearchAlgorithm {
 		boolean supportsSingle();
 
 		long single(char c);
+
 		long[] all(char c);
 
 	}
@@ -203,17 +217,18 @@ public class ShiftAnd implements StringSearchAlgorithm {
 		private char maxChar;
 		private long[] characters;
 
-		public QuickSingleLongStates(char[] pattern) {
-			this.minChar = computeMinChar(pattern);
-			this.maxChar = computeMaxChar(pattern);
-			this.characters = computeStates(pattern, this.minChar, this.maxChar);
+		public QuickSingleLongStates(char[] pattern, CharAlphabet alphabet, CharMapping mapping) {
+			this.minChar = alphabet.minChar();
+			this.maxChar = alphabet.maxChar();
+			this.characters = computeStates(pattern, mapping, this.minChar, this.maxChar);
 		}
 
-		private static long[] computeStates(char[] pattern, char min, char max) {
+		private static long[] computeStates(char[] pattern, CharMapping mapping, char min, char max) {
 			long[] characters = new long[max - min + 1];
 			for (int i = 0; i < pattern.length; i++) {
-				char c = pattern[i];
-				characters[c - min] |= 1l << i;
+				for (char c : mapping.map(pattern[i])) {
+					characters[c - min] |= 1l << i;
+				}
 			}
 			return characters;
 		}
@@ -232,16 +247,17 @@ public class ShiftAnd implements StringSearchAlgorithm {
 
 		private CharLongMap states;
 
-		public SmartSingleLongStates(char[] pattern) {
-			this.states = computeStates(pattern);
+		public SmartSingleLongStates(char[] pattern, CharMapping mapping) {
+			this.states = computeStates(pattern, mapping);
 		}
 
-		private static CharLongMap computeStates(char[] pattern) {
+		private static CharLongMap computeStates(char[] pattern, CharMapping mapping) {
 			CharLongMap map = new CharLongMap(0l);
 			for (int i = 0; i < pattern.length; i++) {
-				char c = pattern[i];
-				long newState = map.get(c) | 1l << i;
-				map.put(c, newState);
+				for (char c : mapping.map(pattern[i])) {
+					long newState = map.get(c) | 1l << i;
+					map.put(c, newState);
+				}
 			}
 			return map;
 		}
@@ -278,23 +294,24 @@ public class ShiftAnd implements StringSearchAlgorithm {
 		private long[][] characters;
 		private long[] zero;
 
-		public QuickMultiLongStates(char[] pattern) {
-			this.minChar = computeMinChar(pattern);
-			this.maxChar = computeMaxChar(pattern);
-			this.characters = computeStates(pattern, this.minChar, this.maxChar);
+		public QuickMultiLongStates(char[] pattern, CharAlphabet alphabet, CharMapping mapping) {
+			this.minChar = alphabet.minChar();
+			this.maxChar = alphabet.maxChar();
+			this.characters = computeStates(pattern, mapping, this.minChar, this.maxChar);
 			this.zero = computeZero(pattern.length);
 		}
 
-		private static long[][] computeStates(char[] pattern, char min, char max) {
+		private static long[][] computeStates(char[] pattern, CharMapping mapping, char min, char max) {
 			long[][] characters = new long[max - min + 1][];
 			for (int c = min; c <= max; c++) {
 				characters[c - min] = computeZero(pattern.length);
 			}
 			for (int i = 0; i < pattern.length; i++) {
-				char c = pattern[i];
 				int slot = ((pattern.length - 1) / 64) - i / 64;
 				int offset = i % 64;
-				characters[c - min][slot] |= 1l << offset;
+				for (char c : mapping.map(pattern[i])) {
+					characters[c - min][slot] |= 1l << offset;
+				}
 			}
 			return characters;
 		}
@@ -313,23 +330,24 @@ public class ShiftAnd implements StringSearchAlgorithm {
 
 		private CharObjectMap<long[]> states;
 
-		public SmartMultiLongStates(char[] pattern) {
-			this.states = computeStates(pattern);
+		public SmartMultiLongStates(char[] pattern, CharMapping mapping) {
+			this.states = computeStates(pattern, mapping);
 		}
 
-		private static CharObjectMap<long[]> computeStates(char[] pattern) {
+		private static CharObjectMap<long[]> computeStates(char[] pattern, CharMapping mapping) {
 			long[] zero = computeZero(pattern.length);
 			CharObjectMap<long[]> map = new CharObjectMap<>(zero);
 			for (int i = 0; i < pattern.length; i++) {
-				char c = pattern[i];
 				int slot = ((pattern.length - 1) / 64) - i / 64;
 				int offset = i % 64;
-				long[] newState = map.get(c);
-				if (newState == zero) {
-					newState = computeZero(pattern.length);
+				for (char c : mapping.map(pattern[i])) {
+					long[] newState = map.get(c);
+					if (newState == zero) {
+						newState = computeZero(pattern.length);
+					}
+					newState[slot] |= 1l << offset;
+					map.put(c, newState);
 				}
-				newState[slot] |= 1l << offset;
-				map.put(c, newState);
 			}
 			return map;
 		}

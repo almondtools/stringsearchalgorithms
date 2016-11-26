@@ -1,5 +1,8 @@
 package net.amygdalum.stringsearchalgorithms.search.chars;
 
+import java.util.LinkedHashSet;
+import java.util.Set;
+
 import net.amygdalum.util.map.CharObjectMap;
 
 public class TrieNode<T> {
@@ -12,6 +15,12 @@ public class TrieNode<T> {
 	private T attached;
 
 	public TrieNode() {
+		this.nexts = trieNodes(4);
+		this.min = 0;
+		this.max = 3;
+	}
+
+	public void reset() {
 		this.nexts = trieNodes(4);
 		this.min = 0;
 		this.max = 3;
@@ -135,6 +144,23 @@ public class TrieNode<T> {
 			}
 		}
 		return current;
+	}
+
+	public Set<TrieNode<T>> nodes() {
+		Set<TrieNode<T>> nodes = new LinkedHashSet<>();
+		colllectNodes(nodes);
+		return nodes;
+	}
+
+	private void colllectNodes(Set<TrieNode<T>> nodes) {
+		if (nodes.contains(this)) {
+			return;
+		}
+		nodes.add(this);
+		for (CharObjectMap<TrieNode<T>>.Entry entry : getNexts().cursor()) {
+			TrieNode<T> node = entry.value;
+			node.colllectNodes(nodes);
+		}
 	}
 
 	@Override

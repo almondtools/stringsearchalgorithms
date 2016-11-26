@@ -8,6 +8,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
+import java.util.Set;
 
 import net.amygdalum.stringsearchalgorithms.io.CharProvider;
 import net.amygdalum.stringsearchalgorithms.search.AbstractStringFinder;
@@ -15,6 +16,7 @@ import net.amygdalum.stringsearchalgorithms.search.StringFinder;
 import net.amygdalum.stringsearchalgorithms.search.StringFinderOption;
 import net.amygdalum.stringsearchalgorithms.search.StringMatch;
 import net.amygdalum.util.map.CharObjectMap;
+import net.amygdalum.util.text.CharMapping;
 
 /**
  * An implementation of the String Search Algorithm BOM (Backward Oracle Matching).
@@ -27,8 +29,34 @@ public class BOM implements StringSearchAlgorithm {
 	private int patternLength;
 
 	public BOM(String pattern) {
+		this(pattern, CharMapping.IDENTITY);
+	}
+
+	public BOM(String pattern, CharMapping mapping) {
 		this.patternLength = pattern.length();
-		this.trie = computeTrie(pattern.toCharArray(), patternLength);
+		this.trie = computeTrie(mapping.normalized(pattern.toCharArray()), patternLength);
+		if (mapping != CharMapping.IDENTITY) {
+			applyMapping(mapping);
+		}
+	}
+
+	private void applyMapping(CharMapping mapping) {
+		Set<TrieNode<String>> nodes = trie.nodes();
+		for (TrieNode<String> node : nodes) {
+			applyMapping(node, mapping);
+		}
+	}
+
+	private void applyMapping(TrieNode<String> node, CharMapping mapping) {
+		CharObjectMap<TrieNode<String>> nexts = node.getNexts();
+		node.reset();
+		for (CharObjectMap<TrieNode<String>>.Entry entry : nexts.cursor()) {
+			char ec = entry.key;
+			TrieNode<String> next = entry.value;
+			for (char c : mapping.map(ec)) {
+				node.addNext(c, next);
+			}
+		}
 	}
 
 	private static TrieNode<String> computeTrie(char[] pattern, int length) {
@@ -128,7 +156,7 @@ public class BOM implements StringSearchAlgorithm {
 				if (j <= 0) {
 					chars.next();
 				} else {
-					chars.forward(j + 1);
+					chars.forward(j + 2);
 				}
 			}
 			return null;
@@ -141,11 +169,23 @@ public class BOM implements StringSearchAlgorithm {
 
 	}
 
-	public static class Factory implements StringSearchAlgorithmFactory {
+	public static class Factory implements StringSearchAlgorithmFactory, SupportsCharClasses<Factory> {
+
+		private CharMapping mapping;
+
+		@Override
+		public Factory withCharClasses(CharMapping mapping) {
+			this.mapping = mapping;
+			return this;
+		}
 
 		@Override
 		public StringSearchAlgorithm of(String pattern) {
-			return new BOM(pattern);
+			if (mapping == null) {
+				return new BOM(pattern);
+			} else {
+				return new BOM(pattern, mapping);
+			}
 		}
 
 	}

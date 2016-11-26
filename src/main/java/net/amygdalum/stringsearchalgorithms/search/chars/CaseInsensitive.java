@@ -12,11 +12,25 @@ import net.amygdalum.util.text.CharMapping;
 public class CaseInsensitive implements StringSearchAlgorithm {
 
 	public static final CharMapping MAPPING = new CharMapping() {
-		
+
 		@Override
 		public char[] map(char c) {
-			return new char[]{toLowerCase(c), toUpperCase(c)};
+			char lc = toLowerCase(c);
+			char uc = toUpperCase(c);
+			if (lc != uc) {
+				return new char[] { lc, uc };
+			} else {
+				return new char[] { lc };
+			}
 		}
+		
+		public char[] normalized(char[] chars) {
+			char[] normalized = new char[chars.length];
+			for (int i = 0; i < normalized.length; i++) {
+				normalized[i] = toLowerCase(chars[i]);
+			}
+			return normalized;
+		};
 	};
 
 	private StringSearchAlgorithm algorithm;
@@ -32,7 +46,7 @@ public class CaseInsensitive implements StringSearchAlgorithm {
 			return new Factory(factory);
 		}
 	}
-	
+
 	@Override
 	public StringFinder createFinder(CharProvider chars, StringFinderOption... options) {
 		return algorithm.createFinder(new CaseInsensitiveCharProvider(chars), options);

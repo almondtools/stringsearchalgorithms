@@ -3,8 +3,11 @@ package net.amygdalum.stringsearchalgorithms.search.chars;
 import static com.almondtools.conmatch.datatypes.PrimitiveArrayMatcher.charArrayContaining;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.nullValue;
+import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.sameInstance;
 import static org.junit.Assert.assertThat;
+
+import java.util.Set;
 
 import org.junit.Test;
 
@@ -175,6 +178,68 @@ public class TrieNodeTest {
 		assertThat(trieNode.nextNode('a'), nullValue());
 		assertThat(trieNode.nextNode("b".toCharArray()), nullValue());
 		assertThat(trieNode.nextNode("ab".toCharArray()), nullValue());
+	}
+
+	@Test
+	public void testReset() throws Exception {
+		TrieNode<String> trieNode = new TrieNode<String>();
+		trieNode.addNext('a', new TrieNode<String>());
+		trieNode.addNext('b', new TrieNode<String>());
+		
+		trieNode.reset();
+		
+		assertThat(trieNode.nextNode('a'), nullValue());
+		assertThat(trieNode.nextNode('b'), nullValue());
+	}
+
+	@SuppressWarnings("unchecked")
+	@Test
+	public void testNodes() throws Exception {
+		TrieNode<String> trieNode = new TrieNode<String>();
+		TrieNode<String> aNode = new TrieNode<String>();
+		TrieNode<String> bNode = new TrieNode<String>();
+		TrieNode<String> cNode = new TrieNode<String>();
+		trieNode.addNext('a', aNode);
+		trieNode.addNext('b', bNode);
+		aNode.addNext('c', cNode);
+		
+		Set<TrieNode<String>> nodes = trieNode.nodes();
+		
+		assertThat(nodes, containsInAnyOrder(trieNode, aNode, bNode, cNode));
+	}
+
+	@SuppressWarnings("unchecked")
+	@Test
+	public void testNodesGraph() throws Exception {
+		TrieNode<String> trieNode = new TrieNode<String>();
+		TrieNode<String> aNode = new TrieNode<String>();
+		TrieNode<String> bNode = new TrieNode<String>();
+		TrieNode<String> cNode = new TrieNode<String>();
+		trieNode.addNext('a', aNode);
+		trieNode.addNext('b', bNode);
+		aNode.addNext('c', cNode);
+		aNode.addNext('b', bNode);
+		
+		Set<TrieNode<String>> nodes = trieNode.nodes();
+		
+		assertThat(nodes, containsInAnyOrder(trieNode, aNode, bNode, cNode));
+	}
+
+	@SuppressWarnings("unchecked")
+	@Test
+	public void testNodesCyclicGraph() throws Exception {
+		TrieNode<String> trieNode = new TrieNode<String>();
+		TrieNode<String> aNode = new TrieNode<String>();
+		TrieNode<String> bNode = new TrieNode<String>();
+		TrieNode<String> cNode = new TrieNode<String>();
+		trieNode.addNext('a', aNode);
+		trieNode.addNext('b', bNode);
+		aNode.addNext('c', cNode);
+		aNode.addNext('t', trieNode);
+		
+		Set<TrieNode<String>> nodes = trieNode.nodes();
+		
+		assertThat(nodes, containsInAnyOrder(trieNode, aNode, bNode, cNode));
 	}
 
 }

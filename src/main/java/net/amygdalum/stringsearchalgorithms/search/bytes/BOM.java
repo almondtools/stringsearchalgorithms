@@ -133,7 +133,7 @@ public class BOM implements StringSearchAlgorithm {
 				if (j <= 0) {
 					bytes.next();
 				} else {
-					bytes.forward(j + 1);
+					bytes.forward(j + 2);
 				}
 			}
 			return null;
