@@ -161,7 +161,7 @@ public class BNDM implements StringSearchAlgorithm {
 			int numberOfSubpatterns = ((patternLength - 1) / 64) + 1;
 			int[] patternLengths = new int[numberOfSubpatterns];
 			fill(patternLengths, 0, patternLengths.length - 1, 64);
-			patternLengths[patternLengths.length - 1] = patternLength % 64;
+			patternLengths[patternLengths.length - 1] = (patternLength - 1) % 64 + 1;
 			return patternLengths;
 		}
 

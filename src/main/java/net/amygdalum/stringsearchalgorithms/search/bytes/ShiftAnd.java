@@ -172,6 +172,16 @@ public class ShiftAnd implements StringSearchAlgorithm {
 
 	}
 
+	public interface BitMapStates {
+
+		boolean supportsSingle();
+
+		long single(byte b);
+
+		long[] all(byte b);
+
+	}
+
 	private abstract static class SingleLongBitMapStates implements BitMapStates {
 
 		@Override

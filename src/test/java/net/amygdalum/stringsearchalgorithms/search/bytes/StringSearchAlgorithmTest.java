@@ -101,12 +101,22 @@ public class StringSearchAlgorithmTest {
 	
 	@Test
 	@SearchFor("aaaa aaaa bbbb bbbb aaaa aaaa bbbb bbbb aaaa aaaa bbbb bbbb aaaa aaaa bbbb bbbb")
-	public void testPatternLargeSize() throws Exception {
+	public void testPatternLargeSize1() throws Exception {
 		List<StringMatch> matches = searcher.createSearcher("xxx aaaa aaaa bbbb bbbb aaaa aaaa bbbb bbbb aaaa aaaa bbbb bbbb aaaa aaaa bbbb bbbb xxx").findAll();
 		assertThat(matches, contains(
 			new StringMatch(8, 166, "aaaa aaaa bbbb bbbb aaaa aaaa bbbb bbbb aaaa aaaa bbbb bbbb aaaa aaaa bbbb bbbb")));
 	}
 	
+	@Test
+	@SearchFor("10011100000010010000001011010111000110111011100011011100101101101110100011101001110000001011110111000010011110111110110000011111")
+	public void testPatternLargeSize2() throws Exception {
+		List<StringMatch> matches = searcher.createSearcher(""
+			+ "10011100000010010000001011010111000110111011100011011100101101101110100011101001110000001011110111000010011110111110110000011111"
+			+ "010101111111100001001011011101111").findAll();
+		assertThat(matches, contains(
+			new StringMatch(0, 256, "10011100000010010000001011010111000110111011100011011100101101101110100011101001110000001011110111000010011110111110110000011111")));
+	}
+
 	@Test
 	@SearchFor("axxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\u0262xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxb")
 	public void testPatternLargeSizeAndAlphabet() throws Exception {

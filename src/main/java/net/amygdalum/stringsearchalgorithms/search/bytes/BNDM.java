@@ -5,6 +5,7 @@ import static java.util.Arrays.fill;
 import static net.amygdalum.stringsearchalgorithms.search.bytes.Encoding.encode;
 
 import java.nio.charset.Charset;
+import java.util.Arrays;
 
 import net.amygdalum.stringsearchalgorithms.io.ByteProvider;
 import net.amygdalum.stringsearchalgorithms.search.AbstractStringFinder;
@@ -127,21 +128,45 @@ public class BNDM implements StringSearchAlgorithm {
 
 	private class MultiLongFinder extends Finder {
 
-		private long[] state;
+		protected final long finalstate[];
+		protected final long activeStates[];
 
-		public MultiLongFinder(ByteProvider bytes, StringFinderOption... options) {
-			super(bytes, options);
-			this.state = initial(patternLength);
+		private long state;
+		private int segment;
+		private int[] patternLengths;
+
+		public MultiLongFinder(ByteProvider chars, StringFinderOption... options) {
+			super(chars, options);
+			this.patternLengths = computePatternLengths();
+			this.finalstate = computeFinalStates();
+			this.activeStates = computeActiveStates();
+			this.segment = 0;
+			this.state = activeStates[segment];
 		}
 
-		private long[] initial(int patternLength) {
-			return init(new long[((patternLength - 1) / 64) + 1]);
+		private int[] computePatternLengths() {
+			int numberOfSubpatterns = ((patternLength - 1) / 64) + 1;
+			int[] patternLengths = new int[numberOfSubpatterns];
+			fill(patternLengths, 0, patternLengths.length - 1, 64);
+			patternLengths[patternLengths.length - 1] = (patternLength - 1) % 64 + 1;
+			return patternLengths;
 		}
 
-		private long[] init(long[] state) {
-			fill(state, -1l);
-			state[0] = activeStates;
-			return state;
+		private long[] computeFinalStates() {
+			long[] finalStates = new long[patternLengths.length];
+			for (int i = 0; i < finalStates.length; i++) {
+				int patternLength = patternLengths[i];
+				finalStates[i] = 1l << ((patternLength - 1) % 64);
+			}
+			return finalStates;
+		}
+
+		private long[] computeActiveStates() {
+			long[] activeStates = new long[finalstate.length];
+			for (int i = 0; i < activeStates.length; i++) {
+				activeStates[i] = (finalstate[i] - 1) | finalstate[i];
+			}
+			return activeStates;
 		}
 
 		@Override
@@ -149,64 +174,57 @@ public class BNDM implements StringSearchAlgorithm {
 			if (pos > bytes.current()) {
 				bytes.move(pos);
 			}
-			init(state);
+			segment = 0;
+			state = activeStates[segment];
 		}
 
 		@Override
 		public StringMatch findNext() {
 			while (!bytes.finished(patternLength - 1)) {
-				state = initial(patternLength);
-				int j = patternLength - 1;
-				int last = patternLength;
-				while (zero(state)) {
-					byte currentByte = bytes.lookahead(j);
-					long[] all = states.all(currentByte);
-					state = join(state, all);
-					if ((state[0] & finalstate) != 0l) {
+				segment = 0;
+				state = activeStates[segment];
+				int j = patternLengths[segment] - 1;
+				int[] last = new int[patternLengths.length];
+				System.arraycopy(patternLengths, 0, last, 0, patternLengths.length);
+				nextSegment: while (state != 0l) {
+					byte currentByte = bytes.lookahead(segment * 64 + j);
+					long single = states.select(segment, currentByte);
+					state &= single;
+					if ((state & finalstate[segment]) != 0l) {
 						if (j > 0) {
-							last = j;
-						} else {
+							last[segment] = j;
+						} else if (segment == patternLengths.length - 1) {
 							StringMatch createMatch = createMatch();
-							bytes.forward(last);
+							bytes.forward(max(last, segment));
 							return createMatch;
+						} else {
+							segment++;
+							state = activeStates[segment];
+							j = patternLengths[segment] - 1;
+							continue nextSegment;
 						}
 					}
 					j--;
-					state = next(state);
+					state = (state << 1) & activeStates[segment];
 				}
-				bytes.forward(last);
+				bytes.forward(max(last, segment));
 			}
 			return null;
 		}
 
-		private long[] next(long[] state) {
-			for (int i = 0; i < state.length; i++) {
-				int j = i + 1;
-				long leastBit = j < state.length ? state[j] >>> 63 : 0l;
-				state[i] = state[i] << 1 | leastBit;
-			}
-			state[0] &= activeStates;
-			return state;
-		}
-
-		private boolean zero(long[] state) {
-			for (int i = 0; i < state.length; i++) {
-				if (state[i] != 0l) {
-					return true;
+		private int max(int[] values, int last) {
+			int max = 0;
+			for (int i = 0; i <= last; i++) {
+				int next = values[i];
+				if (next > max) {
+					max = next;
 				}
 			}
-			return false;
-		}
-
-		private long[] join(long[] state, long[] bits) {
-			for (int i = 0; i < state.length; i++) {
-				state[i] = state[i] & bits[i];
-			}
-			return state;
+			return max;
 		}
 
 	}
-
+	
 	public static class Factory implements StringSearchAlgorithmFactory {
 
 		private Charset charset;
@@ -226,6 +244,16 @@ public class BNDM implements StringSearchAlgorithm {
 
 	}
 
+	public interface BitMapStates {
+
+		boolean supportsSingle();
+
+		long single(byte c);
+
+		long select(int i, byte c);
+
+	}
+
 	private abstract static class SingleLongBitMapStates implements BitMapStates {
 
 		@Override
@@ -234,8 +262,11 @@ public class BNDM implements StringSearchAlgorithm {
 		}
 
 		@Override
-		public long[] all(byte b) {
-			return new long[] { single(b) };
+		public long select(int i, byte b) {
+			if (i > 0) {
+				return 0l;
+			}
+			return single(b);
 		}
 
 	}
@@ -249,13 +280,13 @@ public class BNDM implements StringSearchAlgorithm {
 		}
 
 		private static long[] computeStates(byte[] pattern) {
-			long[] bytes = new long[256];
+			long[] characters = new long[256];
 			for (int i = 0; i < pattern.length; i++) {
-				byte b = pattern[i];
 				int j = pattern.length - i - 1;
-				bytes[b & 0xff] |= 1l << j;
+				byte b = pattern[i];
+					characters[b & 0xff] |= 1l << j;
 			}
-			return bytes;
+			return characters;
 		}
 
 		@Override
@@ -266,10 +297,6 @@ public class BNDM implements StringSearchAlgorithm {
 	}
 
 	private abstract static class MultiLongBitMapStates implements BitMapStates {
-
-		public static long[] computeZero(int length) {
-			return new long[((length - 1) / 64) + 1];
-		}
 
 		@Override
 		public boolean supportsSingle() {
@@ -292,23 +319,30 @@ public class BNDM implements StringSearchAlgorithm {
 		}
 
 		private static long[][] computeStates(byte[] pattern) {
-			long[][] bytes = new long[256][];
+			int numberOfSubpatterns = ((pattern.length - 1) / 64) + 1;
+			long[][] bytes = new long[numberOfSubpatterns][];
 			for (int i = 0; i < bytes.length; i++) {
-				bytes[i] = computeZero(pattern.length);
-			}
-			for (int i = 0; i < pattern.length; i++) {
-				byte b = pattern[i];
-				int j = pattern.length - i - 1;
-				int slot = ((pattern.length - 1) / 64) - j / 64;
-				int offset = j % 64;
-				bytes[b & 0xff][slot] |= 1l << offset;
+				int start = i * 64;
+				int end = i == bytes.length - 1 ? pattern.length : (i + 1) * 64;
+				byte[] subpattern = Arrays.copyOfRange(pattern, start, end);
+				bytes[i] = computeSubStates(subpattern);
 			}
 			return bytes;
 		}
 
+		private static long[] computeSubStates(byte[] pattern) {
+			long[] characters = new long[256];
+			for (int i = 0; i < pattern.length; i++) {
+				int j = pattern.length - i - 1;
+				byte b = pattern[i];
+				characters[b & 0xff] |= 1l << j;
+			}
+			return characters;
+		}
+
 		@Override
-		public long[] all(byte b) {
-			return bytes[b & 0xff];
+		public long select(int i, byte b) {
+			return bytes[i][b & 0xff];
 		}
 
 	}
