@@ -158,7 +158,7 @@
 	</profiles>
 	<description>Searching and Matching Strings with efficient algorithms:
 - Knuth-Morris-Pratt
-- Shift-And
+- Shift-And/Or
 - Boyer-Moore-Horspool
 - Sunday (QuickSearch)
 - BNDM

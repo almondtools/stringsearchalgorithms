@@ -83,7 +83,7 @@ public class ShiftOr implements StringSearchAlgorithm {
 
 		public LongFinder(ByteProvider bytes, StringFinderOption... options) {
 			super(bytes, options);
-			this.state = 0;
+			state = BitMapStates.ALLBITS;
 		}
 
 		@Override
