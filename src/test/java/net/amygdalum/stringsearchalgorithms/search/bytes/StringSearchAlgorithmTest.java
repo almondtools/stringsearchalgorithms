@@ -21,6 +21,7 @@ public class StringSearchAlgorithmTest {
 	@Rule
 	public StringSearchRule searcher = new StringSearchRule(
 		new ShiftAnd.Factory(),
+		new ShiftOr.Factory(),
 		new KnuthMorrisPratt.Factory(),
 		new Horspool.Factory(),
 		new Sunday.Factory(),
