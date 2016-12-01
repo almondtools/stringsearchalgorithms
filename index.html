@@ -64,9 +64,11 @@
                       <ul>
                           <li>Horspool (or Boyer-Moore-Horspool)</li>
                       <li>Shift-And</li>
+                      <li>Shift-Or</li>
                       <li>Knuth-Morris-Pratt</li>
                       <li>Sunday</li>
                       <li>BNDM (Backward Nondet. Dawg Matching)</li>
+                      <li>BOM (Backward Oracle Matching)</li>
   </ul>
   </div>
   </div>
@@ -169,9 +171,10 @@ StringFinder finder = stringSearch.createFinder(text, LONGEST_MATCH, NON_OVERLAP
               <li>alphabet size (the number of different chars used in the text)</li>
   </ul>
         From experimental benchmarks following heuristics could be derived:   <ul>
-                  <li>  <strong>ShiftAnd</strong> for smaller patterns (length <= 16) with small alphabet (<= 4 chars)</li>
-              <li>  <strong>BNDM</strong> for large patterns (length <= 16) with small to mid-sized alphabet (<= 16 chars)</li>
+                  <li>  <strong>ShiftOr</strong> for smaller patterns (length <= 16) with small alphabet (<= 4 chars)</li>
+              <li>  <strong>BNDM</strong> for middle-sized patterns (16 <= length <= 64) with small to mid-sized alphabet (<= 16 chars)</li>
               <li>  <strong>Horspool/Sunday</strong> for large patterns with large alphabet</li>
+              <li>  <strong>BOM</strong> for large patterns (length >= 64) with small to mid-sized alphabet</li>
   </ul></p> 
                       <h3>For Searching Multiple Strings</h3>
       <p>        We compared each multi-word algorithm in a benchmark, characterized by   <ul>
@@ -183,7 +186,7 @@ StringFinder finder = stringSearch.createFinder(text, LONGEST_MATCH, NON_OVERLAP
                   <li>searching for a small pattern number prefers the naive implementation, yet we cannot explain why (benchmark problem?)</li>
               <li>large patterns are dominated by   <strong>SetBackwardOracleMatching</strong></li>
               <li>small patterns with small alphabet are dominated by   <strong>AhoCorasick</strong></li>
-              <li>large alphabets are dominated by   <strong>SetHorspool</strong></li>
+              <li>small patterns with large alphabets are dominated by   <strong>SetHorspool</strong></li>
               <li>  <strong>WuManber</strong> seems to good for middle-sized pattern number, being competitive between   <strong>SetHorspool</strong> and   <strong>SetBackwardOracleMatching</strong></li>
   </ul></p> 
   </div>
