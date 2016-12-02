@@ -306,6 +306,8 @@ public class StreamByteProvider implements ByteProvider {
 
 		if (topPos == -1 && expectedIndex >= topIndex) {
 			return true;
+		} else if (topPos < bufferSize && expectedIndex == topIndex && expectedPos >= topPos) {
+			return true;
 		} else if (topPos == -1 && expectedIndex == topIndex - 1 && expectedPos == bufferSize) {
 			return true;
 		}

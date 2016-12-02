@@ -151,6 +151,13 @@ public class ReaderCharProviderTest {
 	}
 
 	@Test
+	public void testFinishedInMiddleOfBuffer() throws Exception {
+		ReaderCharProvider provider = new ReaderCharProvider(new StringReader("abc"), 2, 2, 1);
+		provider.next();
+		assertThat(provider.finished(), is(true));
+	}
+
+	@Test
 	public void testLookahead() throws Exception {
 		ReaderCharProvider provider = new ReaderCharProvider(new StringReader("abcd"), 0, 4, 1);
 		assertThat(provider.lookahead(), equalTo('a'));

@@ -160,6 +160,13 @@ public class StreamByteProviderTest {
 	}
 
 	@Test
+	public void testFinishedInMiddleOfBuffer() throws Exception {
+		StreamByteProvider provider = new StreamByteProvider(new ByteArrayInputStream("abc".getBytes(UTF_8)), 2, 2, 1);
+		provider.next();
+		assertThat(provider.finished(), is(true));
+	}
+
+	@Test
 	public void testLookahead() throws Exception {
 		StreamByteProvider provider = new StreamByteProvider(new ByteArrayInputStream("abcd".getBytes(UTF_8)), 0, 4, 1);
 		assertThat(provider.lookahead(), equalTo(a));
