@@ -24,7 +24,8 @@ public class MultiStringSearchAlgorithmTest {
 		new SetHorspool.Factory(),
 		new SetHorspool.Factory(true),
 		new WuManber.Factory(),
-		new SetBackwardOracleMatching.Factory());
+		new SetBackwardOracleMatching.Factory(),
+		new QGramShiftOr.Factory());
 
 	@Test
 	@SearchFor({"x"})
@@ -199,6 +200,19 @@ public class MultiStringSearchAlgorithmTest {
 	}
 	
 	@Test
+	@SearchFor({"And God called the firmament Heaven","Let the waters under the heaven be gathered together unto one place","And God called the dry land Earth"})
+	public void testLongPatternsDifferentLengths() throws Exception {
+		List<StringMatch> matches = searcher.createSearcher(""
+			+ "And God called the firmament Heaven. And the evening and the morning were the second day.\n"
+			+ "And God said, Let the waters under the heaven be gathered together unto one place, and let the dry land appear: and it was so.\n"
+			+ "And God called the dry land Earth; and the gathering together of the waters called he Seas: and God saw that it was good.", LONGEST_MATCH, NON_OVERLAP).findAll();
+		assertThat(matches, containsInAnyOrder(
+			new StringMatch(0, 35, "And God called the firmament Heaven"),
+			new StringMatch(104, 171, "Let the waters under the heaven be gathered together unto one place"),
+			new StringMatch(217, 250, "And God called the dry land Earth")));
+	}
+	
+	@Test
 	@SearchFor({"abcd","ab","bc","cd"})
 	public void testOverlappingSubsumingPatterns1() throws Exception {
 		List<StringMatch> matches = searcher.createSearcher("abcd", LONGEST_MATCH, NON_OVERLAP).findAll();
@@ -224,6 +238,78 @@ public class MultiStringSearchAlgorithmTest {
 			new StringMatch(9, 14, "a\u0262baa")));
 	}
 	
+	@Test
+	@SearchFor("aaaa aaaa bbbb bbbb aaaa aaaa bbbb bbbb aaaa")
+	public void testPatternMiddleSize1() throws Exception {
+		List<StringMatch> matches = searcher.createSearcher("xxx aaaa aaaa bbbb bbbb aaaa aaaa bbbb bbbb aaaa aaaa bbbb bbbb aaaa aaaa bbbb bbbb xxx").findAll();
+		assertThat(matches, contains(
+			new StringMatch(4, 48, "aaaa aaaa bbbb bbbb aaaa aaaa bbbb bbbb aaaa"),
+			new StringMatch(24, 68, "aaaa aaaa bbbb bbbb aaaa aaaa bbbb bbbb aaaa")));
+	}
+
+	@Test
+	@SearchFor({"1001110000001001000000101101011100011011101110001101110010110110","1110100011101001110000001011110111000010011110111110110000011111"})
+	public void testPatternMiddleSize2() throws Exception {
+		List<StringMatch> matches = searcher.createSearcher(""
+            + "1001110000001001000000101101011100011011101110001101110010110110"
+            + "1110100011101001110000001011110111000010011110111110110000011111"
+			+ "010101111111100001001011011101111").findAll();
+		assertThat(matches, contains(
+			new StringMatch(0, 64, "1001110000001001000000101101011100011011101110001101110010110110"),
+			new StringMatch(64, 128, "1110100011101001110000001011110111000010011110111110110000011111")));
+	}
+
+	@Test
+	@SearchFor({"GGCTCATA","CATACATC"})
+	public void testPatternMiddleSize3() throws Exception {
+		List<StringMatch> matches = searcher.createSearcher(""
+			+ "CCTTTAAGTAGGACAA"
+			+ "GGCTCATACATC"
+			+ "GTATTAGCTCAGCATG", LONGEST_MATCH, NON_OVERLAP).findAll();
+		assertThat(matches, contains(
+			new StringMatch(16, 24, "GGCTCATA")));
+	}
+	
+	@Test
+	@SearchFor("aaaa aaaa bbbb bbbb aaaa aaaa bbbb bbbb aaaa aaaa bbbb bbbb aaaa aaaa bbbb bbbb")
+	public void testPatternLargeSize1() throws Exception {
+		List<StringMatch> matches = searcher.createSearcher("xxx aaaa aaaa bbbb bbbb aaaa aaaa bbbb bbbb aaaa aaaa bbbb bbbb aaaa aaaa bbbb bbbb xxx").findAll();
+		assertThat(matches, contains(
+			new StringMatch(4, 83, "aaaa aaaa bbbb bbbb aaaa aaaa bbbb bbbb aaaa aaaa bbbb bbbb aaaa aaaa bbbb bbbb")));
+	}
+
+	@Test
+	@SearchFor({"10011100000010010000001011010111000110111011100011011100101101101110100011101001110000001011110111000010011110111110110000011111","10011100000010010000001011010111001010111111110000100101101110111100010111101110000100111101111101100000111110101011111111000010"})
+	public void testPatternLargeSize2() throws Exception {
+		List<StringMatch> matches = searcher.createSearcher(""
+			+ "10011100000010010000001011010111000110111011100011011100101101101110100011101001110000001011110111000010011110111110110000011111"
+			+ "0101"
+			+ "10011100000010010000001011010111001010111111110000100101101110111100010111101110000100111101111101100000111110101011111111000010"
+			+ "010101111111100001001011011101111").findAll();
+		assertThat(matches, contains(
+			new StringMatch(0, 128, "10011100000010010000001011010111000110111011100011011100101101101110100011101001110000001011110111000010011110111110110000011111"),
+			new StringMatch(132, 260, "10011100000010010000001011010111001010111111110000100101101110111100010111101110000100111101111101100000111110101011111111000010")));
+	}
+
+	@Test
+	@SearchFor({"10011100000010010000001011010111000110111011100011011100101101101110100011101001110000001011110111000010011100000010010000001011","10011100000010010000001011010111001010111111110000100101101110111100010111101110000100111101111101100000111110101011111111000010"})
+	public void testPatternLargeSize3() throws Exception {
+		List<StringMatch> matches = searcher.createSearcher(""
+			+ "0101"
+			+ "10011100000010010000001011010111000110111011100011011100101101101110100011101001110000001011110111000010011100000010010000001011010111001010111111110000100101101110111100010111101110000100111101111101100000111110101011111111000010"
+			+ "010101111111100001001011011101111", LONGEST_MATCH, NON_OVERLAP).findAll();
+		assertThat(matches, contains(
+			new StringMatch(4, 132, "10011100000010010000001011010111000110111011100011011100101101101110100011101001110000001011110111000010011100000010010000001011")));
+	}
+
+	@Test
+	@SearchFor("axxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\u0262xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxb")
+	public void testPatternLargeSizeAndAlphabet() throws Exception {
+		List<StringMatch> matches = searcher.createSearcher("xxx axxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\u0262xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxb xxx").findAll();
+		assertThat(matches, contains(
+			new StringMatch(4, 83, "axxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\u0262xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxb")));
+	}
+
 	@Test
 	@SearchFor("a")
 	public void testPatternLength1() throws Exception {

@@ -2,6 +2,8 @@ package net.amygdalum.util.text;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.SortedSet;
+import java.util.TreeSet;
 
 public final class CharUtils {
 
@@ -18,7 +20,7 @@ public final class CharUtils {
 	}
 
 	public static int lastIndexOf(char[] pattern, char[] block) {
-		nextPos:for (int i = pattern.length - block.length; i >= 0; i--) {
+		nextPos: for (int i = pattern.length - block.length; i >= 0; i--) {
 			for (int j = block.length - 1; j >= 0; j--) {
 				if (pattern[j + i] == block[j]) {
 					continue;
@@ -26,7 +28,7 @@ public final class CharUtils {
 					continue nextPos;
 				}
 			}
-			return i; 
+			return i;
 		}
 		return -1;
 	}
@@ -119,6 +121,20 @@ public final class CharUtils {
 			}
 		}
 		return len;
+	}
+
+	public static int[] lengths(List<char[]> patterns) {
+		SortedSet<Integer> lengths = new TreeSet<>();
+		for (char[] pattern : patterns) {
+			lengths.add(pattern.length);
+		}
+		int[] lengthsArray = new int[lengths.size()];
+		int i = lengthsArray.length - 1;
+		for (int length : lengths) {
+			lengthsArray[i] = length;
+			i--;
+		}
+		return lengthsArray;
 	}
 
 }

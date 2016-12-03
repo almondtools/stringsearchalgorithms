@@ -105,6 +105,19 @@ public class MultiStringSearchAlgorithmTest {
 	}
 	
 	@Test
+	@SearchFor({"And God called the firmament Heaven","Let the waters under the heaven be gathered together unto one place","And God called the dry land Earth"})
+	public void testDifferentLengths() throws Exception {
+		List<StringMatch> matches = searcher.createSearcher(""
+			+ "And God called the firmament Heaven. And the evening and the morning were the second day.\n"
+			+ "And God said, Let the waters under the heaven be gathered together unto one place, and let the dry land appear: and it was so.\n"
+			+ "And God called the dry land Earth; and the gathering together of the waters called he Seas: and God saw that it was good.", LONGEST_MATCH, NON_OVERLAP).findAll();
+		assertThat(matches, containsInAnyOrder(
+			new StringMatch(0, 70, "And God called the firmament Heaven"),
+			new StringMatch(208, 342, "Let the waters under the heaven be gathered together unto one place"),
+			new StringMatch(434, 500, "And God called the dry land Earth")));
+	}
+	
+	@Test
 	@SearchFor({"abcd","ab","bc","cd"})
 	public void testSubsumingPatterns1() throws Exception {
 		List<StringMatch> matches = searcher.createSearcher("abcd").findAll();
@@ -214,6 +227,71 @@ public class MultiStringSearchAlgorithmTest {
 			new StringMatch(6, 8, "a")));
 	}
 	
+	
+	@Test
+	@SearchFor("aaaa aaaa bbbb bbbb aaaa aaaa bbbb bbbb aaaa")
+	public void testPatternMiddleSize1() throws Exception {
+		List<StringMatch> matches = searcher.createSearcher("xxx aaaa aaaa bbbb bbbb aaaa aaaa bbbb bbbb aaaa aaaa bbbb bbbb aaaa aaaa bbbb bbbb xxx").findAll();
+		assertThat(matches, contains(
+			new StringMatch(8, 96, "aaaa aaaa bbbb bbbb aaaa aaaa bbbb bbbb aaaa"),
+			new StringMatch(48, 136, "aaaa aaaa bbbb bbbb aaaa aaaa bbbb bbbb aaaa")));
+	}
+
+	@Test
+	@SearchFor({"1001110000001001000000101101011100011011101110001101110010110110","1110100011101001110000001011110111000010011110111110110000011111"})
+	public void testPatternMiddleSize2() throws Exception {
+		List<StringMatch> matches = searcher.createSearcher(""
+            + "1001110000001001000000101101011100011011101110001101110010110110"
+            + "1110100011101001110000001011110111000010011110111110110000011111"
+			+ "010101111111100001001011011101111").findAll();
+		assertThat(matches, contains(
+			new StringMatch(0, 128, "1001110000001001000000101101011100011011101110001101110010110110"),
+			new StringMatch(128, 256, "1110100011101001110000001011110111000010011110111110110000011111")));
+	}
+
+	@Test
+	@SearchFor({"GGCTCATA","CATACATC"})
+	public void testPatternMiddleSize3() throws Exception {
+		List<StringMatch> matches = searcher.createSearcher(""
+			+ "CCTTTAAGTAGGACAA"
+			+ "GGCTCATACATC"
+			+ "GTATTAGCTCAGCATG", LONGEST_MATCH, NON_OVERLAP).findAll();
+		assertThat(matches, contains(
+			new StringMatch(32, 48, "GGCTCATA")));
+	}
+	
+	@Test
+	@SearchFor("aaaa aaaa bbbb bbbb aaaa aaaa bbbb bbbb aaaa aaaa bbbb bbbb aaaa aaaa bbbb bbbb")
+	public void testPatternLargeSize1() throws Exception {
+		List<StringMatch> matches = searcher.createSearcher("xxx aaaa aaaa bbbb bbbb aaaa aaaa bbbb bbbb aaaa aaaa bbbb bbbb aaaa aaaa bbbb bbbb xxx").findAll();
+		assertThat(matches, contains(
+			new StringMatch(8, 166, "aaaa aaaa bbbb bbbb aaaa aaaa bbbb bbbb aaaa aaaa bbbb bbbb aaaa aaaa bbbb bbbb")));
+	}
+
+	@Test
+	@SearchFor({"10011100000010010000001011010111000110111011100011011100101101101110100011101001110000001011110111000010011110111110110000011111","10011100000010010000001011010111001010111111110000100101101110111100010111101110000100111101111101100000111110101011111111000010"})
+	public void testPatternLargeSize2() throws Exception {
+		List<StringMatch> matches = searcher.createSearcher(""
+			+ "10011100000010010000001011010111000110111011100011011100101101101110100011101001110000001011110111000010011110111110110000011111"
+			+ "0101"
+			+ "10011100000010010000001011010111001010111111110000100101101110111100010111101110000100111101111101100000111110101011111111000010"
+			+ "010101111111100001001011011101111").findAll();
+		assertThat(matches, contains(
+			new StringMatch(0, 256, "10011100000010010000001011010111000110111011100011011100101101101110100011101001110000001011110111000010011110111110110000011111"),
+			new StringMatch(264, 520, "10011100000010010000001011010111001010111111110000100101101110111100010111101110000100111101111101100000111110101011111111000010")));
+	}
+
+	@Test
+	@SearchFor({"10011100000010010000001011010111000110111011100011011100101101101110100011101001110000001011110111000010011100000010010000001011","10011100000010010000001011010111001010111111110000100101101110111100010111101110000100111101111101100000111110101011111111000010"})
+	public void testPatternLargeSize3() throws Exception {
+		List<StringMatch> matches = searcher.createSearcher(""
+			+ "0101"
+			+ "10011100000010010000001011010111000110111011100011011100101101101110100011101001110000001011110111000010011100000010010000001011010111001010111111110000100101101110111100010111101110000100111101111101100000111110101011111111000010"
+			+ "010101111111100001001011011101111", LONGEST_MATCH, NON_OVERLAP).findAll();
+		assertThat(matches, contains(
+			new StringMatch(8, 264, "10011100000010010000001011010111000110111011100011011100101101101110100011101001110000001011110111000010011100000010010000001011")));
+	}
+
 	@Test
 	@SearchFor({"aa\u0262ba", "a\u0262baa"})
 	public void testPatternLargeAlphabet() throws Exception {
