@@ -2,7 +2,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>net.amygdalum</groupId>
 	<artifactId>stringsearchalgorithms</artifactId>
-	<version>0.3.11-SNAPSHOT</version>
+	<version>0.3.11</version>
 	<name>${project.groupId}:${project.artifactId}</name>
 	<url>http://stringsearchalgorithms.amygdalum.net/</url>
 	<licenses>
@@ -23,7 +23,7 @@
 		<connection>scm:git:git@github.com:almondtools/stringsearchalgorithms.git</connection>
 		<developerConnection>scm:git:git@github.com:almondtools/stringsearchalgorithms.git</developerConnection>
 		<url>git@github.com:almondtools/stringsearchalgorithms.git</url>
-		<tag>HEAD</tag>
+		<tag>stringsearchalgorithms-0.3.11</tag>
 	</scm>
 	<distributionManagement>
 		<snapshotRepository>
