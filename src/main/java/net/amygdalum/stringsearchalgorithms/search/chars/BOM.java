@@ -16,7 +16,10 @@ import net.amygdalum.stringsearchalgorithms.search.StringFinder;
 import net.amygdalum.stringsearchalgorithms.search.StringFinderOption;
 import net.amygdalum.stringsearchalgorithms.search.StringMatch;
 import net.amygdalum.util.map.CharObjectMap;
+import net.amygdalum.util.map.CharObjectMap.Entry;
 import net.amygdalum.util.text.CharMapping;
+import net.amygdalum.util.tries.CharTrieNode;
+import net.amygdalum.util.tries.PreCharTrieNode;
 
 /**
  * An implementation of the String Search Algorithm BOM (Backward Oracle Matching).
@@ -25,7 +28,7 @@ import net.amygdalum.util.text.CharMapping;
  */
 public class BOM implements StringSearchAlgorithm {
 
-	private TrieNode<char[]> trie;
+	private CharTrieNode<char[]> trie;
 	private int patternLength;
 
 	public BOM(String pattern) {
@@ -34,65 +37,66 @@ public class BOM implements StringSearchAlgorithm {
 
 	public BOM(String pattern, CharMapping mapping) {
 		this.patternLength = pattern.length();
-		this.trie = computeTrie(mapping.normalized(pattern.toCharArray()), patternLength);
-		if (mapping != CharMapping.IDENTITY) {
-			applyMapping(mapping);
-		}
+		this.trie = computeTrie(mapping.normalized(pattern.toCharArray()), patternLength, mapping);
 	}
 
-	private void applyMapping(CharMapping mapping) {
-		Set<TrieNode<char[]>> nodes = trie.nodes();
-		for (TrieNode<char[]> node : nodes) {
+	private static <T> void applyMapping(CharMapping mapping, PreCharTrieNode<char[]> trie) {
+		Set<PreCharTrieNode<char[]>> nodes = trie.nodes();
+		for (PreCharTrieNode<char[]> node : nodes) {
 			applyMapping(node, mapping);
 		}
 	}
 
-	private void applyMapping(TrieNode<char[]> node, CharMapping mapping) {
-		CharObjectMap<TrieNode<char[]>> nexts = node.getNexts();
+	private static void applyMapping(PreCharTrieNode<char[]> node, CharMapping mapping) {
+		CharObjectMap<PreCharTrieNode<char[]>> nexts = node.getNexts();
 		node.reset();
-		for (CharObjectMap<TrieNode<char[]>>.Entry entry : nexts.cursor()) {
+		for (Entry<PreCharTrieNode<char[]>> entry : nexts.cursor()) {
 			char ec = entry.key;
-			TrieNode<char[]> next = entry.value;
+			PreCharTrieNode<char[]> next = entry.value;
 			for (char c : mapping.map(ec)) {
 				node.addNext(c, next);
 			}
 		}
 	}
 
-	private static TrieNode<char[]> computeTrie(char[] pattern, int length) {
-		TrieNode<char[]> trie = new TrieNode<>();
-		TrieNode<char[]> node = trie.extend(revert(pattern), 0);
+	private static CharTrieNode<char[]> computeTrie(char[] pattern, int length, CharMapping mapping) {
+		PreCharTrieNode<char[]> trie = new PreCharTrieNode<>();
+		PreCharTrieNode<char[]> node = trie.extend(revert(pattern), 0);
 		node.setAttached(pattern);
 		computeOracle(trie);
-		return trie;
+		if (mapping != CharMapping.IDENTITY) {
+			applyMapping(mapping, trie);
+		}
+
+		return trie.compile();
 	}
 
-	private static void computeOracle(TrieNode<char[]> trie) {
-		Map<TrieNode<char[]>, TrieNode<char[]>> oracle = new IdentityHashMap<>();
-		TrieNode<char[]> init = trie;
+	private static void computeOracle(PreCharTrieNode<char[]> trie) {
+		Map<PreCharTrieNode<char[]>, PreCharTrieNode<char[]>> oracle = new IdentityHashMap<>();
+		PreCharTrieNode<char[]> init = trie;
 		oracle.put(init, null);
-		Queue<TrieNode<char[]>> worklist = new LinkedList<>();
+		Queue<PreCharTrieNode<char[]>> worklist = new LinkedList<>();
 		worklist.add(trie);
 		while (!worklist.isEmpty()) {
-			TrieNode<char[]> current = worklist.remove();
-			List<TrieNode<char[]>> nexts = process(current, oracle, init);
+			PreCharTrieNode<char[]> current = worklist.remove();
+			List<PreCharTrieNode<char[]>> nexts = process(current, oracle, init);
 			worklist.addAll(nexts);
 		}
 	}
 
-	private static List<TrieNode<char[]>> process(TrieNode<char[]> parent, Map<TrieNode<char[]>, TrieNode<char[]>> oracle, TrieNode<char[]> init) {
-		List<TrieNode<char[]>> nexts = new ArrayList<>();
-		for (CharObjectMap<TrieNode<char[]>>.Entry entry : parent.getNexts().cursor()) {
+	private static List<PreCharTrieNode<char[]>> process(PreCharTrieNode<char[]> parent, Map<PreCharTrieNode<char[]>, PreCharTrieNode<char[]>> oracle, PreCharTrieNode<char[]> init) {
+		List<PreCharTrieNode<char[]>> nexts = new ArrayList<>();
+		for (Entry<PreCharTrieNode<char[]>> entry : parent.getNexts().cursor()) {
 			char c = entry.key;
-			TrieNode<char[]> trie = entry.value;
+			PreCharTrieNode<char[]> trie = entry.value;
 
-			TrieNode<char[]> down = oracle.get(parent);
+			PreCharTrieNode<char[]> down = oracle.get(parent);
 			while (down != null && down.nextNode(c) == null) {
 				down.addNext(c, trie);
 				down = oracle.get(down);
 			}
 			if (down != null) {
-				TrieNode<char[]> next = down.nextNode(c);
+				PreCharTrieNode<char[]> next = down.nextNode(c);
 				oracle.put(trie, next);
 			} else {
 				oracle.put(trie, init);
@@ -138,7 +142,7 @@ public class BOM implements StringSearchAlgorithm {
 		public StringMatch findNext() {
 			final int lookahead = patternLength - 1;
 			while (!chars.finished(lookahead)) {
-				TrieNode<char[]> current = trie;
+				CharTrieNode<char[]> current = trie;
 				int j = lookahead;
 				while (j >= 0 && current != null) {
 					current = current.nextNode(chars.lookahead(j));

@@ -18,6 +18,8 @@ import net.amygdalum.stringsearchalgorithms.search.StringFinderOption;
 import net.amygdalum.stringsearchalgorithms.search.StringMatch;
 import net.amygdalum.util.text.ByteString;
 import net.amygdalum.util.text.StringUtils;
+import net.amygdalum.util.tries.ByteTrieNode;
+import net.amygdalum.util.tries.PreByteTrieNode;
 
 /**
  * An implementation of the Set Horspool Algorithm.
@@ -26,7 +28,7 @@ import net.amygdalum.util.text.StringUtils;
  */
 public class SetHorspool implements StringSearchAlgorithm {
 
-	private TrieNode<ByteString> trie;
+	private ByteTrieNode<ByteString> trie;
 	private int minLength;
 	private int maxLength;
 	private ByteShift byteShift;
@@ -43,13 +45,13 @@ public class SetHorspool implements StringSearchAlgorithm {
 		return new QuickShift(bytepatterns, minLength);
 	}
 
-	private static TrieNode<ByteString> computeTrie(List<byte[]> bytepatterns, Charset charset) {
-		TrieNode<ByteString> trie = new TrieNode<>();
+	private static ByteTrieNode<ByteString> computeTrie(List<byte[]> bytepatterns, Charset charset) {
+		PreByteTrieNode<ByteString> trie = new PreByteTrieNode<>();
 		for (byte[] pattern : bytepatterns) {
-			TrieNode<ByteString> node = trie.extend(revert(pattern), 0);
+			PreByteTrieNode<ByteString> node = trie.extend(revert(pattern), 0);
 			node.setAttached(new ByteString(pattern, charset));
 		}
-		return trie;
+		return trie.compile();
 	}
 
 	@Override
@@ -87,7 +89,7 @@ public class SetHorspool implements StringSearchAlgorithm {
 				int patternPointer = lookahead;
 				long pos = bytes.current();
 				byte current = bytes.lookahead(patternPointer);
-				TrieNode<ByteString> node = trie.nextNode(current);
+				ByteTrieNode<ByteString> node = trie.nextNode(current);
 				while (node != null) {
 					ByteString match = node.getAttached();
 					if (match != null) {
@@ -148,7 +150,7 @@ public class SetHorspool implements StringSearchAlgorithm {
 				int patternPointer = lookahead;
 				long pos = bytes.current();
 				byte current = bytes.lookahead(patternPointer);
-				TrieNode<ByteString> node = trie.nextNode(current);
+				ByteTrieNode<ByteString> node = trie.nextNode(current);
 				while (node != null) {
 					ByteString match = node.getAttached();
 					if (match != null) {

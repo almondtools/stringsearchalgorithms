@@ -13,7 +13,7 @@ import net.amygdalum.stringsearchalgorithms.search.StringFinder;
 import net.amygdalum.stringsearchalgorithms.search.StringFinderOption;
 import net.amygdalum.util.text.CharMapping;
 
-public class CaseInsensitive implements StringSearchAlgorithm {
+public class CaseInsensitive implements StringSearchAlgorithm, StringSearchAlgorithmWrapper {
 
 	public static final CharMapping MAPPING = new CharMapping() {
 
@@ -41,6 +41,11 @@ public class CaseInsensitive implements StringSearchAlgorithm {
 
 	private CaseInsensitive(StringSearchAlgorithm algorithm) {
 		this.algorithm = algorithm;
+	}
+	
+	@Override
+	public StringSearchAlgorithm getAlgorithm() {
+		return algorithm;
 	}
 
 	public static StringSearchAlgorithmFactory caseInsensitive(StringSearchAlgorithmFactory factory) {

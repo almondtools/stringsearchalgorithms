@@ -8,7 +8,7 @@ import java.util.NoSuchElementException;
 
 public class ByteObjectMap<T> extends TuneableMap {
 
-	private static final char NULL_KEY = 0;
+	private static final byte NULL_KEY = 0;
 
 	private float loadFactor;
 	private int mask;
@@ -34,6 +34,14 @@ public class ByteObjectMap<T> extends TuneableMap {
 		this.values = (T[]) new Object[mask + 1];
 		this.defaultValue = defaultValue;
 		this.nullValue = defaultValue;
+	}
+
+	public int size() {
+		int size = this.size;
+		if (nullValue != defaultValue) {
+			size++;
+		}
+		return size;
 	}
 
 	public byte[] keys() {
@@ -99,8 +107,8 @@ public class ByteObjectMap<T> extends TuneableMap {
 		return defaultValue;
 	}
 
-	public Iterable<Entry> cursor() {
-		return new EntryIterable();
+	public Iterable<Entry<T>> cursor() {
+		return new EntryIterable<T>(this);
 	}
 
 	@SuppressWarnings("unchecked")
@@ -167,54 +175,62 @@ public class ByteObjectMap<T> extends TuneableMap {
 		return buffer.toString();
 	}
 
-	public class EntryIterable implements Iterable<ByteObjectMap<T>.Entry> {
+	public static class EntryIterable<T> implements Iterable<Entry<T>> {
+
+		private ByteObjectMap<T> map;
+
+		public EntryIterable(ByteObjectMap<T> map) {
+			this.map = map;
+		}
 
 		@Override
-		public Iterator<ByteObjectMap<T>.Entry> iterator() {
-			return new EntryIterator();
+		public Iterator<Entry<T>> iterator() {
+			return new EntryIterator<T>(map);
 		}
 	}
 
-	public class EntryIterator implements Iterator<ByteObjectMap<T>.Entry> {
+	public static class EntryIterator<T> implements Iterator<Entry<T>> {
 
+		private ByteObjectMap<T> map;
 		private int index;
 		private int currentKey;
 		private int fixedSize;
-		private Entry entry;
+		private Entry<T> entry;
 
-		public EntryIterator() {
+		public EntryIterator(ByteObjectMap<T> map) {
+			this.map = map;
 			this.index = 0;
 			this.currentKey = -1;
-			this.fixedSize = size;
-			this.entry = new Entry();
+			this.fixedSize = map.size;
+			this.entry = new Entry<>();
 		}
 		
 		@Override
 		public boolean hasNext() {
-			if (size != fixedSize) {
+			if (map.size != fixedSize) {
 				throw new ConcurrentModificationException();
 			}
-			return index < fixedSize || index == fixedSize && nullValue != defaultValue;
+			return index < fixedSize || index == fixedSize && map.nullValue != map.defaultValue;
 		}
 
 		@Override
-		public ByteObjectMap<T>.Entry next() {
-			if (size != fixedSize) {
+		public Entry<T> next() {
+			if (map.size != fixedSize) {
 				throw new ConcurrentModificationException();
 			}
-			while (currentKey < keys.length - 1) {
+			while (currentKey < map.keys.length - 1) {
 				currentKey++;
-				byte b = keys[currentKey];
+				byte b = map.keys[currentKey];
 				if (b != NULL_KEY) {
-					entry.key = keys[currentKey];
-					entry.value = values[currentKey];
+					entry.key = map.keys[currentKey];
+					entry.value = map.values[currentKey];
 					index++;
 					return entry;
 				}
 			}
-			if (nullValue != defaultValue) {
+			if (map.nullValue != map.defaultValue) {
 				entry.key = NULL_KEY;
-				entry.value = nullValue;
+				entry.value = map.nullValue;
 				index++;
 				return entry;
 			}
@@ -223,15 +239,15 @@ public class ByteObjectMap<T> extends TuneableMap {
 
 		@Override
 		public void remove() {
-			if (currentKey < 0 || currentKey >= keys.length) {
+			if (currentKey < 0 || currentKey >= map.keys.length) {
 				throw new NoSuchElementException();
 			}
-			keys[currentKey] = NULL_KEY;
-			values[currentKey] = defaultValue;
+			map.keys[currentKey] = NULL_KEY;
+			map.values[currentKey] = map.defaultValue;
 		}
 	}
 
-	public class Entry {
+	public static class Entry<T> {
 
 		public byte key;
 		public T value;

@@ -17,8 +17,10 @@ import net.amygdalum.stringsearchalgorithms.search.AbstractStringFinder;
 import net.amygdalum.stringsearchalgorithms.search.StringFinder;
 import net.amygdalum.stringsearchalgorithms.search.StringFinderOption;
 import net.amygdalum.stringsearchalgorithms.search.StringMatch;
-import net.amygdalum.util.map.ByteObjectMap;
+import net.amygdalum.util.map.ByteObjectMap.Entry;
 import net.amygdalum.util.text.ByteString;
+import net.amygdalum.util.tries.ByteTrieNode;
+import net.amygdalum.util.tries.PreByteTrieNode;
 
 /**
  * An implementation of the String Search Algorithm BOM (Backward Oracle Matching).
@@ -27,7 +29,7 @@ import net.amygdalum.util.text.ByteString;
  */
 public class BOM implements StringSearchAlgorithm {
 
-	private TrieNode<byte[]> trie;
+	private ByteTrieNode<byte[]> trie;
 	private int patternLength;
 
 	public BOM(String pattern, Charset charset) {
@@ -36,40 +38,40 @@ public class BOM implements StringSearchAlgorithm {
 		this.trie = computeTrie(encoded, patternLength);
 	}
 
-	private static TrieNode<byte[]> computeTrie(byte[] pattern, int length) {
-		TrieNode<byte[]> trie = new TrieNode<>();
-		TrieNode<byte[]> node = trie.extend(revert(pattern), 0);
+	private static ByteTrieNode<byte[]> computeTrie(byte[] pattern, int length) {
+		PreByteTrieNode<byte[]> trie = new PreByteTrieNode<>();
+		PreByteTrieNode<byte[]> node = trie.extend(revert(pattern), 0);
 		node.setAttached(pattern);
 		computeOracle(trie);
-		return trie;
+		return trie.compile();
 	}
 
-	private static void computeOracle(TrieNode<byte[]> trie) {
-		Map<TrieNode<byte[]>, TrieNode<byte[]>> oracle = new IdentityHashMap<>();
-		TrieNode<byte[]> init = trie;
+	private static void computeOracle(PreByteTrieNode<byte[]> trie) {
+		Map<PreByteTrieNode<byte[]>, PreByteTrieNode<byte[]>> oracle = new IdentityHashMap<>();
+		PreByteTrieNode<byte[]> init = trie;
 		oracle.put(init, null);
-		Queue<TrieNode<byte[]>> worklist = new LinkedList<>();
+		Queue<PreByteTrieNode<byte[]>> worklist = new LinkedList<>();
 		worklist.add(trie);
 		while (!worklist.isEmpty()) {
-			TrieNode<byte[]> current = worklist.remove();
-			List<TrieNode<byte[]>> nexts = process(current, oracle, init);
+			PreByteTrieNode<byte[]> current = worklist.remove();
+			List<PreByteTrieNode<byte[]>> nexts = process(current, oracle, init);
 			worklist.addAll(nexts);
 		}
 	}
 
-	private static List<TrieNode<byte[]>> process(TrieNode<byte[]> parent, Map<TrieNode<byte[]>, TrieNode<byte[]>> oracle, TrieNode<byte[]> init) {
-		List<TrieNode<byte[]>> nexts = new ArrayList<>();
-		for (ByteObjectMap<TrieNode<byte[]>>.Entry entry : parent.getNexts().cursor()) {
+	private static List<PreByteTrieNode<byte[]>> process(PreByteTrieNode<byte[]> parent, Map<PreByteTrieNode<byte[]>, PreByteTrieNode<byte[]>> oracle, PreByteTrieNode<byte[]> init) {
+		List<PreByteTrieNode<byte[]>> nexts = new ArrayList<>();
+		for (Entry<PreByteTrieNode<byte[]>> entry : parent.getNexts().cursor()) {
 			byte b = entry.key;
-			TrieNode<byte[]> trie = entry.value;
+			PreByteTrieNode<byte[]> trie = entry.value;
 
-			TrieNode<byte[]> down = oracle.get(parent);
+			PreByteTrieNode<byte[]> down = oracle.get(parent);
 			while (down != null && down.nextNode(b) == null) {
 				down.addNext(b, trie);
 				down = oracle.get(down);
 			}
 			if (down != null) {
-				TrieNode<byte[]> next = down.nextNode(b);
+				PreByteTrieNode<byte[]> next = down.nextNode(b);
 				oracle.put(trie, next);
 			} else {
 				oracle.put(trie, init);
@@ -115,7 +117,7 @@ public class BOM implements StringSearchAlgorithm {
 		public StringMatch findNext() {
 			final int lookahead = patternLength - 1;
 			while (!bytes.finished(lookahead)) {
-				TrieNode<byte[]> current = trie;
+				ByteTrieNode<byte[]> current = trie;
 				int j = lookahead;
 				while (j >= 0 && current != null) {
 					current = current.nextNode(bytes.lookahead(j));

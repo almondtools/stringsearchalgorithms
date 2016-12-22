@@ -11,6 +11,8 @@ import java.util.List;
 
 import org.junit.Test;
 
+import net.amygdalum.util.map.ByteObjectMap.Entry;
+
 public class ByteObjectMapTest {
 
 	private static final byte a = (byte) 0x61;
@@ -69,7 +71,7 @@ public class ByteObjectMapTest {
 		ByteObjectMap<String> map = new ByteObjectMap<String>(DEFAULT_VALUE)
 			.add(a, "43")
 			.add(b, "44");
-		Iterator<ByteObjectMap<String>.Entry> iterator = map.cursor().iterator();
+		Iterator<Entry<String>> iterator = map.cursor().iterator();
 
 		List<Byte> keys = new ArrayList<>();
 		while (iterator.hasNext()) {
@@ -85,7 +87,7 @@ public class ByteObjectMapTest {
 			.add(a, "43")
 			.add(b, "44")
 			.add(c, null);
-		Iterator<ByteObjectMap<String>.Entry> iterator = map.cursor().iterator();
+		Iterator<Entry<String>> iterator = map.cursor().iterator();
 
 		List<Byte> keys = new ArrayList<>();
 		while (iterator.hasNext()) {
@@ -101,7 +103,7 @@ public class ByteObjectMapTest {
 			.add(a, "43")
 			.add(b, "44")
 			.add((byte) 0, "45");
-		Iterator<ByteObjectMap<String>.Entry> iterator = map.cursor().iterator();
+		Iterator<Entry<String>> iterator = map.cursor().iterator();
 
 		List<Byte> keys = new ArrayList<>();
 		while (iterator.hasNext()) {

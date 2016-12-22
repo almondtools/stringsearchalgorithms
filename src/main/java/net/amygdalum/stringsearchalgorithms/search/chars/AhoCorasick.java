@@ -15,7 +15,9 @@ import net.amygdalum.stringsearchalgorithms.search.BufferedStringFinder;
 import net.amygdalum.stringsearchalgorithms.search.StringFinder;
 import net.amygdalum.stringsearchalgorithms.search.StringFinderOption;
 import net.amygdalum.stringsearchalgorithms.search.StringMatch;
-import net.amygdalum.util.map.CharObjectMap;
+import net.amygdalum.util.map.CharObjectMap.Entry;
+import net.amygdalum.util.tries.CharTrieNode;
+import net.amygdalum.util.tries.PreCharTrieNode;
 
 /**
  * An implementation of the Aho-Corasick Algorithm.
@@ -24,7 +26,7 @@ import net.amygdalum.util.map.CharObjectMap;
  */
 public class AhoCorasick implements StringSearchAlgorithm {
 
-	private TrieNode<String> trie;
+	private CharTrieNode<String> trie;
 	private int minLength;
 
 	public AhoCorasick(Collection<String> patterns) {
@@ -33,8 +35,8 @@ public class AhoCorasick implements StringSearchAlgorithm {
 		this.minLength = minLength(charpatterns);
 	}
 
-	private static TrieNode<String> computeTrie(List<char[]> charpatterns) {
-		TrieNode<String> trie = new TrieNode<>();
+	private static CharTrieNode<String> computeTrie(List<char[]> charpatterns) {
+		PreCharTrieNode<String> trie = new PreCharTrieNode<>();
 		for (char[] pattern : charpatterns) {
 			trie.extend(pattern, new String(pattern));
 		}
@@ -55,35 +57,35 @@ public class AhoCorasick implements StringSearchAlgorithm {
 		return minLength;
 	}
 
-	private static TrieNode<String> computeSupportTransition(TrieNode<String> trie) {
-		Queue<TrieNode<String>> worklist = new LinkedList<>();
+	private static CharTrieNode<String> computeSupportTransition(PreCharTrieNode<String> trie) {
+		Queue<PreCharTrieNode<String>> worklist = new LinkedList<>();
 		worklist.add(trie);
 		while (!worklist.isEmpty()) {
-			TrieNode<String> current = worklist.remove();
-			for (CharObjectMap<TrieNode<String>>.Entry next : current.getNexts().cursor()) {
-				TrieNode<String> nextTrie = next.value;
+			PreCharTrieNode<String> current = worklist.remove();
+			for (Entry<PreCharTrieNode<String>> next : current.getNexts().cursor()) {
+				PreCharTrieNode<String> nextTrie = next.value;
 				computeSupport(current, next.key, nextTrie, trie);
 				worklist.add(nextTrie);
 			}
 		}
-		return trie;
+		return trie.compile();
 	}
 
-	private static void computeSupport(TrieNode<String> parent, char c, TrieNode<String> trie, TrieNode<String> init) {
-		if (parent != null && trie instanceof TrieNode) {
-			TrieNode<String> down = parent.getFallback();
+	private static void computeSupport(PreCharTrieNode<String> parent, char c, PreCharTrieNode<String> trie, PreCharTrieNode<String> init) {
+		if (parent != null) {
+			PreCharTrieNode<String> down = parent.getLink();
 			while (down != null && down.nextNode(c) == null) {
-				down = down.getFallback();
+				down = down.getLink();
 			}
 			if (down != null) {
-				TrieNode<String> next = down.nextNode(c);
-				trie.addFallback(next);
+				PreCharTrieNode<String> next = down.nextNode(c);
+				trie.link(next);
 				String nextMatch = next.getAttached();
 				if (nextMatch != null && trie.getAttached() == null) {
 					trie.setAttached(nextMatch);
 				}
 			} else {
-				trie.addFallback(init);
+				trie.link(init);
 			}
 		}
 	}
@@ -95,7 +97,7 @@ public class AhoCorasick implements StringSearchAlgorithm {
 
 	private abstract class Finder extends BufferedStringFinder {
 		protected CharProvider chars;
-		protected TrieNode<String> current;
+		protected CharTrieNode<String> current;
 
 		public Finder(CharProvider chars, StringFinderOption... options) {
 			super(options);
@@ -112,7 +114,7 @@ public class AhoCorasick implements StringSearchAlgorithm {
 			clear();
 		}
 
-		protected List<StringMatch> createMatches(TrieNode<String> current, long end) {
+		protected List<StringMatch> createMatches(CharTrieNode<String> current, long end) {
 			List<StringMatch> matches = new ArrayList<>();
 			while (current != null) {
 				String currentMatch = current.getAttached();
@@ -123,7 +125,7 @@ public class AhoCorasick implements StringSearchAlgorithm {
 						matches.add(nextMatch);
 					}
 				}
-				current = current.getFallback();
+				current = current.getLink();
 			}
 			return matches;
 		}
@@ -148,9 +150,9 @@ public class AhoCorasick implements StringSearchAlgorithm {
 			}
 			while (!chars.finished()) {
 				char c = chars.next();
-				TrieNode<String> next = current.nextNode(c);
+				CharTrieNode<String> next = current.nextNode(c);
 				while (next == null) {
-					TrieNode<String> nextcurrent = current.getFallback();
+					CharTrieNode<String> nextcurrent = current.getLink();
 					if (nextcurrent == null) {
 						break;
 					}
@@ -181,13 +183,13 @@ public class AhoCorasick implements StringSearchAlgorithm {
 		public StringMatch findNext() {
 			while (!chars.finished()) {
 				char c = chars.next();
-				TrieNode<String> next = current.nextNode(c);
+				CharTrieNode<String> next = current.nextNode(c);
 				if (next == null && !isBufferEmpty()) {
 					chars.prev();
 					break;
 				}
 				while (next == null) {
-					TrieNode<String> nextcurrent = current.getFallback();
+					CharTrieNode<String> nextcurrent = current.getLink();
 					if (nextcurrent == null) {
 						break;
 					}

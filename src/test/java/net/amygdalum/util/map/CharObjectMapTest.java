@@ -11,6 +11,8 @@ import java.util.List;
 
 import org.junit.Test;
 
+import net.amygdalum.util.map.CharObjectMap.Entry;
+
 public class CharObjectMapTest {
 
 	private String DEFAULT_VALUE = "42";
@@ -64,7 +66,7 @@ public class CharObjectMapTest {
 		CharObjectMap<String> map = new CharObjectMap<String>(DEFAULT_VALUE)
 			.add('a', "43")
 			.add('b', "44");
-		Iterator<CharObjectMap<String>.Entry> iterator = map.cursor().iterator();
+		Iterator<Entry<String>> iterator = map.cursor().iterator();
 
 		List<Character> keys = new ArrayList<>();
 		while (iterator.hasNext()) {
@@ -80,7 +82,7 @@ public class CharObjectMapTest {
 			.add('a', "43")
 			.add('b', "44")
 			.add('c', null);
-		Iterator<CharObjectMap<String>.Entry> iterator = map.cursor().iterator();
+		Iterator<Entry<String>> iterator = map.cursor().iterator();
 
 		List<Character> keys = new ArrayList<>();
 		while (iterator.hasNext()) {
@@ -96,7 +98,7 @@ public class CharObjectMapTest {
 			.add('a', "43")
 			.add('b', "44")
 			.add((char) 0, "45");
-		Iterator<CharObjectMap<String>.Entry> iterator = map.cursor().iterator();
+		Iterator<Entry<String>> iterator = map.cursor().iterator();
 
 		List<Character> keys = new ArrayList<>();
 		while (iterator.hasNext()) {

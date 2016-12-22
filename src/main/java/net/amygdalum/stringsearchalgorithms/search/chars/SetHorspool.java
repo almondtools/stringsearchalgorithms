@@ -18,6 +18,8 @@ import net.amygdalum.stringsearchalgorithms.search.StringFinder;
 import net.amygdalum.stringsearchalgorithms.search.StringFinderOption;
 import net.amygdalum.stringsearchalgorithms.search.StringMatch;
 import net.amygdalum.util.map.CharIntMap;
+import net.amygdalum.util.tries.CharTrieNode;
+import net.amygdalum.util.tries.PreCharTrieNode;
 
 /**
  * An implementation of the Set Horspool Algorithm.
@@ -26,7 +28,7 @@ import net.amygdalum.util.map.CharIntMap;
  */
 public class SetHorspool implements StringSearchAlgorithm {
 
-	private TrieNode<String> trie;
+	private CharTrieNode<String> trie;
 	private int minLength;
 	private int maxLength;
 	private CharShift charShift;
@@ -59,13 +61,13 @@ public class SetHorspool implements StringSearchAlgorithm {
 		return maxChar - minChar < 256 || maxChar - minChar < minLength * 2;
 	}
 
-	private static TrieNode<String> computeTrie(List<char[]> charpatterns) {
-		TrieNode<String> trie = new TrieNode<>();
+	private static CharTrieNode<String> computeTrie(List<char[]> charpatterns) {
+		PreCharTrieNode<String> trie = new PreCharTrieNode<>();
 		for (char[] pattern : charpatterns) {
-			TrieNode<String> node = trie.extend(revert(pattern), 0);
+			PreCharTrieNode<String> node = trie.extend(revert(pattern), 0);
 			node.setAttached(new String(pattern));
 		}
-		return trie;
+		return trie.compile();
 	}
 
 	@Override
@@ -103,7 +105,7 @@ public class SetHorspool implements StringSearchAlgorithm {
 				int patternPointer = lookahead;
 				long pos = chars.current();
 				char current = chars.lookahead(patternPointer);
-				TrieNode<String> node = trie.nextNode(current);
+				CharTrieNode<String> node = trie.nextNode(current);
 				while (node != null) {
 					String match = node.getAttached();
 					if (match != null) {
@@ -164,7 +166,7 @@ public class SetHorspool implements StringSearchAlgorithm {
 				int patternPointer = lookahead;
 				long pos = chars.current();
 				char current = chars.lookahead(patternPointer);
-				TrieNode<String> node = trie.nextNode(current);
+				CharTrieNode<String> node = trie.nextNode(current);
 				while (node != null) {
 					String match = node.getAttached();
 					if (match != null) {

@@ -17,8 +17,10 @@ import net.amygdalum.stringsearchalgorithms.search.BufferedStringFinder;
 import net.amygdalum.stringsearchalgorithms.search.StringFinder;
 import net.amygdalum.stringsearchalgorithms.search.StringFinderOption;
 import net.amygdalum.stringsearchalgorithms.search.StringMatch;
-import net.amygdalum.util.map.ByteObjectMap;
+import net.amygdalum.util.map.ByteObjectMap.Entry;
 import net.amygdalum.util.text.ByteString;
+import net.amygdalum.util.tries.ByteTrieNode;
+import net.amygdalum.util.tries.PreByteTrieNode;
 
 /**
  * An implementation of the Aho-Corasick Algorithm.
@@ -27,7 +29,7 @@ import net.amygdalum.util.text.ByteString;
  */
 public class AhoCorasick implements StringSearchAlgorithm {
 
-	private TrieNode<ByteString> trie;
+	private ByteTrieNode<ByteString> trie;
 	private int minLength;
 
 	public AhoCorasick(Collection<String> patterns, Charset charset) {
@@ -36,8 +38,8 @@ public class AhoCorasick implements StringSearchAlgorithm {
 		this.minLength = minLength(bytepatterns);
 	}
 
-	private static TrieNode<ByteString> computeTrie(List<byte[]> bytepatterns, Charset charset) {
-		TrieNode<ByteString> trie = new TrieNode<>();
+	private static ByteTrieNode<ByteString> computeTrie(List<byte[]> bytepatterns, Charset charset) {
+		PreByteTrieNode<ByteString> trie = new PreByteTrieNode<>();
 		for (byte[] pattern : bytepatterns) {
 			trie.extend(pattern, new ByteString(pattern, charset));
 		}
@@ -58,35 +60,35 @@ public class AhoCorasick implements StringSearchAlgorithm {
 		return minLength;
 	}
 
-	private static TrieNode<ByteString> computeSupportTransition(TrieNode<ByteString> trie) {
-		Queue<TrieNode<ByteString>> worklist = new LinkedList<>();
+	private static ByteTrieNode<ByteString> computeSupportTransition(PreByteTrieNode<ByteString> trie) {
+		Queue<PreByteTrieNode<ByteString>> worklist = new LinkedList<>();
 		worklist.add(trie);
 		while (!worklist.isEmpty()) {
-			TrieNode<ByteString> current = worklist.remove();
-			for (ByteObjectMap<TrieNode<ByteString>>.Entry next : current.getNexts().cursor()) {
-				TrieNode<ByteString> nextTrie = next.value;
+			PreByteTrieNode<ByteString> current = worklist.remove();
+			for (Entry<PreByteTrieNode<ByteString>> next : current.getNexts().cursor()) {
+				PreByteTrieNode<ByteString> nextTrie = next.value;
 				computeSupport(current, next.key, nextTrie, trie);
 				worklist.add(nextTrie);
 			}
 		}
-		return trie;
+		return trie.compile();
 	}
 
-	private static void computeSupport(TrieNode<ByteString> parent, byte b, TrieNode<ByteString> trie, TrieNode<ByteString> init) {
-		if (parent != null && trie instanceof TrieNode) {
-			TrieNode<ByteString> down = parent.getFallback();
+	private static void computeSupport(PreByteTrieNode<ByteString> parent, byte b, PreByteTrieNode<ByteString> trie, PreByteTrieNode<ByteString> init) {
+		if (parent != null) {
+			PreByteTrieNode<ByteString> down = parent.getLink();
 			while (down != null && down.nextNode(b) == null) {
-				down = down.getFallback();
+				down = down.getLink();
 			}
 			if (down != null) {
-				TrieNode<ByteString> next = down.nextNode(b);
-				trie.addFallback(next);
+				PreByteTrieNode<ByteString> next = down.nextNode(b);
+				trie.link(next);
 				ByteString nextMatch = next.getAttached();
 				if (nextMatch != null && trie.getAttached() == null) {
 					trie.setAttached(nextMatch);
 				}
 			} else {
-				trie.addFallback(init);
+				trie.link(init);
 			}
 		}
 	}
@@ -98,7 +100,7 @@ public class AhoCorasick implements StringSearchAlgorithm {
 
 	private abstract class Finder extends BufferedStringFinder {
 		protected ByteProvider bytes;
-		protected TrieNode<ByteString> current;
+		protected ByteTrieNode<ByteString> current;
 
 		public Finder(ByteProvider bytes, StringFinderOption... options) {
 			super(options);
@@ -115,7 +117,7 @@ public class AhoCorasick implements StringSearchAlgorithm {
 			clear();
 		}
 
-		protected List<StringMatch> createMatches(TrieNode<ByteString> current, long end) {
+		protected List<StringMatch> createMatches(ByteTrieNode<ByteString> current, long end) {
 			List<StringMatch> matches = new ArrayList<>();
 			while (current != null) {
 				ByteString currentMatch = current.getAttached();
@@ -126,7 +128,7 @@ public class AhoCorasick implements StringSearchAlgorithm {
 						matches.add(nextMatch);
 					}
 				}
-				current = current.getFallback();
+				current = current.getLink();
 			}
 			return matches;
 		}
@@ -151,9 +153,9 @@ public class AhoCorasick implements StringSearchAlgorithm {
 			}
 			while (!bytes.finished()) {
 				byte b = bytes.next();
-				TrieNode<ByteString> next = current.nextNode(b);
+				ByteTrieNode<ByteString> next = current.nextNode(b);
 				while (next == null) {
-					TrieNode<ByteString> nextcurrent = current.getFallback();
+					ByteTrieNode<ByteString> nextcurrent = current.getLink();
 					if (nextcurrent == null) {
 						break;
 					}
@@ -184,13 +186,13 @@ public class AhoCorasick implements StringSearchAlgorithm {
 		public StringMatch findNext() {
 			while (!bytes.finished()) {
 				byte b = bytes.next();
-				TrieNode<ByteString> next = current.nextNode(b);
+				ByteTrieNode<ByteString> next = current.nextNode(b);
 				if (next == null && !isBufferEmpty()) {
 					bytes.prev();
 					break;
 				}
 				while (next == null) {
-					TrieNode<ByteString> nextcurrent = current.getFallback();
+					ByteTrieNode<ByteString> nextcurrent = current.getLink();
 					if (nextcurrent == null) {
 						break;
 					}

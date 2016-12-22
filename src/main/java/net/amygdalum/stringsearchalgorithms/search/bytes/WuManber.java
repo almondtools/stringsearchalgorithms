@@ -22,6 +22,8 @@ import net.amygdalum.stringsearchalgorithms.search.StringFinderOption;
 import net.amygdalum.stringsearchalgorithms.search.StringMatch;
 import net.amygdalum.util.text.ByteString;
 import net.amygdalum.util.text.StringUtils;
+import net.amygdalum.util.tries.ByteTrieNode;
+import net.amygdalum.util.tries.PreByteTrieNode;
 
 /**
  * An implementation of the Wu-Manber Algorithm.
@@ -39,7 +41,7 @@ public class WuManber implements StringSearchAlgorithm {
 	private int maxLength;
 	private int block;
 	private int[] shift;
-	private TrieNode<ByteString>[] hash;
+	private ByteTrieNode<ByteString>[] hash;
 
 	public WuManber(Collection<String> patterns, Charset charset) {
 		List<byte[]> bytepatterns = StringUtils.toByteArray(patterns,charset);
@@ -101,20 +103,20 @@ public class WuManber implements StringSearchAlgorithm {
 	}
 
 	@SuppressWarnings("unchecked")
-	private static TrieNode<ByteString>[] computeHash(List<byte[]> bytepatterns, int block, Charset charset) {
-		TrieNode<ByteString>[] hash = new TrieNode[HASH_SIZE];
+	private static ByteTrieNode<ByteString>[] computeHash(List<byte[]> bytepatterns, int block, Charset charset) {
+		PreByteTrieNode<ByteString>[] hash = new PreByteTrieNode[HASH_SIZE];
 		for (byte[] pattern : bytepatterns) {
 			byte[] lastBlock = Arrays.copyOfRange(pattern, pattern.length - block, pattern.length);
 			int hashKey = hashHash(lastBlock);
-			TrieNode<ByteString> trie = hash[hashKey];
+			PreByteTrieNode<ByteString> trie = hash[hashKey];
 			if (trie == null) {
-				trie = new TrieNode<>();
+				trie = new PreByteTrieNode<>();
 				hash[hashKey] = trie;
 			}
-			TrieNode<ByteString> node = trie.extend(revert(pattern), 0);
+			PreByteTrieNode<ByteString> node = trie.extend(revert(pattern), 0);
 			node.setAttached(new ByteString(pattern, charset));
 		}
-		return hash;
+		return PreByteTrieNode.compile(hash);
 	}
 
 	public static int hashHash(byte[] block) {
@@ -191,7 +193,7 @@ public class WuManber implements StringSearchAlgorithm {
 				int shiftBy = shift[shiftKey];
 				if (shiftBy == 0) {
 					int hashkey = hashHash(lastBlock);
-					TrieNode<ByteString> node = hash[hashkey];
+					ByteTrieNode<ByteString> node = hash[hashkey];
 					if (node != null) {
 						int patternPointer = lookahead;
 						node = node.nextNode(bytes.lookahead(patternPointer));
@@ -239,7 +241,7 @@ public class WuManber implements StringSearchAlgorithm {
 				int shiftBy = shift[shiftKey];
 				if (shiftBy == 0) {
 					int hashkey = hashHash(lastBlock);
-					TrieNode<ByteString> node = hash[hashkey];
+					ByteTrieNode<ByteString> node = hash[hashkey];
 					if (node != null) {
 						int patternPointer = lookahead;
 						node = node.nextNode(bytes.lookahead(patternPointer));

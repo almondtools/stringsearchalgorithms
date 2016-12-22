@@ -1,4 +1,4 @@
-package net.amygdalum.stringsearchalgorithms.search.bytes;
+package net.amygdalum.util.tries;
 
 import static com.almondtools.conmatch.datatypes.PrimitiveArrayMatcher.byteArrayContaining;
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -13,7 +13,7 @@ import java.util.Set;
 import org.junit.Test;
 
 
-public class TrieNodeTest {
+public class PreByteTrieNodeTest {
 
 	private static final byte A = (byte) 0x41;
 	private static final byte B = (byte) 0x42;
@@ -25,8 +25,8 @@ public class TrieNodeTest {
 
 	@Test
 	public void testAddNext() throws Exception {
-		TrieNode<String> trieNode = new TrieNode<String>();
-		TrieNode<String> nextNode = new TrieNode<String>();
+		PreByteTrieNode<String> trieNode = new PreByteTrieNode<String>();
+		PreByteTrieNode<String> nextNode = new PreByteTrieNode<String>();
 
 		trieNode.addNext(a, nextNode);
 
@@ -35,9 +35,9 @@ public class TrieNodeTest {
 
 	@Test
 	public void testAddNextAggregates() throws Exception {
-		TrieNode<String> trieNode = new TrieNode<String>();
-		TrieNode<String> nextNode = new TrieNode<String>();
-		TrieNode<String> otherNode = new TrieNode<String>();
+		PreByteTrieNode<String> trieNode = new PreByteTrieNode<String>();
+		PreByteTrieNode<String> nextNode = new PreByteTrieNode<String>();
+		PreByteTrieNode<String> otherNode = new PreByteTrieNode<String>();
 
 		trieNode.addNext(a, nextNode);
 		trieNode.addNext(b, otherNode);
@@ -48,9 +48,9 @@ public class TrieNodeTest {
 
 	@Test
 	public void testAddNextReplaces() throws Exception {
-		TrieNode<String> trieNode = new TrieNode<String>();
-		TrieNode<String> nextNode = new TrieNode<String>();
-		TrieNode<String> otherNode = new TrieNode<String>();
+		PreByteTrieNode<String> trieNode = new PreByteTrieNode<String>();
+		PreByteTrieNode<String> nextNode = new PreByteTrieNode<String>();
+		PreByteTrieNode<String> otherNode = new PreByteTrieNode<String>();
 
 		trieNode.addNext(a, nextNode);
 		trieNode.addNext(a, otherNode);
@@ -59,30 +59,30 @@ public class TrieNodeTest {
 	}
 
 	@Test
-	public void testAddFallback() throws Exception {
-		TrieNode<String> trieNode = new TrieNode<String>();
-		TrieNode<String> fallbackNode = new TrieNode<String>();
+	public void testLink() throws Exception {
+		PreByteTrieNode<String> trieNode = new PreByteTrieNode<String>();
+		PreByteTrieNode<String> fallbackNode = new PreByteTrieNode<String>();
 
-		trieNode.addFallback(fallbackNode);
+		trieNode.link(fallbackNode);
 
-		assertThat(trieNode.getFallback(), sameInstance(fallbackNode));
+		assertThat(trieNode.getLink(), sameInstance(fallbackNode));
 	}
 
 	@Test
 	public void testAddFallbackReplaces() throws Exception {
-		TrieNode<String> trieNode = new TrieNode<String>();
-		TrieNode<String> otherNode = new TrieNode<String>();
-		TrieNode<String> fallbackNode = new TrieNode<String>();
+		PreByteTrieNode<String> trieNode = new PreByteTrieNode<String>();
+		PreByteTrieNode<String> otherNode = new PreByteTrieNode<String>();
+		PreByteTrieNode<String> fallbackNode = new PreByteTrieNode<String>();
 
-		trieNode.addFallback(otherNode);
-		trieNode.addFallback(fallbackNode);
+		trieNode.link(otherNode);
+		trieNode.link(fallbackNode);
 
-		assertThat(trieNode.getFallback(), sameInstance(fallbackNode));
+		assertThat(trieNode.getLink(), sameInstance(fallbackNode));
 	}
 
 	@Test
 	public void testSetAttached() throws Exception {
-		TrieNode<String> trieNode = new TrieNode<String>();
+		PreByteTrieNode<String> trieNode = new PreByteTrieNode<String>();
 
 		trieNode.setAttached("Attached");
 
@@ -91,7 +91,7 @@ public class TrieNodeTest {
 
 	@Test
 	public void testSetAttachedNonString() throws Exception {
-		TrieNode<Double> trieNode = new TrieNode<Double>();
+		PreByteTrieNode<Double> trieNode = new PreByteTrieNode<Double>();
 		
 		trieNode.setAttached(Double.valueOf(42));
 		
@@ -100,7 +100,7 @@ public class TrieNodeTest {
 
 	@Test
 	public void testSetAttachedReplaces() throws Exception {
-		TrieNode<String> trieNode = new TrieNode<String>();
+		PreByteTrieNode<String> trieNode = new PreByteTrieNode<String>();
 
 		trieNode.setAttached("OldAttached");
 		trieNode.setAttached("Attached");
@@ -110,7 +110,7 @@ public class TrieNodeTest {
 
 	@Test
 	public void testExtendCharArray() throws Exception {
-		TrieNode<String> trieNode = new TrieNode<String>();
+		PreByteTrieNode<String> trieNode = new PreByteTrieNode<String>();
 
 		trieNode.extend(new byte[] { A, B }, "AB");
 
@@ -119,7 +119,7 @@ public class TrieNodeTest {
 
 	@Test
 	public void testExtendCharArrayAndNonString() throws Exception {
-		TrieNode<Double> trieNode = new TrieNode<Double>();
+		PreByteTrieNode<Double> trieNode = new PreByteTrieNode<Double>();
 		
 		trieNode.extend(new byte[]{A,B}, Double.valueOf(42));
 		
@@ -128,7 +128,7 @@ public class TrieNodeTest {
 
 	@Test
 	public void testExtendCharArrayAggregates() throws Exception {
-		TrieNode<String> trieNode = new TrieNode<String>();
+		PreByteTrieNode<String> trieNode = new PreByteTrieNode<String>();
 
 		trieNode.extend(new byte[] { A, B }, "AB");
 		trieNode.extend(new byte[] { A, C }, "AC");
@@ -141,7 +141,7 @@ public class TrieNodeTest {
 
 	@Test
 	public void testExtendWideRanges() throws Exception {
-		TrieNode<String> trieNode = new TrieNode<String>();
+		PreByteTrieNode<String> trieNode = new PreByteTrieNode<String>();
 
 		trieNode.extend(new byte[] { A, B }, "AB");
 		trieNode.extend("\u4500A".getBytes(UTF_8), "\u4500A");
@@ -154,7 +154,7 @@ public class TrieNodeTest {
 
 	@Test
 	public void testExtendHighRanges() throws Exception {
-		TrieNode<String> trieNode = new TrieNode<String>();
+		PreByteTrieNode<String> trieNode = new PreByteTrieNode<String>();
 
 		trieNode.extend("\u4500\u4501".getBytes(UTF_8), "\u4500\u4501");
 		trieNode.extend("\u4500\u4502".getBytes(UTF_8), "\u4500\u4502");
@@ -167,7 +167,7 @@ public class TrieNodeTest {
 
 	@Test
 	public void testGetNexts() throws Exception {
-		TrieNode<String> trieNode = new TrieNode<String>();
+		PreByteTrieNode<String> trieNode = new PreByteTrieNode<String>();
 
 		trieNode.extend(new byte[] { B }, "B");
 		trieNode.extend(new byte[] { C }, "C");
@@ -182,7 +182,7 @@ public class TrieNodeTest {
 
 	@Test
 	public void testNextNode() throws Exception {
-		TrieNode<String> trieNode = new TrieNode<String>();
+		PreByteTrieNode<String> trieNode = new PreByteTrieNode<String>();
 
 		assertThat(trieNode.nextNode(a), nullValue());
 		assertThat(trieNode.nextNode(new byte[] { b }), nullValue());
@@ -191,9 +191,9 @@ public class TrieNodeTest {
 
 	@Test
 	public void testReset() throws Exception {
-		TrieNode<String> trieNode = new TrieNode<String>();
-		trieNode.addNext(a, new TrieNode<String>());
-		trieNode.addNext(b, new TrieNode<String>());
+		PreByteTrieNode<String> trieNode = new PreByteTrieNode<String>();
+		trieNode.addNext(a, new PreByteTrieNode<String>());
+		trieNode.addNext(b, new PreByteTrieNode<String>());
 		
 		trieNode.reset();
 		
@@ -204,15 +204,15 @@ public class TrieNodeTest {
 	@SuppressWarnings("unchecked")
 	@Test
 	public void testNodes() throws Exception {
-		TrieNode<String> trieNode = new TrieNode<String>();
-		TrieNode<String> aNode = new TrieNode<String>();
-		TrieNode<String> bNode = new TrieNode<String>();
-		TrieNode<String> cNode = new TrieNode<String>();
+		PreByteTrieNode<String> trieNode = new PreByteTrieNode<String>();
+		PreByteTrieNode<String> aNode = new PreByteTrieNode<String>();
+		PreByteTrieNode<String> bNode = new PreByteTrieNode<String>();
+		PreByteTrieNode<String> cNode = new PreByteTrieNode<String>();
 		trieNode.addNext(a, aNode);
 		trieNode.addNext(b, bNode);
 		aNode.addNext(c, cNode);
 		
-		Set<TrieNode<String>> nodes = trieNode.nodes();
+		Set<PreByteTrieNode<String>> nodes = trieNode.nodes();
 		
 		assertThat(nodes, containsInAnyOrder(trieNode, aNode, bNode, cNode));
 	}
@@ -220,16 +220,16 @@ public class TrieNodeTest {
 	@SuppressWarnings("unchecked")
 	@Test
 	public void testNodesGraph() throws Exception {
-		TrieNode<String> trieNode = new TrieNode<String>();
-		TrieNode<String> aNode = new TrieNode<String>();
-		TrieNode<String> bNode = new TrieNode<String>();
-		TrieNode<String> cNode = new TrieNode<String>();
+		PreByteTrieNode<String> trieNode = new PreByteTrieNode<String>();
+		PreByteTrieNode<String> aNode = new PreByteTrieNode<String>();
+		PreByteTrieNode<String> bNode = new PreByteTrieNode<String>();
+		PreByteTrieNode<String> cNode = new PreByteTrieNode<String>();
 		trieNode.addNext(a, aNode);
 		trieNode.addNext(b, bNode);
 		aNode.addNext(c, cNode);
 		aNode.addNext(b, bNode);
 		
-		Set<TrieNode<String>> nodes = trieNode.nodes();
+		Set<PreByteTrieNode<String>> nodes = trieNode.nodes();
 		
 		assertThat(nodes, containsInAnyOrder(trieNode, aNode, bNode, cNode));
 	}
@@ -237,16 +237,16 @@ public class TrieNodeTest {
 	@SuppressWarnings("unchecked")
 	@Test
 	public void testNodesCyclicGraph() throws Exception {
-		TrieNode<String> trieNode = new TrieNode<String>();
-		TrieNode<String> aNode = new TrieNode<String>();
-		TrieNode<String> bNode = new TrieNode<String>();
-		TrieNode<String> cNode = new TrieNode<String>();
+		PreByteTrieNode<String> trieNode = new PreByteTrieNode<String>();
+		PreByteTrieNode<String> aNode = new PreByteTrieNode<String>();
+		PreByteTrieNode<String> bNode = new PreByteTrieNode<String>();
+		PreByteTrieNode<String> cNode = new PreByteTrieNode<String>();
 		trieNode.addNext(a, aNode);
 		trieNode.addNext(b, bNode);
 		aNode.addNext(c, cNode);
 		aNode.addNext(x, trieNode);
 		
-		Set<TrieNode<String>> nodes = trieNode.nodes();
+		Set<PreByteTrieNode<String>> nodes = trieNode.nodes();
 		
 		assertThat(nodes, containsInAnyOrder(trieNode, aNode, bNode, cNode));
 	}

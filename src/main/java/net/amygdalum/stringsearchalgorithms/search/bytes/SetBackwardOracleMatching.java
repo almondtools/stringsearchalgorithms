@@ -22,8 +22,10 @@ import net.amygdalum.stringsearchalgorithms.search.AbstractStringFinder;
 import net.amygdalum.stringsearchalgorithms.search.StringFinder;
 import net.amygdalum.stringsearchalgorithms.search.StringFinderOption;
 import net.amygdalum.stringsearchalgorithms.search.StringMatch;
-import net.amygdalum.util.map.ByteObjectMap;
+import net.amygdalum.util.map.ByteObjectMap.Entry;
 import net.amygdalum.util.text.ByteString;
+import net.amygdalum.util.tries.ByteTrieNode;
+import net.amygdalum.util.tries.PreByteTrieNode;
 
 /**
  * An implementation of the Set Backward Oracle Matching Algorithm.
@@ -32,7 +34,7 @@ import net.amygdalum.util.text.ByteString;
  */
 public class SetBackwardOracleMatching implements StringSearchAlgorithm {
 
-	private TrieNode<List<byte[]>> trie;
+	private ByteTrieNode<List<byte[]>> trie;
 	private int minLength;
 
 	public SetBackwardOracleMatching(Collection<String> patterns, Charset charset) {
@@ -41,43 +43,43 @@ public class SetBackwardOracleMatching implements StringSearchAlgorithm {
 		this.trie = computeTrie(bytepatterns, minLength);
 	}
 
-	private static TrieNode<List<byte[]>> computeTrie(List<byte[]> bytepatterns, int length) {
-		TrieNode<List<byte[]>> trie = new TrieNode<>();
+	private static ByteTrieNode<List<byte[]>> computeTrie(List<byte[]> bytepatterns, int length) {
+		PreByteTrieNode<List<byte[]>> trie = new PreByteTrieNode<>();
 		for (byte[] pattern : bytepatterns) {
 			byte[] prefix = copyOfRange(pattern, 0, length);
 			trie.extend(revert(prefix), 0);
 		}
 		computeOracle(trie);
 		computeTerminals(trie, bytepatterns, length);
-		return trie;
+		return trie.compile();
 	}
 
-	private static void computeOracle(TrieNode<List<byte[]>> trie) {
-		Map<TrieNode<List<byte[]>>, TrieNode<List<byte[]>>> oracle = new IdentityHashMap<>();
-		TrieNode<List<byte[]>> init = trie;
+	private static void computeOracle(PreByteTrieNode<List<byte[]>> trie) {
+		Map<PreByteTrieNode<List<byte[]>>, PreByteTrieNode<List<byte[]>>> oracle = new IdentityHashMap<>();
+		PreByteTrieNode<List<byte[]>> init = trie;
 		oracle.put(init, null);
-		Queue<TrieNode<List<byte[]>>> worklist = new LinkedList<>();
+		Queue<PreByteTrieNode<List<byte[]>>> worklist = new LinkedList<>();
 		worklist.add(trie);
 		while (!worklist.isEmpty()) {
-			TrieNode<List<byte[]>> current = worklist.remove();
-			List<TrieNode<List<byte[]>>> nexts = process(current, oracle, init);
+			PreByteTrieNode<List<byte[]>> current = worklist.remove();
+			List<PreByteTrieNode<List<byte[]>>> nexts = process(current, oracle, init);
 			worklist.addAll(nexts);
 		}
 	}
 
-	private static List<TrieNode<List<byte[]>>> process(TrieNode<List<byte[]>> parent, Map<TrieNode<List<byte[]>>, TrieNode<List<byte[]>>> oracle, TrieNode<List<byte[]>> init) {
-		List<TrieNode<List<byte[]>>> nexts = new ArrayList<>();
-		for (ByteObjectMap<TrieNode<List<byte[]>>>.Entry entry : parent.getNexts().cursor()) {
+	private static List<PreByteTrieNode<List<byte[]>>> process(PreByteTrieNode<List<byte[]>> parent, Map<PreByteTrieNode<List<byte[]>>, PreByteTrieNode<List<byte[]>>> oracle, PreByteTrieNode<List<byte[]>> init) {
+		List<PreByteTrieNode<List<byte[]>>> nexts = new ArrayList<>();
+		for (Entry<PreByteTrieNode<List<byte[]>>> entry : parent.getNexts().cursor()) {
 			byte c = entry.key;
-			TrieNode<List<byte[]>> trie = entry.value;
+			PreByteTrieNode<List<byte[]>> trie = entry.value;
 
-			TrieNode<List<byte[]>> down = oracle.get(parent);
+			PreByteTrieNode<List<byte[]>> down = oracle.get(parent);
 			while (down != null && down.nextNode(c) == null) {
 				down.addNext(c, trie);
 				down = oracle.get(down);
 			}
 			if (down != null) {
-				TrieNode<List<byte[]>> next = down.nextNode(c);
+				PreByteTrieNode<List<byte[]>> next = down.nextNode(c);
 				oracle.put(trie, next);
 			} else {
 				oracle.put(trie, init);
@@ -88,10 +90,10 @@ public class SetBackwardOracleMatching implements StringSearchAlgorithm {
 		return nexts;
 	}
 
-	private static void computeTerminals(TrieNode<List<byte[]>> trie, List<byte[]> patterns, int minLength) {
+	private static void computeTerminals(PreByteTrieNode<List<byte[]>> trie, List<byte[]> patterns, int minLength) {
 		for (byte[] pattern : patterns) {
 			byte[] prefix = Arrays.copyOfRange(pattern, 0, minLength);
-			TrieNode<List<byte[]>> terminal = trie.nextNode(revert(prefix));
+			PreByteTrieNode<List<byte[]>> terminal = trie.nextNode(revert(prefix));
 			List<byte[]> terminalPatterns = terminal.getAttached();
 			if (terminalPatterns == null) {
 				terminalPatterns = new ArrayList<>();
@@ -144,7 +146,7 @@ public class SetBackwardOracleMatching implements StringSearchAlgorithm {
 			}
 			final int lookahead = minLength - 1;
 			next: while (!bytes.finished(lookahead)) {
-				TrieNode<List<byte[]>> current = trie;
+				ByteTrieNode<List<byte[]>> current = trie;
 				int j = lookahead;
 				while (j >= 0 && current != null) {
 					current = current.nextNode(bytes.lookahead(j));
