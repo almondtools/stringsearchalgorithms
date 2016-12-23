@@ -6,8 +6,6 @@ import java.util.List;
 
 public class AnyCharNode extends CharNode {
 
-	private static final DefinedCharNode DOTALL = new RangeCharNode(Character.MIN_VALUE, Character.MAX_VALUE);
-
 	private List<DefinedCharNode> charNodes;
 
 	private AnyCharNode(DefinedCharNode... charNodes) {
@@ -19,7 +17,7 @@ public class AnyCharNode extends CharNode {
 	}
 
 	public static AnyCharNode dotAll(char min, char max) {
-		return new AnyCharNode(DOTALL);
+		return new AnyCharNode(new RangeCharNode(min, max));
 	}
 
 	public static AnyCharNode dotDefault(char min, char max) {

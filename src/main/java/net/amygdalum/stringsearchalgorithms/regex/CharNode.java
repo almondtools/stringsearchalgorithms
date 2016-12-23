@@ -27,6 +27,9 @@ public abstract class CharNode implements RegexNode {
 		for (DefinedCharNode node : nodes) {
 			char from = node.getFrom();
 			char to = node.getTo();
+			if (from > max || to < min) {
+				continue;
+			}
 			if (current + 1 == from) {
 				remainderNodes.add(new SingleCharNode(current));
 			} else if (current < from) {

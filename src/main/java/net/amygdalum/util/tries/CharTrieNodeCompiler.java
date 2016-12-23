@@ -1,5 +1,7 @@
 package net.amygdalum.util.tries;
 
+import static net.amygdalum.util.tries.CharTrieArrayNode.computeArraySize;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -144,33 +146,11 @@ public class CharTrieNodeCompiler<T> {
 	}
 
 	private boolean isQualifiedForArrayNode(CharObjectMap<CharTrieNode<T>> nexts) {
-		return computeArraySize(nexts) != Integer.MAX_VALUE;
-	}
-
-	private int computeArraySize(CharObjectMap<CharTrieNode<T>> nexts) {
-		int nextSize = nexts.size();
-		int minimumSize = 1;
-		while (minimumSize < nextSize) {
-			minimumSize <<= 1;
-		}
-		nextMask: for (int size = minimumSize; size < 256; size <<= 1) {
-			boolean[] collision = new boolean[size];
-			int mask = size - 1;
-			for (Entry<CharTrieNode<T>> entry : nexts.cursor()) {
-				int index = ((int) entry.key) & mask;
-				if (collision[index]) {
-					continue nextMask;
-				} else {
-					collision[index] = true;
-				}
-			}
-			return size;
-		}
-		return Integer.MAX_VALUE;
+		return computeArraySize(nexts) != -1;
 	}
 
 	private CharTrieNode<T> createTrieArrayNode(CharObjectMap<CharTrieNode<T>> nexts, T attached) {
-		return new CharTrieArrayNode<T>(nexts, computeArraySize(nexts), attached);
+		return new CharTrieArrayNode<T>(nexts, attached);
 	}
 
 	private CharTrieNode<T> createTrieMapNode(CharObjectMap<CharTrieNode<T>> nexts, T attached) {

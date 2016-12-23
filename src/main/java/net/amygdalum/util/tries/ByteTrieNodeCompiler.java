@@ -141,30 +141,8 @@ public class ByteTrieNodeCompiler<T> {
 		}
 	}
 
-	private int computeArraySize(ByteObjectMap<ByteTrieNode<T>> nexts) {
-		int nextSize = nexts.size();
-		int minimumSize = 1;
-		while (minimumSize < nextSize) {
-			minimumSize <<= 1;
-		}
-		nextMask: for (int size = minimumSize; size < 256; size <<= 1) {
-			boolean[] collision = new boolean[size];
-			int mask = size - 1;
-			for (Entry<ByteTrieNode<T>> entry : nexts.cursor()) {
-				int index = ((int) entry.key) & mask;
-				if (collision[index]) {
-					continue nextMask;
-				} else {
-					collision[index] = true;
-				}
-			}
-			return size;
-		}
-		return Integer.MAX_VALUE;
-	}
-
 	private ByteTrieNode<T> createTrieArrayNode(ByteObjectMap<ByteTrieNode<T>> nexts, T attached) {
-		return new ByteTrieArrayNode<T>(nexts, computeArraySize(nexts), attached);
+		return new ByteTrieArrayNode<T>(nexts, attached);
 	}
 
 	private static class TemporaryByteTrieNode<T> implements ByteTrieNode<T> {

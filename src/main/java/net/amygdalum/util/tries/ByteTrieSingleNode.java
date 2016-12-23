@@ -7,16 +7,21 @@ public class ByteTrieSingleNode<T> extends ByteTrieLeafNode<T> implements ByteTr
 	private TrieProxyNode<T>[] proxies;
 	private byte[] alt;
 
+	public ByteTrieSingleNode(byte[] bytes, T attached) {
+		this(bytes, newAttached(attached, bytes.length));
+	}
+
 	public ByteTrieSingleNode(byte b, ByteTrieTerminalNode<T> next, T attached) {
-		this.bytes = newBytes(b);
-		this.attached = newAttached(attached, next.getAttached());
-		this.proxies = proxies(bytes.length);
-		this.alt = new byte[] { bytes[0] };
+		this(newBytes(b), newAttached(attached, next.getAttached()));
 	}
 
 	public ByteTrieSingleNode(byte b, ByteTrieSingleNode<T> next, T attached) {
-		this.bytes = newBytes(b, next.bytes);
-		this.attached = newAttached(attached, next.attached);
+		this(newBytes(b, next.bytes), newAttached(attached, next.attached));
+	}
+
+	public ByteTrieSingleNode(byte[] bytes, T[] attached) {
+		this.bytes = bytes;
+		this.attached = attached;
 		this.proxies = proxies(bytes.length);
 		this.alt = new byte[] { bytes[0] };
 	}
@@ -53,11 +58,18 @@ public class ByteTrieSingleNode<T> extends ByteTrieLeafNode<T> implements ByteTr
 		return attached;
 	}
 
+	@SuppressWarnings("unchecked")
+	private static <T> T[] newAttached(T last, int size) {
+		T[] attached = (T[]) new Object[size + 1];
+		attached[size] = last;
+		return attached;
+	}
+
 	@Override
 	public int length() {
 		return bytes.length;
 	}
-	
+
 	@Override
 	public ByteTrieNode<T> nextNode(byte b) {
 		if (bytes[0] != b) {
@@ -70,7 +82,9 @@ public class ByteTrieSingleNode<T> extends ByteTrieLeafNode<T> implements ByteTr
 	public ByteTrieNode<T> nextNode(byte[] bytes) {
 		int numberOfChars = bytes.length;
 		for (int i = 0; i < numberOfChars; i++) {
-			if (this.bytes[i] != bytes[i]) {
+			if (i >= this.bytes.length) {
+				return null;
+			} else if (this.bytes[i] != bytes[i]) {
 				return null;
 			}
 		}
@@ -81,7 +95,9 @@ public class ByteTrieSingleNode<T> extends ByteTrieLeafNode<T> implements ByteTr
 	public ByteTrieNode<T> nextNode(byte[] bytes, int start) {
 		int numberOfBytes = bytes.length - start;
 		for (int i = 0; i < numberOfBytes; i++) {
-			if (this.bytes[i] != bytes[i + start]) {
+			if (i >= this.bytes.length) {
+				return null;
+			} else if (this.bytes[i] != bytes[i + start]) {
 				return null;
 			}
 		}
@@ -113,10 +129,10 @@ public class ByteTrieSingleNode<T> extends ByteTrieLeafNode<T> implements ByteTr
 
 		public TrieProxyNode(ByteTrieSingleNode<T> base, int offset) {
 			this.base = base;
-			this.offset = offset;
-			this.alt = offset == base.bytes.length ? new byte[0] : new byte[]{base.bytes[offset]};
+			this.offset = offset + 1;
+			this.alt = this.offset == base.bytes.length ? new byte[0] : new byte[] { base.bytes[this.offset] };
 		}
-		
+
 		@Override
 		public int length() {
 			return base.bytes.length - offset;
@@ -124,40 +140,46 @@ public class ByteTrieSingleNode<T> extends ByteTrieLeafNode<T> implements ByteTr
 
 		@Override
 		public ByteTrieNode<T> nextNode(byte b) {
-			if (base.bytes.length <= offset + 1) {
+			if (base.bytes.length <= offset) {
 				return null;
 			}
-			if (base.bytes[offset + 1] != b) {
+			if (base.bytes[offset] != b) {
 				return null;
 			}
-			return base.proxy(offset + 1);
+			return base.proxy(offset);
 		}
 
 		@Override
 		public ByteTrieNode<T> nextNode(byte[] bytes) {
 			int numberOfChars = bytes.length;
 			for (int i = 0; i < numberOfChars; i++) {
-				if (base.bytes[offset + i] != bytes[i]) {
+				int offi = offset + i;
+				if (offi >= base.bytes.length) {
+					return null;
+				} else if (base.bytes[offi] != bytes[i]) {
 					return null;
 				}
 			}
-			return base.proxy(offset + numberOfChars);
+			return base.proxy(offset + numberOfChars - 1);
 		}
 
 		@Override
 		public ByteTrieNode<T> nextNode(byte[] bytes, int start) {
 			int numberOfChars = bytes.length - start;
 			for (int i = 0; i < numberOfChars; i++) {
-				if (base.bytes[offset + i] != bytes[i + start]) {
+				int offi = offset + i;
+				if (offi >= base.bytes.length) {
+					return null;
+				} else if (base.bytes[offi] != bytes[i + start]) {
 					return null;
 				}
 			}
-			return base.proxy(offset + numberOfChars);
+			return base.proxy(offset + numberOfChars - 1);
 		}
 
 		@Override
 		public T getAttached() {
-			return base.attached[offset + 1];
+			return base.attached[offset];
 		}
 
 		@Override

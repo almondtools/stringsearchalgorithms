@@ -1,6 +1,8 @@
 package net.amygdalum.stringsearchalgorithms.regex;
 
 import static com.almondtools.conmatch.conventions.ReflectiveEqualsMatcher.reflectiveEqualTo;
+import static java.lang.Character.MAX_VALUE;
+import static java.lang.Character.MIN_VALUE;
 import static net.amygdalum.stringsearchalgorithms.regex.AnyCharNode.dotAll;
 import static net.amygdalum.stringsearchalgorithms.regex.AnyCharNode.dotDefault;
 import static net.amygdalum.util.text.CharUtils.after;
@@ -33,6 +35,29 @@ public class AnyCharNodeTest {
 			reflectiveEqualTo((DefinedCharNode) new RangeCharNode(after('\n'), before('\r'))),
 			reflectiveEqualTo((DefinedCharNode) new RangeCharNode(after('\r'), before('\u0085'))),
 			reflectiveEqualTo((DefinedCharNode) new RangeCharNode(after('\u0085'), (char) 255))));
+	}
+
+	@SuppressWarnings("unchecked")
+	@Test
+	public void testToCharNodesUnlimitedRange() throws Exception {
+		assertThat(dotAll(MIN_VALUE, MAX_VALUE).toCharNodes(), contains(reflectiveEqualTo((DefinedCharNode) new RangeCharNode(MIN_VALUE, MAX_VALUE))));
+		assertThat(dotDefault(MIN_VALUE, MAX_VALUE).toCharNodes(), contains(
+			reflectiveEqualTo((DefinedCharNode) new RangeCharNode(MIN_VALUE, before('\n'))),
+			reflectiveEqualTo((DefinedCharNode) new RangeCharNode(after('\n'), before('\r'))),
+			reflectiveEqualTo((DefinedCharNode) new RangeCharNode(after('\r'), before('\u0085'))),
+			reflectiveEqualTo((DefinedCharNode) new RangeCharNode(after('\u0085'), before('\u2028'))),
+			reflectiveEqualTo((DefinedCharNode) new RangeCharNode(after('\u2029'), MAX_VALUE))));
+	}
+
+	@SuppressWarnings("unchecked")
+	@Test
+	public void testToCharNodesPathologicRange() throws Exception {
+		assertThat(dotAll(MIN_VALUE, before('\u2029')).toCharNodes(), contains(reflectiveEqualTo((DefinedCharNode) new RangeCharNode(MIN_VALUE, before('\u2029')))));
+		assertThat(dotDefault(MIN_VALUE, before('\u2029')).toCharNodes(), contains(
+			reflectiveEqualTo((DefinedCharNode) new RangeCharNode(MIN_VALUE, before('\n'))),
+			reflectiveEqualTo((DefinedCharNode) new RangeCharNode(after('\n'), before('\r'))),
+			reflectiveEqualTo((DefinedCharNode) new RangeCharNode(after('\r'), before('\u0085'))),
+			reflectiveEqualTo((DefinedCharNode) new RangeCharNode(after('\u0085'), before('\u2028')))));
 	}
 
 	@Test

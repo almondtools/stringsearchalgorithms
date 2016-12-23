@@ -5,17 +5,41 @@ import net.amygdalum.util.map.CharObjectMap.Entry;
 
 public class CharTrieArrayNode<T> extends CharTrieInnerNode<T> implements CharTrieNode<T> {
 
+	private int size;
 	private int mask;
 	private char[] chars;
 	private CharTrieNode<T>[] nodes;
 	private char[] alts;
 
-	public CharTrieArrayNode(CharObjectMap<CharTrieNode<T>> nexts, int size, T attached) {
+	public CharTrieArrayNode(CharObjectMap<CharTrieNode<T>> nexts, T attached) {
 		super(attached);
+		this.size = computeArraySize(nexts);
 		this.mask = size - 1;
 		this.chars = chars(nexts, size, mask);
 		this.nodes = nodes(nexts, size, mask);
 		this.alts = alts(nexts);
+	}
+
+	public static <T> int computeArraySize(CharObjectMap<CharTrieNode<T>> nexts) {
+		int nextSize = nexts.size();
+		int minimumSize = 1;
+		while (minimumSize < nextSize) {
+			minimumSize <<= 1;
+		}
+		nextMask: for (int size = minimumSize; size < 256; size <<= 1) {
+			boolean[] collision = new boolean[size];
+			int mask = size - 1;
+			for (Entry<CharTrieNode<T>> entry : nexts.cursor()) {
+				int index = ((int) entry.key) & mask;
+				if (collision[index]) {
+					continue nextMask;
+				} else {
+					collision[index] = true;
+				}
+			}
+			return size;
+		}
+		return -1;
 	}
 
 	private static <T> char[] chars(CharObjectMap<CharTrieNode<T>> nexts, int size, int mask) {
@@ -49,6 +73,9 @@ public class CharTrieArrayNode<T> extends CharTrieInnerNode<T> implements CharTr
 
 	@Override
 	public CharTrieNode<T> nextNode(char c) {
+		if (nodes.length == 0) {
+			return null;
+		}
 		int index = ((int) c) & mask;
 		if (chars[index] != c) {
 			return null;

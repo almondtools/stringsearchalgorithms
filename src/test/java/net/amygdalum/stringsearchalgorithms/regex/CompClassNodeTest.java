@@ -2,7 +2,6 @@ package net.amygdalum.stringsearchalgorithms.regex;
 
 import static com.almondtools.conmatch.conventions.ReflectiveEqualsMatcher.reflectiveEqualTo;
 import static java.util.Arrays.asList;
-import static net.amygdalum.util.text.CharUtils.before;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.not;
@@ -36,7 +35,7 @@ public class CompClassNodeTest {
 			asList((DefinedCharNode) new RangeCharNode((char) 0, 'd')),
 			asList((DefinedCharNode) new RangeCharNode('e', (char) 255)))
 			.invert((char) 0, (char) 255).toCharNodes(), contains(
-			reflectiveEqualTo((DefinedCharNode) new RangeCharNode((char) 0, before('d')))));
+			reflectiveEqualTo((DefinedCharNode) new RangeCharNode((char) 0, 'd'))));
 	}
 
 	@Test

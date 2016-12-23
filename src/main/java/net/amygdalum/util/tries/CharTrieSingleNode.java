@@ -7,16 +7,21 @@ public class CharTrieSingleNode<T> extends CharTrieLeafNode<T> implements CharTr
 	private TrieProxyNode<T>[] proxies;
 	private char[] alt;
 
+	public CharTrieSingleNode(char[] chars, T attached) {
+		this(chars, newAttached(attached, chars.length));
+	}
+
 	public CharTrieSingleNode(char c, CharTrieTerminalNode<T> next, T attached) {
-		this.chars = newChars(c);
-		this.attached = newAttached(attached, next.getAttached());
-		this.proxies = proxies(chars.length);
-		this.alt = new char[] { chars[0] };
+		this(newChars(c), newAttached(attached, next.getAttached()));
 	}
 
 	public CharTrieSingleNode(char c, CharTrieSingleNode<T> next, T attached) {
-		this.chars = newChars(c, next.chars);
-		this.attached = newAttached(attached, next.attached);
+		this(newChars(c, next.chars), newAttached(attached, next.attached));
+	}
+
+	public CharTrieSingleNode(char[] chars, T[] attached) {
+		this.chars = chars;
+		this.attached = attached;
 		this.proxies = proxies(chars.length);
 		this.alt = new char[] { chars[0] };
 	}
@@ -53,11 +58,18 @@ public class CharTrieSingleNode<T> extends CharTrieLeafNode<T> implements CharTr
 		return attached;
 	}
 
+	@SuppressWarnings("unchecked")
+	private static <T> T[] newAttached(T last, int size) {
+		T[] attached = (T[]) new Object[size + 1];
+		attached[size] = last;
+		return attached;
+	}
+
 	@Override
 	public int length() {
 		return chars.length;
 	}
-	
+
 	@Override
 	public CharTrieNode<T> nextNode(char c) {
 		if (chars[0] != c) {
@@ -70,7 +82,9 @@ public class CharTrieSingleNode<T> extends CharTrieLeafNode<T> implements CharTr
 	public CharTrieNode<T> nextNode(char[] chars) {
 		int numberOfChars = chars.length;
 		for (int i = 0; i < numberOfChars; i++) {
-			if (this.chars[i] != chars[i]) {
+			if (i >= this.chars.length) {
+				return null;
+			} else if (this.chars[i] != chars[i]) {
 				return null;
 			}
 		}
@@ -81,7 +95,9 @@ public class CharTrieSingleNode<T> extends CharTrieLeafNode<T> implements CharTr
 	public CharTrieNode<T> nextNode(char[] chars, int start) {
 		int numberOfChars = chars.length - start;
 		for (int i = 0; i < numberOfChars; i++) {
-			if (this.chars[i] != chars[i + start]) {
+			if (i >= this.chars.length) {
+				return null;
+			} else if (this.chars[i] != chars[i + start]) {
 				return null;
 			}
 		}
@@ -113,10 +129,10 @@ public class CharTrieSingleNode<T> extends CharTrieLeafNode<T> implements CharTr
 
 		public TrieProxyNode(CharTrieSingleNode<T> base, int offset) {
 			this.base = base;
-			this.offset = offset;
-			this.alt = offset == base.chars.length ? new char[0] : new char[]{base.chars[offset]};
+			this.offset = offset + 1;
+			this.alt = this.offset == base.chars.length ? new char[0] : new char[] { base.chars[this.offset] };
 		}
-		
+
 		@Override
 		public int length() {
 			return base.chars.length - offset;
@@ -124,40 +140,46 @@ public class CharTrieSingleNode<T> extends CharTrieLeafNode<T> implements CharTr
 
 		@Override
 		public CharTrieNode<T> nextNode(char c) {
-			if (base.chars.length <= offset + 1) {
+			if (base.chars.length <= offset) {
 				return null;
 			}
-			if (base.chars[offset + 1] != c) {
+			if (base.chars[offset] != c) {
 				return null;
 			}
-			return base.proxy(offset + 1);
+			return base.proxy(offset);
 		}
 
 		@Override
 		public CharTrieNode<T> nextNode(char[] chars) {
 			int numberOfChars = chars.length;
 			for (int i = 0; i < numberOfChars; i++) {
-				if (base.chars[offset + i] != chars[i]) {
+				int offi = offset + i;
+				if (offi >= base.chars.length) {
+					return null;
+				} else if (base.chars[offi] != chars[i]) {
 					return null;
 				}
 			}
-			return base.proxy(offset + numberOfChars);
+			return base.proxy(offset + numberOfChars - 1);
 		}
 
 		@Override
 		public CharTrieNode<T> nextNode(char[] chars, int start) {
 			int numberOfChars = chars.length - start;
 			for (int i = 0; i < numberOfChars; i++) {
-				if (base.chars[offset + i] != chars[i + start]) {
+				int offi = offset + i;
+				if (offi >= base.chars.length) {
+					return null;
+				} else if (base.chars[offi] != chars[i + start]) {
 					return null;
 				}
 			}
-			return base.proxy(offset + numberOfChars);
+			return base.proxy(offset + numberOfChars - 1);
 		}
 
 		@Override
 		public T getAttached() {
-			return base.attached[offset + 1];
+			return base.attached[offset];
 		}
 
 		@Override
