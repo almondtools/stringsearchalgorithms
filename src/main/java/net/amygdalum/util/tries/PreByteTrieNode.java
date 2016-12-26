@@ -1,6 +1,8 @@
 package net.amygdalum.util.tries;
 
 import java.util.LinkedHashSet;
+import java.util.LinkedList;
+import java.util.Queue;
 import java.util.Set;
 
 import net.amygdalum.util.map.ByteObjectMap;
@@ -84,19 +86,22 @@ public class PreByteTrieNode<T> {
 
 	public Set<PreByteTrieNode<T>> nodes() {
 		Set<PreByteTrieNode<T>> nodes = new LinkedHashSet<>();
-		collectNodes(nodes);
-		return nodes;
-	}
 
-	private void collectNodes(Set<PreByteTrieNode<T>> nodes) {
-		if (nodes.contains(this)) {
-			return;
+		Queue<PreByteTrieNode<T>> worklist = new LinkedList<>();
+		worklist.add(this);
+
+		while (!worklist.isEmpty()) {
+			PreByteTrieNode<T> current = worklist.remove();
+			boolean added = nodes.add(current);
+			if (added) {
+				for (Entry<PreByteTrieNode<T>> entry : current.getNexts().cursor()) {
+					PreByteTrieNode<T> node = entry.value;
+					worklist.add(node);
+				}
+			}
 		}
-		nodes.add(this);
-		for (Entry<PreByteTrieNode<T>> entry : getNexts().cursor()) {
-			PreByteTrieNode<T> node = entry.value;
-			node.collectNodes(nodes);
-		}
+
+		return nodes;
 	}
 
 	@Override
@@ -106,16 +111,6 @@ public class PreByteTrieNode<T> {
 		} else {
 			return "[]";
 		}
-	}
-
-	public ByteTrieNode<T> compile() {
-		ByteTrieNodeCompiler<T> compiler = new ByteTrieNodeCompiler<T>();
-		return compiler.compileAndLink(this);
-	}
-
-	public static <T> ByteTrieNode<T>[] compile(PreByteTrieNode<T>[] nodes) {
-		ByteTrieNodeCompiler<T> compiler = new ByteTrieNodeCompiler<T>();
-		return compiler.compileAndLink(nodes);
 	}
 
 }

@@ -17,6 +17,7 @@ import net.amygdalum.stringsearchalgorithms.search.StringFinderOption;
 import net.amygdalum.stringsearchalgorithms.search.StringMatch;
 import net.amygdalum.util.map.CharObjectMap.Entry;
 import net.amygdalum.util.tries.CharTrieNode;
+import net.amygdalum.util.tries.CharTrieNodeCompiler;
 import net.amygdalum.util.tries.PreCharTrieNode;
 
 /**
@@ -68,7 +69,7 @@ public class AhoCorasick implements StringSearchAlgorithm {
 				worklist.add(nextTrie);
 			}
 		}
-		return trie.compile();
+		return new CharTrieNodeCompiler<String>(false).compileAndLink(trie);
 	}
 
 	private static void computeSupport(PreCharTrieNode<String> parent, char c, PreCharTrieNode<String> trie, PreCharTrieNode<String> init) {

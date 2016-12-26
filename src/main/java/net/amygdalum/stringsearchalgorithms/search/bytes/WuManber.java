@@ -23,6 +23,7 @@ import net.amygdalum.stringsearchalgorithms.search.StringMatch;
 import net.amygdalum.util.text.ByteString;
 import net.amygdalum.util.text.StringUtils;
 import net.amygdalum.util.tries.ByteTrieNode;
+import net.amygdalum.util.tries.ByteTrieNodeCompiler;
 import net.amygdalum.util.tries.PreByteTrieNode;
 
 /**
@@ -116,7 +117,7 @@ public class WuManber implements StringSearchAlgorithm {
 			PreByteTrieNode<ByteString> node = trie.extend(revert(pattern), 0);
 			node.setAttached(new ByteString(pattern, charset));
 		}
-		return PreByteTrieNode.compile(hash);
+		return new ByteTrieNodeCompiler<ByteString>(false).compileAndLink(hash);
 	}
 
 	public static int hashHash(byte[] block) {

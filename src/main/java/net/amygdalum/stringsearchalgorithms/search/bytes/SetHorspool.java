@@ -19,6 +19,7 @@ import net.amygdalum.stringsearchalgorithms.search.StringMatch;
 import net.amygdalum.util.text.ByteString;
 import net.amygdalum.util.text.StringUtils;
 import net.amygdalum.util.tries.ByteTrieNode;
+import net.amygdalum.util.tries.ByteTrieNodeCompiler;
 import net.amygdalum.util.tries.PreByteTrieNode;
 
 /**
@@ -51,7 +52,7 @@ public class SetHorspool implements StringSearchAlgorithm {
 			PreByteTrieNode<ByteString> node = trie.extend(revert(pattern), 0);
 			node.setAttached(new ByteString(pattern, charset));
 		}
-		return trie.compile();
+		return new ByteTrieNodeCompiler<ByteString>(false).compileAndLink(trie);
 	}
 
 	@Override

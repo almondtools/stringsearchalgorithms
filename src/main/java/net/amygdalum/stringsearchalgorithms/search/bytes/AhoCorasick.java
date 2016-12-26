@@ -20,6 +20,7 @@ import net.amygdalum.stringsearchalgorithms.search.StringMatch;
 import net.amygdalum.util.map.ByteObjectMap.Entry;
 import net.amygdalum.util.text.ByteString;
 import net.amygdalum.util.tries.ByteTrieNode;
+import net.amygdalum.util.tries.ByteTrieNodeCompiler;
 import net.amygdalum.util.tries.PreByteTrieNode;
 
 /**
@@ -71,7 +72,7 @@ public class AhoCorasick implements StringSearchAlgorithm {
 				worklist.add(nextTrie);
 			}
 		}
-		return trie.compile();
+		return new ByteTrieNodeCompiler<ByteString>(false).compileAndLink(trie);
 	}
 
 	private static void computeSupport(PreByteTrieNode<ByteString> parent, byte b, PreByteTrieNode<ByteString> trie, PreByteTrieNode<ByteString> init) {

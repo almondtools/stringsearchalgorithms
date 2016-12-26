@@ -25,6 +25,7 @@ import net.amygdalum.stringsearchalgorithms.search.StringMatch;
 import net.amygdalum.util.map.ByteObjectMap.Entry;
 import net.amygdalum.util.text.ByteString;
 import net.amygdalum.util.tries.ByteTrieNode;
+import net.amygdalum.util.tries.ByteTrieNodeCompiler;
 import net.amygdalum.util.tries.PreByteTrieNode;
 
 /**
@@ -51,7 +52,7 @@ public class SetBackwardOracleMatching implements StringSearchAlgorithm {
 		}
 		computeOracle(trie);
 		computeTerminals(trie, bytepatterns, length);
-		return trie.compile();
+		return new ByteTrieNodeCompiler<List<byte[]>>(false).compileAndLink(trie);
 	}
 
 	private static void computeOracle(PreByteTrieNode<List<byte[]>> trie) {

@@ -39,7 +39,7 @@ public class ByteTrieArrayNode<T> extends ByteTrieInnerNode<T> implements ByteTr
 			}
 			return size;
 		}
-		return Integer.MAX_VALUE;
+		return 256;
 	}
 
 	private static <T> byte[] bytes(ByteObjectMap<ByteTrieNode<T>> nexts, int size, int mask) {

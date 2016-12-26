@@ -21,7 +21,6 @@ public class PreByteTrieNodeTest {
 	private static final byte a = (byte) 0x61;
 	private static final byte b = (byte) 0x62;
 	private static final byte c = (byte) 0x63;
-	private static final byte x = (byte) 0x78;
 
 	@Test
 	public void testAddNext() throws Exception {
@@ -228,23 +227,6 @@ public class PreByteTrieNodeTest {
 		trieNode.addNext(b, bNode);
 		aNode.addNext(c, cNode);
 		aNode.addNext(b, bNode);
-		
-		Set<PreByteTrieNode<String>> nodes = trieNode.nodes();
-		
-		assertThat(nodes, containsInAnyOrder(trieNode, aNode, bNode, cNode));
-	}
-
-	@SuppressWarnings("unchecked")
-	@Test
-	public void testNodesCyclicGraph() throws Exception {
-		PreByteTrieNode<String> trieNode = new PreByteTrieNode<String>();
-		PreByteTrieNode<String> aNode = new PreByteTrieNode<String>();
-		PreByteTrieNode<String> bNode = new PreByteTrieNode<String>();
-		PreByteTrieNode<String> cNode = new PreByteTrieNode<String>();
-		trieNode.addNext(a, aNode);
-		trieNode.addNext(b, bNode);
-		aNode.addNext(c, cNode);
-		aNode.addNext(x, trieNode);
 		
 		Set<PreByteTrieNode<String>> nodes = trieNode.nodes();
 		

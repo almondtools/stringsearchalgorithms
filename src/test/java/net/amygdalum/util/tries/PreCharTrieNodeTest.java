@@ -226,21 +226,4 @@ public class PreCharTrieNodeTest {
 		assertThat(nodes, containsInAnyOrder(trieNode, aNode, bNode, cNode));
 	}
 
-	@SuppressWarnings("unchecked")
-	@Test
-	public void testNodesCyclicGraph() throws Exception {
-		PreCharTrieNode<String> trieNode = new PreCharTrieNode<String>();
-		PreCharTrieNode<String> aNode = new PreCharTrieNode<String>();
-		PreCharTrieNode<String> bNode = new PreCharTrieNode<String>();
-		PreCharTrieNode<String> cNode = new PreCharTrieNode<String>();
-		trieNode.addNext('a', aNode);
-		trieNode.addNext('b', bNode);
-		aNode.addNext('c', cNode);
-		aNode.addNext('t', trieNode);
-		
-		Set<PreCharTrieNode<String>> nodes = trieNode.nodes();
-		
-		assertThat(nodes, containsInAnyOrder(trieNode, aNode, bNode, cNode));
-	}
-
 }

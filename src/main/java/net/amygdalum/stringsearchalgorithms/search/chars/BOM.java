@@ -19,6 +19,7 @@ import net.amygdalum.util.map.CharObjectMap;
 import net.amygdalum.util.map.CharObjectMap.Entry;
 import net.amygdalum.util.text.CharMapping;
 import net.amygdalum.util.tries.CharTrieNode;
+import net.amygdalum.util.tries.CharTrieNodeCompiler;
 import net.amygdalum.util.tries.PreCharTrieNode;
 
 /**
@@ -67,8 +68,7 @@ public class BOM implements StringSearchAlgorithm {
 		if (mapping != CharMapping.IDENTITY) {
 			applyMapping(mapping, trie);
 		}
-
-		return trie.compile();
+		return new CharTrieNodeCompiler<char[]>(false).compileAndLink(trie);
 	}
 
 	private static void computeOracle(PreCharTrieNode<char[]> trie) {

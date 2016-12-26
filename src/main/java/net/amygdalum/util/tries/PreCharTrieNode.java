@@ -1,6 +1,8 @@
 package net.amygdalum.util.tries;
 
 import java.util.LinkedHashSet;
+import java.util.LinkedList;
+import java.util.Queue;
 import java.util.Set;
 
 import net.amygdalum.util.map.CharObjectMap;
@@ -84,19 +86,22 @@ public class PreCharTrieNode<T> {
 
 	public Set<PreCharTrieNode<T>> nodes() {
 		Set<PreCharTrieNode<T>> nodes = new LinkedHashSet<>();
-		collectNodes(nodes);
-		return nodes;
-	}
 
-	private void collectNodes(Set<PreCharTrieNode<T>> nodes) {
-		if (nodes.contains(this)) {
-			return;
+		Queue<PreCharTrieNode<T>> worklist = new LinkedList<>();
+		worklist.add(this);
+
+		while (!worklist.isEmpty()) {
+			PreCharTrieNode<T> current = worklist.remove();
+			boolean added = nodes.add(current);
+			if (added) {
+				for (Entry<PreCharTrieNode<T>> entry : current.getNexts().cursor()) {
+					PreCharTrieNode<T> node = entry.value;
+					worklist.add(node);
+				}
+			}
 		}
-		nodes.add(this);
-		for (Entry<PreCharTrieNode<T>> entry : getNexts().cursor()) {
-			PreCharTrieNode<T> node = entry.value;
-			node.collectNodes(nodes);
-		}
+
+		return nodes;
 	}
 
 	@Override
@@ -106,16 +111,6 @@ public class PreCharTrieNode<T> {
 		} else {
 			return "[]";
 		}
-	}
-
-	public CharTrieNode<T> compile() {
-		CharTrieNodeCompiler<T> compiler = new CharTrieNodeCompiler<T>();
-		return compiler.compileAndLink(this);
-	}
-
-	public static <T> CharTrieNode<T>[] compile(PreCharTrieNode<T>[] nodes) {
-		CharTrieNodeCompiler<T> compiler = new CharTrieNodeCompiler<T>();
-		return compiler.compileAndLink(nodes);
 	}
 
 }

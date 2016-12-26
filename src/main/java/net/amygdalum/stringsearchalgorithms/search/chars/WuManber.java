@@ -22,6 +22,7 @@ import net.amygdalum.stringsearchalgorithms.search.StringFinder;
 import net.amygdalum.stringsearchalgorithms.search.StringFinderOption;
 import net.amygdalum.stringsearchalgorithms.search.StringMatch;
 import net.amygdalum.util.tries.CharTrieNode;
+import net.amygdalum.util.tries.CharTrieNodeCompiler;
 import net.amygdalum.util.tries.PreCharTrieNode;
 
 /**
@@ -119,7 +120,7 @@ public class WuManber implements StringSearchAlgorithm {
 			PreCharTrieNode<String> node = trie.extend(revert(pattern), 0);
 			node.setAttached(new String(pattern));
 		}
-		return PreCharTrieNode.compile(hash);
+		return new CharTrieNodeCompiler<String>(false).compileAndLink(hash);
 	}
 
 	public static int hashHash(char[] block) {

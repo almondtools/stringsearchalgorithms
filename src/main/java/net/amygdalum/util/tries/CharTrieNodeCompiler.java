@@ -10,10 +10,12 @@ import net.amygdalum.util.map.CharObjectMap.Entry;
 
 public class CharTrieNodeCompiler<T> {
 
+	private boolean compressed;
 	private Map<PreCharTrieNode<T>, CharTrieNode<T>> nodes;
 	private Map<CharTrieNode<T>, PreCharTrieNode<T>> reverse;
 
-	public CharTrieNodeCompiler() {
+	public CharTrieNodeCompiler(boolean compressed) {
+		this.compressed = compressed;
 		this.nodes = new HashMap<>();
 		this.reverse = new HashMap<>();
 	}
@@ -34,7 +36,7 @@ public class CharTrieNodeCompiler<T> {
 		return compiled;
 	}
 
-	public CharTrieNode<T> compile(PreCharTrieNode<T> node) {
+	private CharTrieNode<T> compile(PreCharTrieNode<T> node) {
 		if (node == null) {
 			return null;
 		}
@@ -51,7 +53,7 @@ public class CharTrieNodeCompiler<T> {
 		return compiled;
 	}
 
-	public void link() {
+	private void link() {
 		for (Map.Entry<PreCharTrieNode<T>, CharTrieNode<T>> entry : nodes.entrySet()) {
 			PreCharTrieNode<T> key = entry.getKey();
 			PreCharTrieNode<T> link = key.getLink();
@@ -71,7 +73,7 @@ public class CharTrieNodeCompiler<T> {
 		}
 	}
 
-	public CharObjectMap<CharTrieNode<T>> compile(CharObjectMap<PreCharTrieNode<T>> nexts) {
+	private CharObjectMap<CharTrieNode<T>> compile(CharObjectMap<PreCharTrieNode<T>> nexts) {
 		CharTrieNode<T> defaultValue = compile(nexts.getDefaultValue());
 		CharObjectMap<CharTrieNode<T>> compiled = new CharObjectMap<>(defaultValue);
 		for (Entry<PreCharTrieNode<T>> entry : nexts.cursor()) {
@@ -103,7 +105,7 @@ public class CharTrieNodeCompiler<T> {
 	}
 
 	private boolean isQualifiedForSingleNode(CharObjectMap<CharTrieNode<T>> nexts) {
-		if (nexts.size() == 1) {
+		if (compressed && nexts.size() == 1) {
 			CharTrieNode<T> next = nexts.cursor().iterator().next().value;
 			return next instanceof CharTrieSingleNode || next instanceof CharTrieTerminalNode;
 		} else {

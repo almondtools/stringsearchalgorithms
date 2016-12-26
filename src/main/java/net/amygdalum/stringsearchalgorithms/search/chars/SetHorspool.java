@@ -19,6 +19,7 @@ import net.amygdalum.stringsearchalgorithms.search.StringFinderOption;
 import net.amygdalum.stringsearchalgorithms.search.StringMatch;
 import net.amygdalum.util.map.CharIntMap;
 import net.amygdalum.util.tries.CharTrieNode;
+import net.amygdalum.util.tries.CharTrieNodeCompiler;
 import net.amygdalum.util.tries.PreCharTrieNode;
 
 /**
@@ -67,7 +68,7 @@ public class SetHorspool implements StringSearchAlgorithm {
 			PreCharTrieNode<String> node = trie.extend(revert(pattern), 0);
 			node.setAttached(new String(pattern));
 		}
-		return trie.compile();
+		return new CharTrieNodeCompiler<String>(false).compileAndLink(trie);
 	}
 
 	@Override

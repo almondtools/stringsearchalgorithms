@@ -8,10 +8,12 @@ import net.amygdalum.util.map.ByteObjectMap.Entry;
 
 public class ByteTrieNodeCompiler<T> {
 
+	private boolean compressed;
 	private Map<PreByteTrieNode<T>, ByteTrieNode<T>> nodes;
 	private Map<ByteTrieNode<T>, PreByteTrieNode<T>> reverse;
 
-	public ByteTrieNodeCompiler() {
+	public ByteTrieNodeCompiler(boolean compressed) {
+		this.compressed = compressed;
 		this.nodes = new HashMap<>();
 		this.reverse = new HashMap<>();
 	}
@@ -32,7 +34,7 @@ public class ByteTrieNodeCompiler<T> {
 		return compiled;
 	}
 
-	public ByteTrieNode<T> compile(PreByteTrieNode<T> node) {
+	private ByteTrieNode<T> compile(PreByteTrieNode<T> node) {
 		if (node == null) {
 			return null;
 		}
@@ -49,7 +51,7 @@ public class ByteTrieNodeCompiler<T> {
 		return compiled;
 	}
 
-	public void link() {
+	private void link() {
 		for (Map.Entry<PreByteTrieNode<T>, ByteTrieNode<T>> entry : nodes.entrySet()) {
 			PreByteTrieNode<T> key = entry.getKey();
 			PreByteTrieNode<T> link = key.getLink();
@@ -69,7 +71,7 @@ public class ByteTrieNodeCompiler<T> {
 		}
 	}
 
-	public ByteObjectMap<ByteTrieNode<T>> compile(ByteObjectMap<PreByteTrieNode<T>> nexts) {
+	private ByteObjectMap<ByteTrieNode<T>> compile(ByteObjectMap<PreByteTrieNode<T>> nexts) {
 		ByteTrieNode<T> defaultValue = compile(nexts.getDefaultValue());
 		ByteObjectMap<ByteTrieNode<T>> compiled = new ByteObjectMap<>(defaultValue);
 		for (Entry<PreByteTrieNode<T>> entry : nexts.cursor()) {
@@ -99,7 +101,7 @@ public class ByteTrieNodeCompiler<T> {
 	}
 
 	private boolean isQualifiedForSingleNode(ByteObjectMap<ByteTrieNode<T>> nexts) {
-		if (nexts.size() == 1) {
+		if (compressed && nexts.size() == 1) {
 			ByteTrieNode<T> next = nexts.cursor().iterator().next().value;
 			return next instanceof ByteTrieSingleNode || next instanceof ByteTrieTerminalNode;
 		} else {

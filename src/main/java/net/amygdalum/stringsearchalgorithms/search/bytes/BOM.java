@@ -20,6 +20,7 @@ import net.amygdalum.stringsearchalgorithms.search.StringMatch;
 import net.amygdalum.util.map.ByteObjectMap.Entry;
 import net.amygdalum.util.text.ByteString;
 import net.amygdalum.util.tries.ByteTrieNode;
+import net.amygdalum.util.tries.ByteTrieNodeCompiler;
 import net.amygdalum.util.tries.PreByteTrieNode;
 
 /**
@@ -43,7 +44,7 @@ public class BOM implements StringSearchAlgorithm {
 		PreByteTrieNode<byte[]> node = trie.extend(revert(pattern), 0);
 		node.setAttached(pattern);
 		computeOracle(trie);
-		return trie.compile();
+		return new ByteTrieNodeCompiler<byte[]>(false).compileAndLink(trie);
 	}
 
 	private static void computeOracle(PreByteTrieNode<byte[]> trie) {
