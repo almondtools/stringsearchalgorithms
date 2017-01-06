@@ -1,6 +1,6 @@
 package net.amygdalum.util.text;
 
-import static net.amygdalum.stringsearchalgorithms.search.bytes.Encoding.encode;
+import static net.amygdalum.util.text.ByteUtils.encode;
 
 import java.nio.charset.Charset;
 import java.util.ArrayList;

@@ -7,6 +7,8 @@ import java.util.TreeSet;
 
 public final class CharUtils {
 
+	public static final int CHAR_RANGE = 1 << 16;
+
 	private CharUtils() {
 	}
 
