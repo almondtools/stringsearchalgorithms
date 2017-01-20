@@ -11,8 +11,10 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Queue;
 import java.util.Set;
 
 import net.amygdalum.stringsearchalgorithms.regex.AlternativesNode;
@@ -303,9 +305,9 @@ public class GlushkovAnalyzer implements RegexNodeVisitor<Void> {
 	private List<BitSet> allFinals(BitSet initial, CharObjectMap<BitSet> reachableByChar, GlushkovAnalyzerOption... options) {
 		BitSet start = FACTORS.in(options) ? all() : initial();
 		BitSet defaultValue = SELF_LOOP.in(options) ? initial() : new BitSet(len);
-		
+
 		Collection<BitSet> possible = possibleStartsByState(start, reachableByChar, defaultValue);
-		
+
 		return filterPossiblesStartsByChar(initial, reachableByChar, possible);
 	}
 
@@ -315,31 +317,35 @@ public class GlushkovAnalyzer implements RegexNodeVisitor<Void> {
 		return possible.values();
 	}
 
-	private void possibleStartsByState(Map<BitSet, BitSet> possible, BitSet next, CharObjectMap<BitSet> reachableByChar, BitSet defaultValue) {
-		if (possible.get(next) == null) {
-			possibleStartsByState(next, possible, reachableByChar, defaultValue);
-		}
-		next = or(next, initial());
-		if (possible.get(next) == null) {
-			possibleStartsByState(next, possible, reachableByChar, defaultValue);
-		}
-	}
-
-	private void possibleStartsByState(BitSet d, Map<BitSet, BitSet> possible, CharObjectMap<BitSet> reachableByChar, BitSet defaultValue) {
-		BitSet td = possible.get(d);
-		if (td == null) {
-			td = (BitSet) defaultValue.clone();
-			possible.put(d, td);
-		}
-		for (int i = 0; i < len; i++) {
-			if (d.get(i)) {
-				td.or(bits(len, follow(i)));
+	private void possibleStartsByState(Map<BitSet, BitSet> possible, BitSet start, CharObjectMap<BitSet> reachableByChar, BitSet defaultValue) {
+		Queue<BitSet> nexts = new LinkedList<>();
+		nexts.add(start);
+		nexts.add(or(start, initial()));
+		while (!nexts.isEmpty()) {
+			BitSet next = nexts.remove();
+			BitSet td = possible.get(next);
+			if (td == null) {
+				if (td == null) {
+					td = (BitSet) defaultValue.clone();
+					possible.put(next, td);
+				}
+				for (int i = 0; i < len; i++) {
+					if (next.get(i)) {
+						td.or(bits(len, follow(i)));
+					}
+				}
+				BitSet n = (BitSet) td.clone();
+				for (char c : alphabet) {
+					BitSet cand = and(n, reachableByChar.get(c));
+					if (!nexts.contains(cand)) {
+						nexts.add(cand);
+					}
+					cand = or(cand, initial());
+					if (!nexts.contains(cand)) {
+						nexts.add(cand);
+					}
+				}
 			}
-		}
-		BitSet n = (BitSet) td.clone();
-		for (char c : alphabet) {
-			BitSet next = and(n, reachableByChar.get(c));
-			possibleStartsByState(possible, next, reachableByChar, defaultValue);
 		}
 	}
 
