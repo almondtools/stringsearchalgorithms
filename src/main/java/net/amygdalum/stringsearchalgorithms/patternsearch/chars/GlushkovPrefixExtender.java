@@ -7,10 +7,10 @@ import java.util.List;
 import java.util.Set;
 import java.util.SortedSet;
 
+import net.amygdalum.regexparser.RegexNode;
+import net.amygdalum.regexparser.RegexParser;
 import net.amygdalum.stringsearchalgorithms.io.CharProvider;
 import net.amygdalum.stringsearchalgorithms.io.StringCharProvider;
-import net.amygdalum.stringsearchalgorithms.regex.RegexNode;
-import net.amygdalum.stringsearchalgorithms.regex.RegexParser;
 import net.amygdalum.stringsearchalgorithms.search.StringMatch;
 
 public class GlushkovPrefixExtender implements FactorExtender {

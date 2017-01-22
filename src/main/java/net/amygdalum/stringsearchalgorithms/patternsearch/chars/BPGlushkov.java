@@ -10,10 +10,10 @@ import java.util.BitSet;
 import java.util.Iterator;
 import java.util.List;
 
+import net.amygdalum.regexparser.RegexNode;
+import net.amygdalum.regexparser.RegexParser;
 import net.amygdalum.stringsearchalgorithms.io.CharProvider;
 import net.amygdalum.stringsearchalgorithms.io.ReverseCharProvider;
-import net.amygdalum.stringsearchalgorithms.regex.RegexNode;
-import net.amygdalum.stringsearchalgorithms.regex.RegexParser;
 import net.amygdalum.stringsearchalgorithms.search.BufferedStringFinder;
 import net.amygdalum.stringsearchalgorithms.search.MatchOption;
 import net.amygdalum.stringsearchalgorithms.search.StringFinder;

@@ -4,22 +4,22 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
-import net.amygdalum.stringsearchalgorithms.regex.AlternativesNode;
-import net.amygdalum.stringsearchalgorithms.regex.AnyCharNode;
-import net.amygdalum.stringsearchalgorithms.regex.BoundedLoopNode;
-import net.amygdalum.stringsearchalgorithms.regex.CharClassNode;
-import net.amygdalum.stringsearchalgorithms.regex.CompClassNode;
-import net.amygdalum.stringsearchalgorithms.regex.ConcatNode;
-import net.amygdalum.stringsearchalgorithms.regex.EmptyNode;
-import net.amygdalum.stringsearchalgorithms.regex.GroupNode;
-import net.amygdalum.stringsearchalgorithms.regex.OptionalNode;
-import net.amygdalum.stringsearchalgorithms.regex.RangeCharNode;
-import net.amygdalum.stringsearchalgorithms.regex.RegexNode;
-import net.amygdalum.stringsearchalgorithms.regex.RegexNodeVisitor;
-import net.amygdalum.stringsearchalgorithms.regex.SingleCharNode;
-import net.amygdalum.stringsearchalgorithms.regex.SpecialCharClassNode;
-import net.amygdalum.stringsearchalgorithms.regex.StringNode;
-import net.amygdalum.stringsearchalgorithms.regex.UnboundedLoopNode;
+import net.amygdalum.regexparser.AlternativesNode;
+import net.amygdalum.regexparser.AnyCharNode;
+import net.amygdalum.regexparser.BoundedLoopNode;
+import net.amygdalum.regexparser.CharClassNode;
+import net.amygdalum.regexparser.CompClassNode;
+import net.amygdalum.regexparser.ConcatNode;
+import net.amygdalum.regexparser.EmptyNode;
+import net.amygdalum.regexparser.GroupNode;
+import net.amygdalum.regexparser.OptionalNode;
+import net.amygdalum.regexparser.RangeCharNode;
+import net.amygdalum.regexparser.RegexNode;
+import net.amygdalum.regexparser.RegexNodeVisitor;
+import net.amygdalum.regexparser.SingleCharNode;
+import net.amygdalum.regexparser.SpecialCharClassNode;
+import net.amygdalum.regexparser.StringNode;
+import net.amygdalum.regexparser.UnboundedLoopNode;
 
 public class GlushkovNormalizer implements RegexNodeVisitor<RegexNode> {
 	
