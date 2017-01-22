@@ -29,11 +29,19 @@ import net.amygdalum.stringsearchalgorithms.patternsearch.chars.BestFactorAnalyz
 
 public class BestFactorAnalyzer implements RegexNodeVisitor<Factors> {
 
+	private static final int DEFAULT_MAX_RANGE = 32;
+
 	private RegexNode root;
 	private Factors factors;
+	private int maxRange;
 
 	public BestFactorAnalyzer(RegexNode root) {
+		this(root, DEFAULT_MAX_RANGE);
+	}
+
+	public BestFactorAnalyzer(RegexNode root, int maxRange) {
 		this.root = root;
+		this.maxRange = maxRange;
 	}
 
 	public Set<String> getBestFactors(Set<String> default1, Set<String> default2) {
@@ -136,12 +144,16 @@ public class BestFactorAnalyzer implements RegexNodeVisitor<Factors> {
 
 	@Override
 	public Factors visitRangeChar(RangeCharNode node) {
-		Set<String> factors = new LinkedHashSet<>();
+		if (node.getTo() - node.getFrom() > maxRange) {
+			return Factors.base(null);
+		} else {
+			Set<String> factors = new LinkedHashSet<>();
 
-		for (char c = node.getFrom(); c <= node.getTo(); c++) {
-			factors.add(String.valueOf(c));
+			for (char c = node.getFrom(); c <= node.getTo(); c++) {
+				factors.add(String.valueOf(c));
+			}
+			return Factors.base(factors);
 		}
-		return Factors.base(factors);
 	}
 
 	@Override
@@ -228,7 +240,7 @@ public class BestFactorAnalyzer implements RegexNodeVisitor<Factors> {
 					Set<String> newPrefix = concat(builder.all, factorsConcat.prefix);
 					Set<String> newSuffix = concat(builder.suffix, factorsConcat.all);
 					Set<String> newFactor = concat(builder.prefix, factorsConcat.suffix);
-					
+
 					builder.addAll(factorsConcat.all);
 					builder.updatePrefix(builder.prefix, newPrefix);
 					builder.updateSuffix(newSuffix, factorsConcat.suffix);
@@ -291,10 +303,10 @@ public class BestFactorAnalyzer implements RegexNodeVisitor<Factors> {
 			}
 
 			public Builder(Factors prototype) {
-				all = prototype.all ==  null ? null : new LinkedHashSet<>(prototype.all);
-				prefix = prototype.prefix ==  null ? null : new LinkedHashSet<>(prototype.prefix);
-				suffix = prototype.suffix ==  null ? null : new LinkedHashSet<>(prototype.suffix);
-				factor = prototype.factor ==  null ? null : new LinkedHashSet<>(prototype.factor);
+				all = prototype.all == null ? null : new LinkedHashSet<>(prototype.all);
+				prefix = prototype.prefix == null ? null : new LinkedHashSet<>(prototype.prefix);
+				suffix = prototype.suffix == null ? null : new LinkedHashSet<>(prototype.suffix);
+				factor = prototype.factor == null ? null : new LinkedHashSet<>(prototype.factor);
 			}
 
 			public void addAll(Set<String> factors) {
