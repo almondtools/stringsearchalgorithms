@@ -11,11 +11,11 @@ import org.junit.rules.TestRule;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 
-import net.amygdalum.stringsearchalgorithms.io.ByteProvider;
-import net.amygdalum.stringsearchalgorithms.io.StringByteProvider;
 import net.amygdalum.stringsearchalgorithms.search.SearchFor;
 import net.amygdalum.stringsearchalgorithms.search.StringFinder;
 import net.amygdalum.stringsearchalgorithms.search.StringFinderOption;
+import net.amygdalum.util.io.ByteProvider;
+import net.amygdalum.util.io.StringByteProvider;
 
 public class MultiStringSearchRule implements TestRule {
 

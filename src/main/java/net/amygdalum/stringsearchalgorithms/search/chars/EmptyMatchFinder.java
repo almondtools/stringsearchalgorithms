@@ -2,11 +2,11 @@ package net.amygdalum.stringsearchalgorithms.search.chars;
 
 import static net.amygdalum.stringsearchalgorithms.search.MatchOption.LONGEST_MATCH;
 
-import net.amygdalum.stringsearchalgorithms.io.CharProvider;
 import net.amygdalum.stringsearchalgorithms.search.BufferedStringFinder;
 import net.amygdalum.stringsearchalgorithms.search.StringFinder;
 import net.amygdalum.stringsearchalgorithms.search.StringFinderOption;
 import net.amygdalum.stringsearchalgorithms.search.StringMatch;
+import net.amygdalum.util.io.CharProvider;
 
 public class EmptyMatchFinder extends BufferedStringFinder {
 

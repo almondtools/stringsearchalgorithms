@@ -1,8 +1,8 @@
 package net.amygdalum.stringsearchalgorithms.search.chars;
 
-import net.amygdalum.stringsearchalgorithms.io.CharProvider;
 import net.amygdalum.stringsearchalgorithms.search.StringFinder;
 import net.amygdalum.stringsearchalgorithms.search.StringFinderOption;
+import net.amygdalum.util.io.CharProvider;
 
 /**
  * a generic interface for string search algorithms (both single- and multi-string-algorithms implement this)

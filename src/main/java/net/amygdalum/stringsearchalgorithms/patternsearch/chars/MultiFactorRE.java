@@ -13,7 +13,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import net.amygdalum.stringsearchalgorithms.io.CharProvider;
 import net.amygdalum.stringsearchalgorithms.search.BufferedStringFinder;
 import net.amygdalum.stringsearchalgorithms.search.StringFinder;
 import net.amygdalum.stringsearchalgorithms.search.StringFinderOption;
@@ -22,6 +21,7 @@ import net.amygdalum.stringsearchalgorithms.search.chars.EmptyMatchFinder;
 import net.amygdalum.stringsearchalgorithms.search.chars.MultiStringSearchAlgorithmFactory;
 import net.amygdalum.stringsearchalgorithms.search.chars.StringSearchAlgorithm;
 import net.amygdalum.stringsearchalgorithms.search.chars.StringSearchAlgorithmFactory;
+import net.amygdalum.util.io.CharProvider;
 
 /**
  * An implementation of the regex pattern search algorithm MultiStringRE.

@@ -5,11 +5,11 @@ import static java.util.Arrays.fill;
 
 import java.util.Arrays;
 
-import net.amygdalum.stringsearchalgorithms.io.CharProvider;
 import net.amygdalum.stringsearchalgorithms.search.AbstractStringFinder;
 import net.amygdalum.stringsearchalgorithms.search.StringFinder;
 import net.amygdalum.stringsearchalgorithms.search.StringFinderOption;
 import net.amygdalum.stringsearchalgorithms.search.StringMatch;
+import net.amygdalum.util.io.CharProvider;
 import net.amygdalum.util.map.CharLongMap;
 import net.amygdalum.util.text.CharAlphabet;
 import net.amygdalum.util.text.CharMapping;

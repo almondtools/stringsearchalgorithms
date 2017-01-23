@@ -12,10 +12,10 @@ import java.util.SortedSet;
 
 import net.amygdalum.regexparser.RegexNode;
 import net.amygdalum.regexparser.RegexParser;
-import net.amygdalum.stringsearchalgorithms.io.CharProvider;
-import net.amygdalum.stringsearchalgorithms.io.ReverseCharProvider;
-import net.amygdalum.stringsearchalgorithms.io.StringCharProvider;
 import net.amygdalum.stringsearchalgorithms.search.StringMatch;
+import net.amygdalum.util.io.CharProvider;
+import net.amygdalum.util.io.ReverseCharProvider;
+import net.amygdalum.util.io.StringCharProvider;
 
 public class GlushkovFactorExtender implements FactorExtender {
 

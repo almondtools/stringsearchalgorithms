@@ -12,8 +12,6 @@ import java.util.List;
 
 import net.amygdalum.regexparser.RegexNode;
 import net.amygdalum.regexparser.RegexParser;
-import net.amygdalum.stringsearchalgorithms.io.CharProvider;
-import net.amygdalum.stringsearchalgorithms.io.ReverseCharProvider;
 import net.amygdalum.stringsearchalgorithms.search.BufferedStringFinder;
 import net.amygdalum.stringsearchalgorithms.search.MatchOption;
 import net.amygdalum.stringsearchalgorithms.search.StringFinder;
@@ -21,6 +19,8 @@ import net.amygdalum.stringsearchalgorithms.search.StringFinderOption;
 import net.amygdalum.stringsearchalgorithms.search.StringMatch;
 import net.amygdalum.stringsearchalgorithms.search.chars.StringSearchAlgorithm;
 import net.amygdalum.stringsearchalgorithms.search.chars.StringSearchAlgorithmFactory;
+import net.amygdalum.util.io.CharProvider;
+import net.amygdalum.util.io.ReverseCharProvider;
 
 /**
  * An implementation of the regex pattern search algorithm Bit-Parallel Glushkov.

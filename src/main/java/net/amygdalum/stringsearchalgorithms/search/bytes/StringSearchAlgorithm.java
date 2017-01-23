@@ -1,8 +1,8 @@
 package net.amygdalum.stringsearchalgorithms.search.bytes;
 
-import net.amygdalum.stringsearchalgorithms.io.ByteProvider;
 import net.amygdalum.stringsearchalgorithms.search.StringFinder;
 import net.amygdalum.stringsearchalgorithms.search.StringFinderOption;
+import net.amygdalum.util.io.ByteProvider;
 
 /**
  * a generic interface for string search algorithms (both single- and multi-string-algorithms implement this)

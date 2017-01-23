@@ -7,11 +7,11 @@ import static net.amygdalum.util.text.ByteUtils.encode;
 import java.nio.charset.Charset;
 import java.util.Arrays;
 
-import net.amygdalum.stringsearchalgorithms.io.ByteProvider;
 import net.amygdalum.stringsearchalgorithms.search.AbstractStringFinder;
 import net.amygdalum.stringsearchalgorithms.search.StringFinder;
 import net.amygdalum.stringsearchalgorithms.search.StringFinderOption;
 import net.amygdalum.stringsearchalgorithms.search.StringMatch;
+import net.amygdalum.util.io.ByteProvider;
 import net.amygdalum.util.text.ByteString;
 
 /**

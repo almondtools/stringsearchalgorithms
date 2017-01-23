@@ -12,12 +12,12 @@ import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 
-import net.amygdalum.stringsearchalgorithms.io.CharProvider;
 import net.amygdalum.stringsearchalgorithms.search.BufferedStringFinder;
 import net.amygdalum.stringsearchalgorithms.search.MatchOption;
 import net.amygdalum.stringsearchalgorithms.search.StringFinder;
 import net.amygdalum.stringsearchalgorithms.search.StringFinderOption;
 import net.amygdalum.stringsearchalgorithms.search.StringMatch;
+import net.amygdalum.util.io.CharProvider;
 import net.amygdalum.util.text.CharMapping;
 import net.amygdalum.util.text.QGramAlphabet;
 import net.amygdalum.util.text.QGramMapping;

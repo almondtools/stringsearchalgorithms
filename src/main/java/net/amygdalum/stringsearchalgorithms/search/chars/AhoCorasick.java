@@ -10,11 +10,11 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
 
-import net.amygdalum.stringsearchalgorithms.io.CharProvider;
 import net.amygdalum.stringsearchalgorithms.search.BufferedStringFinder;
 import net.amygdalum.stringsearchalgorithms.search.StringFinder;
 import net.amygdalum.stringsearchalgorithms.search.StringFinderOption;
 import net.amygdalum.stringsearchalgorithms.search.StringMatch;
+import net.amygdalum.util.io.CharProvider;
 import net.amygdalum.util.map.CharObjectMap.Entry;
 import net.amygdalum.util.tries.CharTrieNode;
 import net.amygdalum.util.tries.CharTrieNodeCompiler;

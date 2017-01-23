@@ -12,11 +12,11 @@ import static net.amygdalum.util.text.StringUtils.toCharArray;
 import java.util.Collection;
 import java.util.List;
 
-import net.amygdalum.stringsearchalgorithms.io.CharProvider;
 import net.amygdalum.stringsearchalgorithms.search.BufferedStringFinder;
 import net.amygdalum.stringsearchalgorithms.search.StringFinder;
 import net.amygdalum.stringsearchalgorithms.search.StringFinderOption;
 import net.amygdalum.stringsearchalgorithms.search.StringMatch;
+import net.amygdalum.util.io.CharProvider;
 import net.amygdalum.util.map.CharIntMap;
 import net.amygdalum.util.tries.CharTrieNode;
 import net.amygdalum.util.tries.CharTrieNodeCompiler;

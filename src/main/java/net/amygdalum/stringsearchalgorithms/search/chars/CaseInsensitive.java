@@ -7,10 +7,10 @@ import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
-import net.amygdalum.stringsearchalgorithms.io.CaseInsensitiveCharProvider;
-import net.amygdalum.stringsearchalgorithms.io.CharProvider;
 import net.amygdalum.stringsearchalgorithms.search.StringFinder;
 import net.amygdalum.stringsearchalgorithms.search.StringFinderOption;
+import net.amygdalum.util.io.CaseInsensitiveCharProvider;
+import net.amygdalum.util.io.CharProvider;
 import net.amygdalum.util.text.CharMapping;
 
 public class CaseInsensitive implements StringSearchAlgorithm, StringSearchAlgorithmWrapper {

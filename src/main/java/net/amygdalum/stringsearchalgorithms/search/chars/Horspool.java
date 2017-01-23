@@ -3,11 +3,11 @@ package net.amygdalum.stringsearchalgorithms.search.chars;
 import static net.amygdalum.util.text.CharUtils.computeMaxChar;
 import static net.amygdalum.util.text.CharUtils.computeMinChar;
 
-import net.amygdalum.stringsearchalgorithms.io.CharProvider;
 import net.amygdalum.stringsearchalgorithms.search.AbstractStringFinder;
 import net.amygdalum.stringsearchalgorithms.search.StringFinder;
 import net.amygdalum.stringsearchalgorithms.search.StringFinderOption;
 import net.amygdalum.stringsearchalgorithms.search.StringMatch;
+import net.amygdalum.util.io.CharProvider;
 import net.amygdalum.util.map.CharIntMap;
 
 /**

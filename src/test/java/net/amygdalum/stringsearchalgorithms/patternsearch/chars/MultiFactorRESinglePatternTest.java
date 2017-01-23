@@ -5,10 +5,10 @@ import static org.junit.Assert.assertThat;
 
 import org.junit.Test;
 
-import net.amygdalum.stringsearchalgorithms.io.StringCharProvider;
 import net.amygdalum.stringsearchalgorithms.search.StringFinder;
 import net.amygdalum.stringsearchalgorithms.search.StringMatch;
 import net.amygdalum.stringsearchalgorithms.search.chars.AhoCorasick;
+import net.amygdalum.util.io.StringCharProvider;
 
 
 public class MultiFactorRESinglePatternTest {

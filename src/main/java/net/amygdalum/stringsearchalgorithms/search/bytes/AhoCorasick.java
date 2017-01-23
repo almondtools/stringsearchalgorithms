@@ -12,11 +12,11 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
 
-import net.amygdalum.stringsearchalgorithms.io.ByteProvider;
 import net.amygdalum.stringsearchalgorithms.search.BufferedStringFinder;
 import net.amygdalum.stringsearchalgorithms.search.StringFinder;
 import net.amygdalum.stringsearchalgorithms.search.StringFinderOption;
 import net.amygdalum.stringsearchalgorithms.search.StringMatch;
+import net.amygdalum.util.io.ByteProvider;
 import net.amygdalum.util.map.ByteObjectMap.Entry;
 import net.amygdalum.util.text.ByteString;
 import net.amygdalum.util.tries.ByteTrieNode;

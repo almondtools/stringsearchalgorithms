@@ -3,11 +3,11 @@ package net.amygdalum.stringsearchalgorithms.search.chars;
 import static java.lang.Math.max;
 import static java.util.Arrays.fill;
 
-import net.amygdalum.stringsearchalgorithms.io.CharProvider;
 import net.amygdalum.stringsearchalgorithms.search.AbstractStringFinder;
 import net.amygdalum.stringsearchalgorithms.search.StringFinder;
 import net.amygdalum.stringsearchalgorithms.search.StringFinderOption;
 import net.amygdalum.stringsearchalgorithms.search.StringMatch;
+import net.amygdalum.util.io.CharProvider;
 import net.amygdalum.util.map.CharLongMap;
 import net.amygdalum.util.map.CharObjectMap;
 import net.amygdalum.util.text.CharAlphabet;

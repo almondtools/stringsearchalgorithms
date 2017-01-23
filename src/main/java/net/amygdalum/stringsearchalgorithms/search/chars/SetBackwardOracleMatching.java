@@ -16,11 +16,11 @@ import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
 
-import net.amygdalum.stringsearchalgorithms.io.CharProvider;
 import net.amygdalum.stringsearchalgorithms.search.AbstractStringFinder;
 import net.amygdalum.stringsearchalgorithms.search.StringFinder;
 import net.amygdalum.stringsearchalgorithms.search.StringFinderOption;
 import net.amygdalum.stringsearchalgorithms.search.StringMatch;
+import net.amygdalum.util.io.CharProvider;
 import net.amygdalum.util.map.CharObjectMap;
 import net.amygdalum.util.map.CharObjectMap.Entry;
 import net.amygdalum.util.text.CharMapping;

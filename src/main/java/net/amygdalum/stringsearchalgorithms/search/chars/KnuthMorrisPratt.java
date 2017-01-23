@@ -1,10 +1,10 @@
 package net.amygdalum.stringsearchalgorithms.search.chars;
 
-import net.amygdalum.stringsearchalgorithms.io.CharProvider;
 import net.amygdalum.stringsearchalgorithms.search.AbstractStringFinder;
 import net.amygdalum.stringsearchalgorithms.search.StringFinder;
 import net.amygdalum.stringsearchalgorithms.search.StringFinderOption;
 import net.amygdalum.stringsearchalgorithms.search.StringMatch;
+import net.amygdalum.util.io.CharProvider;
 
 /**
  * An implementation of the String Search Algorithm of Knuth-Morris-Pratt.

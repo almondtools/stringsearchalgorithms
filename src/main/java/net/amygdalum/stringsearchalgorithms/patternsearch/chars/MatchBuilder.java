@@ -6,8 +6,8 @@ import java.util.List;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
-import net.amygdalum.stringsearchalgorithms.io.CharProvider;
 import net.amygdalum.stringsearchalgorithms.search.StringMatch;
+import net.amygdalum.util.io.CharProvider;
 
 public class MatchBuilder implements MatchListener {
 	
