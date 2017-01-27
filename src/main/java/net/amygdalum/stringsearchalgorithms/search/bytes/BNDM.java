@@ -2,7 +2,7 @@ package net.amygdalum.stringsearchalgorithms.search.bytes;
 
 import static java.nio.charset.StandardCharsets.UTF_16LE;
 import static java.util.Arrays.fill;
-import static net.amygdalum.util.text.ByteUtils.encode;
+import static net.amygdalum.util.text.ByteEncoding.encode;
 
 import java.nio.charset.Charset;
 import java.util.Arrays;
