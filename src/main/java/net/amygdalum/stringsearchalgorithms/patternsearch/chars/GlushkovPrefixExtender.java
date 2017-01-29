@@ -1,7 +1,6 @@
 package net.amygdalum.stringsearchalgorithms.patternsearch.chars;
 
 import java.util.ArrayList;
-import java.util.BitSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -10,6 +9,7 @@ import java.util.SortedSet;
 import net.amygdalum.regexparser.RegexNode;
 import net.amygdalum.regexparser.RegexParser;
 import net.amygdalum.stringsearchalgorithms.search.StringMatch;
+import net.amygdalum.util.bits.BitSet;
 import net.amygdalum.util.io.CharProvider;
 import net.amygdalum.util.io.StringCharProvider;
 

@@ -3,7 +3,6 @@ package net.amygdalum.stringsearchalgorithms.patternsearch.chars;
 import static net.amygdalum.stringsearchalgorithms.patternsearch.chars.GlushkovAnalyzerOption.FACTORS;
 
 import java.util.ArrayList;
-import java.util.BitSet;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -13,6 +12,7 @@ import java.util.SortedSet;
 import net.amygdalum.regexparser.RegexNode;
 import net.amygdalum.regexparser.RegexParser;
 import net.amygdalum.stringsearchalgorithms.search.StringMatch;
+import net.amygdalum.util.bits.BitSet;
 import net.amygdalum.util.io.CharProvider;
 import net.amygdalum.util.io.ReverseCharProvider;
 import net.amygdalum.util.io.StringCharProvider;

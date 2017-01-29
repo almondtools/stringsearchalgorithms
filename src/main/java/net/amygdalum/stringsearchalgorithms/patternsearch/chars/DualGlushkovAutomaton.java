@@ -1,11 +1,11 @@
 package net.amygdalum.stringsearchalgorithms.patternsearch.chars;
 
-import java.util.BitSet;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Queue;
 import java.util.Set;
 
+import net.amygdalum.util.bits.BitSet;
 import net.amygdalum.util.map.BitSetObjectMap;
 import net.amygdalum.util.map.CharObjectMap;
 
@@ -43,17 +43,14 @@ public class DualGlushkovAutomaton implements BitParallelAutomaton {
 		BitSet result = state;
 		BitSet byChar = emittingChar.get(c);
 
-		result = (BitSet) result.clone();
-		result.and(byChar);
+		result = result.and(byChar);
 		result = reachableByState.get(result);
 		return result;
 	}
 
 	@Override
 	public boolean isFinal(BitSet state) {
-		BitSet result = (BitSet) finals.clone();
-		result.and(state);
-		return !result.isEmpty();
+		return !finals.and(state).isEmpty();
 	}
 
 	@Override

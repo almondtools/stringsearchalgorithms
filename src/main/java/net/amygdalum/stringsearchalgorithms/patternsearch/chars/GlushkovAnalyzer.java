@@ -5,7 +5,6 @@ import static net.amygdalum.stringsearchalgorithms.patternsearch.chars.GlushkovA
 import static net.amygdalum.stringsearchalgorithms.patternsearch.chars.GlushkovAnalyzerOption.SELF_LOOP;
 
 import java.util.ArrayList;
-import java.util.BitSet;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
@@ -34,6 +33,7 @@ import net.amygdalum.regexparser.SingleCharNode;
 import net.amygdalum.regexparser.SpecialCharClassNode;
 import net.amygdalum.regexparser.StringNode;
 import net.amygdalum.regexparser.UnboundedLoopNode;
+import net.amygdalum.util.bits.BitSet;
 import net.amygdalum.util.map.BitSetObjectMap;
 import net.amygdalum.util.map.CharObjectMap;
 
@@ -237,20 +237,18 @@ public class GlushkovAnalyzer implements RegexNodeVisitor<Void> {
 	}
 
 	private BitSet initial() {
-		BitSet initial = new BitSet(len);
-		initial.set(0);
-		return initial;
+		return BitSet.bits(len, 0);
 	}
 
 	private CharObjectMap<BitSet> reachableByChar(GlushkovAnalyzerOption... options) {
-		BitSet defaultValue = SELF_LOOP.in(options) ? initial() : new BitSet(len);
+		BitSet defaultValue = SELF_LOOP.in(options) ? initial() : BitSet.empty(len);
 
 		CharObjectMap<BitSet> reachable = new CharObjectMap<BitSet>(defaultValue);
 		for (int i = 1; i < len; i++) {
 			for (char c : chars[i].chars()) {
 				BitSet b = reachable.get(c);
 				if (b == defaultValue) {
-					b = (BitSet) defaultValue.clone();
+					b = defaultValue.clone();
 					reachable.put(c, b);
 				}
 				b.set(i);
@@ -260,7 +258,7 @@ public class GlushkovAnalyzer implements RegexNodeVisitor<Void> {
 	}
 
 	private BitSetObjectMap<BitSet> reachableByState(CharObjectMap<BitSet> reachableByChar, GlushkovAnalyzerOption... options) {
-		BitSet defaultValue = SELF_LOOP.in(options) ? initial() : new BitSet(len);
+		BitSet defaultValue = SELF_LOOP.in(options) ? initial() : BitSet.empty(len);
 		BitSet start = FACTORS.in(options) ? all() : initial();
 
 		BitSetObjectMap<BitSet> reachable = new BitSetObjectMap<>(defaultValue);
@@ -272,17 +270,17 @@ public class GlushkovAnalyzer implements RegexNodeVisitor<Void> {
 		BitSet td = reachable.get(d);
 		if (td == defaultValue) {
 			td = (BitSet) defaultValue.clone();
-			reachable.put(d, td);
 		}
 		for (int i = 0; i < len; i++) {
 			if (d.get(i)) {
-				td.or(bits(len, follow(i)));
+				td = td.or(bits(len, follow(i)));
 			}
 		}
+		reachable.put(d, td);
 
 		BitSet n = (BitSet) td.clone();
 		for (char c : alphabet) {
-			BitSet next = and(n, reachableByChar.get(c));
+			BitSet next = n.and(reachableByChar.get(c));
 			if (reachable.get(next) == defaultValue) {
 				reachableByState(next, reachable, reachableByChar, defaultValue);
 			}
@@ -291,7 +289,7 @@ public class GlushkovAnalyzer implements RegexNodeVisitor<Void> {
 	}
 
 	private BitSetObjectMap<BitSet> sourceableByState(CharObjectMap<BitSet> reachableByChar, GlushkovAnalyzerOption... options) {
-		BitSet defaultValue = SELF_LOOP.in(options) ? finals() : new BitSet(len);
+		BitSet defaultValue = SELF_LOOP.in(options) ? finals() : BitSet.empty(len);
 		BitSet start = FACTORS.in(options) ? all() : finals();
 
 		BitSetObjectMap<BitSet> sourceable = new BitSetObjectMap<>(defaultValue);
@@ -304,7 +302,7 @@ public class GlushkovAnalyzer implements RegexNodeVisitor<Void> {
 
 	private List<BitSet> allFinals(BitSet initial, CharObjectMap<BitSet> reachableByChar, GlushkovAnalyzerOption... options) {
 		BitSet start = FACTORS.in(options) ? all() : initial();
-		BitSet defaultValue = SELF_LOOP.in(options) ? initial() : new BitSet(len);
+		BitSet defaultValue = SELF_LOOP.in(options) ? initial() : BitSet.empty(len);
 
 		Collection<BitSet> possible = possibleStartsByState(start, reachableByChar, defaultValue);
 
@@ -320,27 +318,25 @@ public class GlushkovAnalyzer implements RegexNodeVisitor<Void> {
 	private void possibleStartsByState(Map<BitSet, BitSet> possible, BitSet start, CharObjectMap<BitSet> reachableByChar, BitSet defaultValue) {
 		Queue<BitSet> nexts = new LinkedList<>();
 		nexts.add(start);
-		nexts.add(or(start, initial()));
+		nexts.add(start.or(initial()));
 		while (!nexts.isEmpty()) {
 			BitSet next = nexts.remove();
 			BitSet td = possible.get(next);
 			if (td == null) {
-				if (td == null) {
-					td = (BitSet) defaultValue.clone();
-					possible.put(next, td);
-				}
+				td = (BitSet) defaultValue.clone();
 				for (int i = 0; i < len; i++) {
 					if (next.get(i)) {
-						td.or(bits(len, follow(i)));
+						td = td.or(bits(len, follow(i)));
 					}
 				}
+				possible.put(next, td);
 				BitSet n = (BitSet) td.clone();
 				for (char c : alphabet) {
-					BitSet cand = and(n, reachableByChar.get(c));
+					BitSet cand = n.and(reachableByChar.get(c));
 					if (!nexts.contains(cand)) {
 						nexts.add(cand);
 					}
-					cand = or(cand, initial());
+					cand = cand.or(initial());
 					if (!nexts.contains(cand)) {
 						nexts.add(cand);
 					}
@@ -352,11 +348,10 @@ public class GlushkovAnalyzer implements RegexNodeVisitor<Void> {
 	private List<BitSet> filterPossiblesStartsByChar(BitSet initial, CharObjectMap<BitSet> reachableByChar, Collection<BitSet> possible) {
 		Set<BitSet> filteredPossible = new LinkedHashSet<>();
 		for (BitSet value : possible) {
-			BitSet finalValue = (BitSet) initial.clone();
-			finalValue.and(value);
+			BitSet finalValue = (BitSet) initial.and(value);
 			for (char c : alphabet) {
 				BitSet charFilter = reachableByChar.get(c);
-				BitSet state = and(finalValue, charFilter);
+				BitSet state = finalValue.and(charFilter);
 				if (!state.isEmpty()) {
 					filteredPossible.add(state);
 				}
@@ -369,17 +364,17 @@ public class GlushkovAnalyzer implements RegexNodeVisitor<Void> {
 		BitSet td = sourceable.get(d);
 		if (td == defaultValue) {
 			td = (BitSet) defaultValue.clone();
-			sourceable.put(d, td);
 		}
 		for (int i = 0; i < len; i++) {
 			if (d.get(i)) {
-				td.or(bits(len, precede(i)));
+				td = td.or(bits(len, precede(i)));
 			}
 		}
+		sourceable.put(d, td);
 
 		BitSet n = (BitSet) td.clone();
 		for (char c : alphabet) {
-			BitSet next = and(n, reachableByChar.get(c));
+			BitSet next = n.and(reachableByChar.get(c));
 			if (sourceable.get(next) == defaultValue) {
 				sourceableByState(next, len, sourceable, reachableByChar, defaultValue);
 			}
@@ -388,7 +383,7 @@ public class GlushkovAnalyzer implements RegexNodeVisitor<Void> {
 	}
 
 	private BitSet bits(int len, Set<Integer> ints) {
-		BitSet bits = new BitSet(len);
+		BitSet bits = BitSet.empty(len);
 		for (int i : ints) {
 			bits.set(i);
 		}
@@ -396,7 +391,7 @@ public class GlushkovAnalyzer implements RegexNodeVisitor<Void> {
 	}
 
 	private BitSet finals() {
-		BitSet finals = new BitSet(len);
+		BitSet finals = BitSet.empty(len);
 		for (int x : last(root)) {
 			finals.set(x);
 		}
@@ -407,9 +402,7 @@ public class GlushkovAnalyzer implements RegexNodeVisitor<Void> {
 	}
 
 	private BitSet all() {
-		BitSet all = new BitSet(len);
-		all.flip(0, len);
-		return all;
+		return BitSet.all(len);
 	}
 
 	@Override
@@ -629,18 +622,6 @@ public class GlushkovAnalyzer implements RegexNodeVisitor<Void> {
 			sum += value;
 		}
 		return sum;
-	}
-
-	private BitSet and(BitSet b1, BitSet b2) {
-		BitSet bitSet = (BitSet) b1.clone();
-		bitSet.and(b2);
-		return bitSet;
-	}
-
-	private BitSet or(BitSet b1, BitSet b2) {
-		BitSet bitSet = (BitSet) b1.clone();
-		bitSet.or(b2);
-		return bitSet;
 	}
 
 }

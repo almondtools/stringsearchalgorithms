@@ -6,7 +6,7 @@ import static net.amygdalum.stringsearchalgorithms.patternsearch.chars.GlushkovA
 import static net.amygdalum.stringsearchalgorithms.search.MatchOption.LONGEST_MATCH;
 
 import java.util.ArrayList;
-import java.util.BitSet;
+
 import java.util.Iterator;
 import java.util.List;
 
@@ -19,6 +19,7 @@ import net.amygdalum.stringsearchalgorithms.search.StringFinderOption;
 import net.amygdalum.stringsearchalgorithms.search.StringMatch;
 import net.amygdalum.stringsearchalgorithms.search.chars.StringSearchAlgorithm;
 import net.amygdalum.stringsearchalgorithms.search.chars.StringSearchAlgorithmFactory;
+import net.amygdalum.util.bits.BitSet;
 import net.amygdalum.util.io.CharProvider;
 import net.amygdalum.util.io.ReverseCharProvider;
 
@@ -128,8 +129,7 @@ public class BPGlushkov implements StringSearchAlgorithm {
 			if (end <= border) {
 				return emptyList();
 			}
-			state = (BitSet) state.clone();
-			state.and(back.getInitial());
+			state = state.and(back.getInitial());
 
 			List<StringMatch> matches = new ArrayList<>();
 

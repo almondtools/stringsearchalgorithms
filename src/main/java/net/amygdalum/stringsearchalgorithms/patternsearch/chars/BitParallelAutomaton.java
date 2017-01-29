@@ -1,6 +1,6 @@
 package net.amygdalum.stringsearchalgorithms.patternsearch.chars;
 
-import java.util.BitSet;
+import net.amygdalum.util.bits.BitSet;
 
 public interface BitParallelAutomaton {
 
