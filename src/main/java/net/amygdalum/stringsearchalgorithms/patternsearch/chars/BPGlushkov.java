@@ -6,12 +6,12 @@ import static net.amygdalum.stringsearchalgorithms.patternsearch.chars.GlushkovA
 import static net.amygdalum.stringsearchalgorithms.search.MatchOption.LONGEST_MATCH;
 
 import java.util.ArrayList;
-
 import java.util.Iterator;
 import java.util.List;
 
 import net.amygdalum.regexparser.RegexNode;
 import net.amygdalum.regexparser.RegexParser;
+import net.amygdalum.regexparser.RegexParserOption;
 import net.amygdalum.stringsearchalgorithms.search.BufferedStringFinder;
 import net.amygdalum.stringsearchalgorithms.search.MatchOption;
 import net.amygdalum.stringsearchalgorithms.search.StringFinder;
@@ -38,15 +38,15 @@ public class BPGlushkov implements StringSearchAlgorithm {
 	private DualGlushkovAutomaton back;
 	private int minLength;
 
-	public BPGlushkov(String pattern) {
-		GlushkovAnalyzer analyzer = parseAndNormalizeRegex(pattern);
+	public BPGlushkov(String pattern, RegexParserOption... options) {
+		GlushkovAnalyzer analyzer = parseAndNormalizeRegex(pattern, options);
 		search = analyzer.buildAutomaton(SELF_LOOP);
 		back = analyzer.buildReverseAutomaton();
 		minLength = analyzer.minLength();
 	}
 
-	private static GlushkovAnalyzer parseAndNormalizeRegex(String pattern) {
-		RegexParser parser = new RegexParser(pattern);
+	private static GlushkovAnalyzer parseAndNormalizeRegex(String pattern, RegexParserOption... options) {
+		RegexParser parser = new RegexParser(pattern, options);
 		RegexNode root = parser.parse();
 		root = root.accept(new GlushkovNormalizer());
 		return new GlushkovAnalyzer(root).analyze();
@@ -177,9 +177,15 @@ public class BPGlushkov implements StringSearchAlgorithm {
 
 	public static class Factory implements StringSearchAlgorithmFactory {
 
+		private RegexParserOption[] options;
+
+		public Factory(RegexParserOption... options) {
+			this.options = options;
+		}
+
 		@Override
 		public StringSearchAlgorithm of(String pattern) {
-			return new BPGlushkov(pattern);
+			return new BPGlushkov(pattern, options);
 		}
 
 	}

@@ -5,11 +5,11 @@ import static org.junit.Assert.assertThat;
 
 import org.junit.Test;
 
+import net.amygdalum.regexparser.RegexParserOption;
 import net.amygdalum.stringsearchalgorithms.search.StringFinder;
 import net.amygdalum.stringsearchalgorithms.search.StringMatch;
 import net.amygdalum.stringsearchalgorithms.search.chars.AhoCorasick;
 import net.amygdalum.util.io.StringCharProvider;
-
 
 public class MultiPrefixRESinglePatternTest {
 
@@ -168,8 +168,8 @@ public class MultiPrefixRESinglePatternTest {
 			new StringMatch(3, 5, "bc")));
 	}
 
-	private StringFinder findIn(String in, String... pattern) {
-		MultiFactorRE algorithm = new MultiFactorRE(new AhoCorasick.Factory(), new GlushkovPrefixExtender.Factory(), pattern);
+	private StringFinder findIn(String in, String pattern, RegexParserOption... options) {
+		MultiFactorRE algorithm = new MultiFactorRE(new AhoCorasick.Factory(), new GlushkovPrefixExtender.Factory(options), pattern);
 		return algorithm.createFinder(new StringCharProvider(in, 0));
 	}
 

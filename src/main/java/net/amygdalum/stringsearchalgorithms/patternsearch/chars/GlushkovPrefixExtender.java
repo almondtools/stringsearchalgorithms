@@ -8,6 +8,7 @@ import java.util.SortedSet;
 
 import net.amygdalum.regexparser.RegexNode;
 import net.amygdalum.regexparser.RegexParser;
+import net.amygdalum.regexparser.RegexParserOption;
 import net.amygdalum.stringsearchalgorithms.search.StringMatch;
 import net.amygdalum.util.bits.BitSet;
 import net.amygdalum.util.io.CharProvider;
@@ -22,8 +23,8 @@ public class GlushkovPrefixExtender implements FactorExtender {
 	private int prefixLength;
 	private BitSet prefixInitial;
 
-	public GlushkovPrefixExtender(String pattern) {
-		RegexNode root = parseAndNormalizeRegex(pattern);
+	public GlushkovPrefixExtender(String pattern, RegexParserOption... options) {
+		RegexNode root = parseAndNormalizeRegex(pattern, options);
 		GlushkovAnalyzer analyzer = new GlushkovAnalyzer(root).analyze();
 		this.pattern = pattern;
 		this.automaton = analyzer.buildAutomaton();
@@ -37,9 +38,9 @@ public class GlushkovPrefixExtender implements FactorExtender {
 		this.prefixLength = prefixLength;
 		this.prefixInitial = prefixInitial;
 	}
-	
-	private static RegexNode parseAndNormalizeRegex(String pattern) {
-		RegexParser parser = new RegexParser(pattern);
+
+	private static RegexNode parseAndNormalizeRegex(String pattern, RegexParserOption... options) {
+		RegexParser parser = new RegexParser(pattern, options);
 		RegexNode root = parser.parse();
 		return root.accept(new GlushkovNormalizer());
 	}
@@ -48,7 +49,7 @@ public class GlushkovPrefixExtender implements FactorExtender {
 		BitSet prefixInitial = match(automaton.getInitial(), new StringCharProvider(prefix, 0));
 		return new GlushkovPrefixExtender(pattern, automaton, minLength, prefix.length(), prefixInitial);
 	}
-	
+
 	@Override
 	public String getPattern() {
 		return pattern;
@@ -132,9 +133,15 @@ public class GlushkovPrefixExtender implements FactorExtender {
 
 	public static class Factory implements FactorExtenderFactory {
 
+		private RegexParserOption[] options;
+
+		public Factory(RegexParserOption... options) {
+			this.options = options;
+		}
+
 		@Override
 		public FactorExtender of(String pattern) {
-			return new GlushkovPrefixExtender(pattern);
+			return new GlushkovPrefixExtender(pattern, options);
 		}
 
 	}

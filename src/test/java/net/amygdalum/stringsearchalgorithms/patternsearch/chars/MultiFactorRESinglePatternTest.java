@@ -5,6 +5,7 @@ import static org.junit.Assert.assertThat;
 
 import org.junit.Test;
 
+import net.amygdalum.regexparser.RegexParserOption;
 import net.amygdalum.stringsearchalgorithms.search.StringFinder;
 import net.amygdalum.stringsearchalgorithms.search.StringMatch;
 import net.amygdalum.stringsearchalgorithms.search.chars.AhoCorasick;
@@ -141,7 +142,7 @@ public class MultiFactorRESinglePatternTest {
 
 	@Test
 	public void testRegexCompClasses() throws Exception {
-		StringFinder finder = findIn("ccabccaccbcc", "[^a-b]+");
+		StringFinder finder = findIn("ccabccaccbcc", "[^a-b]+", RegexParserOption.DOT_ALL);
 
 		assertThat(finder.findAll(), contains(
 			new StringMatch(0, 1, "c"),
@@ -168,8 +169,8 @@ public class MultiFactorRESinglePatternTest {
 			new StringMatch(3, 5, "bc")));
 	}
 
-	private StringFinder findIn(String in, String... pattern) {
-		MultiFactorRE algorithm = new MultiFactorRE(new AhoCorasick.Factory(), new GlushkovFactorExtender.Factory(), pattern);
+	private StringFinder findIn(String in, String pattern, RegexParserOption... options) {
+		MultiFactorRE algorithm = new MultiFactorRE(new AhoCorasick.Factory(), new GlushkovFactorExtender.Factory(options), pattern);
 		return algorithm.createFinder(new StringCharProvider(in, 0));
 	}
 

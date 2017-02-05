@@ -11,6 +11,7 @@ import java.util.SortedSet;
 
 import net.amygdalum.regexparser.RegexNode;
 import net.amygdalum.regexparser.RegexParser;
+import net.amygdalum.regexparser.RegexParserOption;
 import net.amygdalum.stringsearchalgorithms.search.StringMatch;
 import net.amygdalum.util.bits.BitSet;
 import net.amygdalum.util.io.CharProvider;
@@ -28,8 +29,8 @@ public class GlushkovFactorExtender implements FactorExtender {
 	private int factorLength;
 	private BitSet factorInitial;
 
-	public GlushkovFactorExtender(String pattern) {
-		RegexNode root = parseAndNormalizeRegex(pattern);
+	public GlushkovFactorExtender(String pattern, RegexParserOption ...options) {
+		RegexNode root = parseAndNormalizeRegex(pattern, options);
 		BestFactorAnalyzer bestFactorAnalyzer = new BestFactorAnalyzer(root).analyze();
 		GlushkovAnalyzer analyzer = new GlushkovAnalyzer(root).analyze();
 		this.pattern = pattern;
@@ -48,8 +49,8 @@ public class GlushkovFactorExtender implements FactorExtender {
 		this.factorInitial = factorInitial;
 	}
 
-	private static RegexNode parseAndNormalizeRegex(String pattern) {
-		RegexParser parser = new RegexParser(pattern);
+	private static RegexNode parseAndNormalizeRegex(String pattern, RegexParserOption ...options) {
+		RegexParser parser = new RegexParser(pattern, options);
 		RegexNode root = parser.parse();
 		return root.accept(new GlushkovNormalizer());
 	}
@@ -165,9 +166,15 @@ public class GlushkovFactorExtender implements FactorExtender {
 
 	public static class Factory implements FactorExtenderFactory {
 
+		private RegexParserOption[] options;
+
+		public Factory(RegexParserOption... options) {
+			this.options = options;
+		}
+
 		@Override
 		public FactorExtender of(String pattern) {
-			return new GlushkovFactorExtender(pattern);
+			return new GlushkovFactorExtender(pattern, options);
 		}
 
 	}

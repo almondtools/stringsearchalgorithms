@@ -9,6 +9,7 @@ import static org.junit.Assert.assertThat;
 import org.junit.Rule;
 import org.junit.Test;
 
+import net.amygdalum.regexparser.RegexParserOption;
 import net.amygdalum.stringsearchalgorithms.search.SearchFor;
 import net.amygdalum.stringsearchalgorithms.search.StringFinder;
 import net.amygdalum.stringsearchalgorithms.search.StringMatch;
@@ -18,9 +19,9 @@ public class SinglePatternTest {
 
 	@Rule
 	public SinglePatternSearchRule searcher = new SinglePatternSearchRule(
-		new BPGlushkov.Factory(),
-		new MultiFactorRE.Factory(new AhoCorasick.Factory(), new GlushkovPrefixExtender.Factory(), 2),
-		new MultiFactorRE.Factory(new AhoCorasick.Factory(), new GlushkovFactorExtender.Factory(), 2)
+		new BPGlushkov.Factory(RegexParserOption.DOT_ALL),
+		new MultiFactorRE.Factory(new AhoCorasick.Factory(), new GlushkovPrefixExtender.Factory(RegexParserOption.DOT_ALL), 2),
+		new MultiFactorRE.Factory(new AhoCorasick.Factory(), new GlushkovFactorExtender.Factory(RegexParserOption.DOT_ALL), 2)
 		);
 
 	@Test
