@@ -1,6 +1,8 @@
 [StringSearchAlgorithms](http://stringsearchalgorithms.amygdalum.net/)
 ===============
 [![Build Status](https://api.travis-ci.org/almondtools/stringsearchalgorithms.svg)](https://travis-ci.org/almondtools/stringsearchalgorithms)
+[![codecov](https://codecov.io/gh/almondtools/stringsearchalgorithms/branch/master/graph/badge.svg)](https://codecov.io/gh/almondtools/stringsearchalgorithms)
+
 
 StringSearchAlgorithms (formerly StringAndChars) is a library for exact string matching algorithms (or string search algorithms).
 
