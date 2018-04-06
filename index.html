@@ -1,5 +1,5 @@
         <!DOCTYPE html>
-      <html>
+      <html lang="en">
                 <head>
                   <meta charset="utf-8"/>
               <meta name="google-site-verification" content="zi2eDd9lPMxUKII5BagZe7uZLJdM-xwB3MYmn7At8m4"/>
@@ -9,7 +9,7 @@
               <link rel="stylesheet" href="custom.css"/>
               <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.0.0/styles/default.min.css"/>
                   <title>StringSearchAlgorithms - Efficient String Search Algorithms in Java</title>
-      <meta name="description" content="Efficient String Search Algorithms in Java"/>
+      <meta name="description" content="StringSearchAlgorithms provides highly efficient algorithms for (multiple) string search (string matching), e.g. Knuth-Morris-Pratt, Boyer-Moore, Aho-Corasick. StringSearchAlgorithms supports search in Strings, char-arrays, byte-arrays, InputStreams, Readers and Buffers."/>
       <meta name="keywords" content="string matching,string search,algorithm,Java,efficient,performance"/>
       <link rel="canonical" href="http://stringsearchalgorithms.amygdalum.net"/>
   </head>
@@ -43,7 +43,7 @@
                         <div class="jumbotron">
       <div class="container">
               <h1>String Search Algorithms</h1>
-          <p>Efficient String Search Algorithms in Java</p>
+          <p>StringSearchAlgorithms provides highly efficient algorithms for (multiple) string search (string matching), e.g. Knuth-Morris-Pratt, Boyer-Moore, Aho-Corasick. StringSearchAlgorithms supports search in Strings, char-arrays, byte-arrays, InputStreams, Readers and Buffers.</p>
           <p>  <a href="download.html" class="btn btn-primary">
     Get String Search Algorithms
   </a>   <a href="https://github.com/almondtools/stringsearchalgorithms" class="btn btn-light">
@@ -54,65 +54,65 @@
   </header>
               <main>
       <div class="container">
-                  <section>
+                  <section class="page-section">
               <h2>Why should I use String Search Algorithms?</h2>
-              <section>
-          <div class="row">
-              <div class="order-2 col-lg-4">
-                      <div class="card info-card">
+              <section class="page-section">
+              <div class="row">
+                  <div class="order-2 col-lg-4">
+                          <div class="card info-card">
               <div class="card-header">
       <h4 class="panel-title">Available algorithms (single string):</h4>
   </div>
           <div class="card-body">
-                      <ul>
-                          <li>Horspool (or Boyer-Moore-Horspool)</li>
-                      <li>Shift-And</li>
-                      <li>Shift-Or</li>
-                      <li>Knuth-Morris-Pratt</li>
-                      <li>Sunday</li>
-                      <li>BNDM (Backward Nondet. Dawg Matching)</li>
-                      <li>BOM (Backward Oracle Matching)</li>
+                          <ul>
+                              <li>Horspool (or Boyer-Moore-Horspool)</li>
+                          <li>Shift-And</li>
+                          <li>Shift-Or</li>
+                          <li>Knuth-Morris-Pratt</li>
+                          <li>Sunday</li>
+                          <li>BNDM (Backward Nondet. Dawg Matching)</li>
+                          <li>BOM (Backward Oracle Matching)</li>
   </ul>
   </div>
   </div>
-                  <div class="card info-card">
+                      <div class="card info-card">
               <div class="card-header">
       <h4 class="panel-title">Available algorithms (multiple strings):</h4>
   </div>
           <div class="card-body">
-                      <ul>
-                          <li>Set Backward Oracle Matching</li>
-                      <li>Aho-Corasick</li>
-                      <li>Set Horspool</li>
-                      <li>Wu-Manber</li>
+                          <ul>
+                              <li>Set Backward Oracle Matching</li>
+                          <li>Aho-Corasick</li>
+                          <li>Set Horspool</li>
+                          <li>Wu-Manber</li>
   </ul>
   </div>
   </div>
   </div>
-          <div class="order-1 col-lg-8">
-                  <p>                  <a href="https://en.wikipedia.org/wiki/String_searching_algorithm">
+              <div class="order-1 col-lg-8">
+                      <p>                      <a href="https://en.wikipedia.org/wiki/String_searching_algorithm">
     String searching
   </a> is about finding a pattern in a longer text.
-                The support of the Java Standard API for searching strings is limited - one may get an impression   <a href="http://blog.amygdalum.net/en/string-searching-using-the-java-api/">
+                    The support of the Java Standard API for searching strings is limited - one may get an impression   <a href="http://blog.amygdalum.net/en/string-searching-using-the-java-api/">
     here
   </a>.
-                There exist many algorithms that process text more efficiently. Yet the majority of these algorithms is only described in papers or books or listed on websites (and the language they are specified is usually C) 
-                - and not available as library (in Java).  </p>
-              <p>                StringSearchAlgorithms provides a Java library of various algorithms to support you in string searching - supporting single patterns and multi patterns. While most algorithms outperform the naive algorithm provided by 
-                the Java-API (via       <code >String.indexOf</code>), the performance of the algorithms differs in the dimensions of:
-                  <ul>
-                          <li>size of the alphabet (e.g. {A,C,G,T} vs [A-Za-z])</li>
-                      <li>size of the pattern (e.g. CG vs ACGCTACGACGCTTTTTACGAC)</li>
-                      <li>the number of patterns to match in one pass</li>
+                    There exist many algorithms that process text more efficiently. Yet the majority of these algorithms is only described in papers or books or listed on websites (and the language they are specified is usually C) 
+                    - and not available as library (in Java).  </p>
+                  <p>                    StringSearchAlgorithms provides a Java library of various algorithms to support you in string searching - supporting single patterns and multi patterns. While most algorithms outperform the naive algorithm provided by 
+                    the Java-API (via       <code >String.indexOf</code>), the performance of the algorithms differs in the dimensions of:
+                      <ul>
+                              <li>size of the alphabet (e.g. {A,C,G,T} vs [A-Za-z])</li>
+                          <li>size of the pattern (e.g. CG vs ACGCTACGACGCTTTTTACGAC)</li>
+                          <li>the number of patterns to match in one pass</li>
   </ul>
-                Some heuristics how to choose the best algorithm for your scenario will be presented in a   <a href="#chooseAlgorithm">
+                    Some heuristics how to choose the best algorithm for your scenario will be presented in a   <a href="#chooseAlgorithm">
     later chapter
   </a>. </p>
   </div>
   </div>
   </section>
   </section>
-              <section>
+              <section class="page-section">
               <h2>Usage</h2>
               <div class="row">
               <div class="order-2 col-lg-4">
@@ -162,10 +162,10 @@ StringFinder finder = stringSearch.createFinder(text, LONGEST_MATCH, NON_OVERLAP
   </ul></p>
   </div>
   </div>
-
-
+        
+        
   </section>
-              <section id="chooseAlgorithm">
+              <section class="page-section" id="chooseAlgorithm">
               <h2>Choosing the Best Algorithm</h2>
           <div class="row">
                   <div class="col-lg-8">
@@ -209,7 +209,7 @@ StringFinder finder = stringSearch.createFinder(text, LONGEST_MATCH, NON_OVERLAP
   </div>
   </div>
   </section>
-              <section>
+              <section class="page-section">
               <h2>Benchmarks</h2>
           <div class="row">
                   <div class="col-lg-8">
