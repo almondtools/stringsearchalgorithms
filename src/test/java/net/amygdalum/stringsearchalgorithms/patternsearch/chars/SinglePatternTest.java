@@ -243,6 +243,26 @@ public class SinglePatternTest {
 	}
 
 	@Test
+	@SearchFor("ab?a")
+	public void testRegexOptionalInfix() throws Exception {
+		StringFinder finder = searcher.createSearcher("cccabaacc");
+
+		assertThat(finder.findAll(), contains(
+			new StringMatch(3, 6, "aba"),
+			new StringMatch(5, 7, "aa")));
+	}
+
+	@Test
+	@SearchFor("ab*a")
+	public void testRegexLoopInfix() throws Exception {
+		StringFinder finder = searcher.createSearcher("cccabbaacc");
+
+		assertThat(finder.findAll(), contains(
+			new StringMatch(3, 7, "abba"),
+			new StringMatch(6, 8, "aa")));
+	}
+
+	@Test
 	@SearchFor("a{1,2}")
 	public void testRegexBoundedLoop() throws Exception {
 		StringFinder finder = searcher.createSearcher("cccaaacc");
@@ -481,5 +501,34 @@ public class SinglePatternTest {
 			new StringMatch(8, 43, "gacatagacattttagacataaaagacatagacaa"),
 			new StringMatch(51, 95, "atagacaacatagacatagacatagacatagacatagacataga")));
 	}
+
+	@Test
+	@SearchFor("(A|a)nd (the )?(B|b)east")
+	public void testKJBPatternOptional() throws Exception {
+		StringFinder finder = searcher.createSearcher("Therefore thus saith the Lord GOD; I will also stretch out mine hand upon Edom, and will cut off man and beast from it; and I will make it desolate from Teman; and they of Dedan shall fall by the sword.", LONGEST_MATCH, NON_OVERLAP);
+
+		assertThat(finder.findAll(), contains(
+			new StringMatch(101, 110, "and beast")));
+	}
+
+	@Test
+	@SearchFor("(A|a)nd (the ){0,1}(B|b)east")
+	public void testKJBPatternOptionalAsLoop() throws Exception {
+		StringFinder finder = searcher.createSearcher("Therefore thus saith the Lord GOD; I will also stretch out mine hand upon Edom, and will cut off man and beast from it; and I will make it desolate from Teman; and they of Dedan shall fall by the sword.", LONGEST_MATCH, NON_OVERLAP);
+
+		assertThat(finder.findAll(), contains(
+			new StringMatch(101, 110, "and beast")));
+	}
+
+	@Test
+	@SearchFor("(A|a)nd (the )?(B|b)east")
+	public void testKJBPatternNonOptional() throws Exception {
+		StringFinder finder = searcher.createSearcher("So that the fishes of the sea, and the fowls of the heaven, and the beasts of the field, and all creeping things that creep upon the earth, and all the men that are upon the face of the earth, shall shake at my presence, and the mountains shall be thrown down, and the steep places shall fall, and every wall shall fall to the ground. ", LONGEST_MATCH, NON_OVERLAP);
+
+		assertThat(finder.findAll(), contains(
+			new StringMatch(60, 73, "and the beast")));
+	}
+
+
 
 }
