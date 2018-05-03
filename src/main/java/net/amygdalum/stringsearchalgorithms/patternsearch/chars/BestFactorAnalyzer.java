@@ -239,7 +239,7 @@ public class BestFactorAnalyzer implements RegexNodeVisitor<Factors> {
 
 					Set<String> newPrefix = concat(builder.all, factorsConcat.prefix);
 					Set<String> newSuffix = concat(builder.suffix, factorsConcat.all);
-					Set<String> newFactor = concat(builder.prefix, factorsConcat.suffix);
+					Set<String> newFactor = concat(builder.suffix, factorsConcat.prefix);
 
 					builder.addAll(factorsConcat.all);
 					builder.updatePrefix(builder.prefix, newPrefix);
