@@ -451,15 +451,28 @@ public class GlushkovAnalyzer implements RegexNodeVisitor<Void> {
 
 		for (int i = 0; i < subNodes.size() - 1; i++) {
 			RegexNode current = subNodes.get(i);
-			RegexNode next = subNodes.get(i + 1);
-			for (int x : last(current)) {
-				appendFollow(x, first(next));
-			}
-			for (int y : first(next)) {
-				appendPrecede(y, last(current));
+			for (int j = i + 1; j < subNodes.size(); j++) {
+				RegexNode next = subNodes.get(j);
+				for (int x : last(current)) {
+					appendFollow(x, first(next));
+				}
+				if (minLength(next) > 0) {
+					break;
+				}
 			}
 		}
-
+		for (int i = subNodes.size() - 1; i >= 1; i--) {
+			RegexNode current = subNodes.get(i);
+			for (int j = i - 1; j >= 0; j--) {
+				RegexNode prev = subNodes.get(j);
+				for (int y : first(current)) {
+					appendPrecede(y, last(prev));
+				}
+				if (minLength(prev) > 0) {
+					break;
+				}
+			}
+		}
 		return null;
 	}
 
