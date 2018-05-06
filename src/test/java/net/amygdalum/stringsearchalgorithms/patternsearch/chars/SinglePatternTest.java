@@ -529,6 +529,18 @@ public class SinglePatternTest {
 			new StringMatch(60, 73, "and the beast")));
 	}
 
+	@Test
+	@SearchFor("(a*tgc*|t*acg*)*(cg){1,20}(a|t)*")
+	public void testEcoli1() throws Exception {
+		StringFinder finder = searcher.createSearcher("ggggcgattgcccggcagcatgatgtccaggcgattcacaat", LONGEST_MATCH, NON_OVERLAP);
+
+		assertThat(finder.findAll(), contains(
+			new StringMatch(4, 9, "cgatt"),
+			new StringMatch(12, 14, "cg"),
+			new StringMatch(31, 36, "cgatt")));
+	}
+
+	
 
 
 }

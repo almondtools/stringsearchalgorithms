@@ -1,6 +1,5 @@
 package net.amygdalum.stringsearchalgorithms.patternsearch.chars;
 
-import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static net.amygdalum.stringsearchalgorithms.patternsearch.chars.GlushkovAnalyzerOption.SELF_LOOP;
 import static net.amygdalum.stringsearchalgorithms.search.MatchOption.LONGEST_MATCH;
@@ -151,12 +150,7 @@ public class BPGlushkov implements StringSearchAlgorithm {
 			if (nonEmpty) {
 				removeEmpty(matches);
 			}
-			if (longestMatch && !matches.isEmpty()) {
-				StringMatch longest = matches.remove(matches.size() - 1);
-				return asList(longest);
-			} else {
-				return matches;
-			}
+			return matches;
 		}
 
 		public StringMatch createMatch(long start, long end) {
