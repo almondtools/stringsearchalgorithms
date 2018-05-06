@@ -129,7 +129,7 @@ public class GlushkovFactorExtender implements FactorExtender {
 			char c = reverse.next();
 			state = factors.next(state, c);
 		}
-		if (reverse.finished() && automaton.isFinal(state)) {
+		if (reverse.finished() && factors.isFinal(state)) {
 			starts.add(0, chars.current());
 		}
 		return starts;

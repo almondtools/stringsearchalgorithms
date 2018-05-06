@@ -42,9 +42,11 @@ public class MultiFactorRE implements StringSearchAlgorithm {
 
 	private static final int DEFAULT_MAX_LENGTH = 3;
 
+	private int maxLength;
 	private int minLength;
 	private StringSearchAlgorithm searchAlgorithm;
 	private Map<String, List<FactorExtender>> extenders;
+
 
 	public MultiFactorRE(MultiStringSearchAlgorithmFactory factorSearcher, FactorExtenderFactory factorExtender, String... patterns) {
 		this(factorSearcher, factorExtender, DEFAULT_MAX_LENGTH, asList(patterns));
@@ -60,6 +62,7 @@ public class MultiFactorRE implements StringSearchAlgorithm {
 
 	public MultiFactorRE(MultiStringSearchAlgorithmFactory factorSearcher, FactorExtenderFactory factorExtender, int maxLength, Collection<String> patterns) {
 		Map<String, FactorExtender> matchers = computeMatchers(patterns, factorExtender);
+		this.maxLength = maxLength;
 		this.minLength = computeMinLength(matchers);
 		this.extenders = computeExtenders(matchers, minLength, maxLength);
 		this.searchAlgorithm = factorSearcher.of(extenders.keySet());
@@ -144,7 +147,7 @@ public class MultiFactorRE implements StringSearchAlgorithm {
 				factors.add(matchExtender.toString());
 			}
 		}
-		return getClass().getSimpleName() + "<" + searchAlgorithm.toString() + ", " + factors + ">";
+		return getClass().getSimpleName() + "<" + searchAlgorithm.toString() + ", " + factors + ", "+ maxLength +">";
 	}
 
 	private class Finder extends BufferedStringFinder {
@@ -158,7 +161,7 @@ public class MultiFactorRE implements StringSearchAlgorithm {
 
 		public Finder(CharProvider chars, StringFinderOption... options) {
 			super(options);
-			this.searchFactors = searchAlgorithm.createFinder(chars, options);
+			this.searchFactors = searchAlgorithm.createFinder(chars);
 			if (minLength == 0) {
 				this.searchFactors = new EmptyMatchFinder(searchFactors, chars, options);
 			}
@@ -225,7 +228,7 @@ public class MultiFactorRE implements StringSearchAlgorithm {
 				chars.move(match.end());
 				for (StringMatch extendedMatch : matcher.extendFactor(chars, longest)) {
 					if (extendedMatch.start() >= lastStart //do only report matches starting after last match
-						&& (extendedMatch.start() > lastStart || extendedMatch.end() > lastEnd) // do only reports matches different form the last match
+						&& (extendedMatch.start() > lastStart || extendedMatch.end() > lastEnd) // do only reports matches different from the last match
 						&& (!longest || extendedMatch.end() > lastEnd) // if longest: do only report matches not being subsumed by last match
 						&& (!nonEmpty || !extendedMatch.isEmpty())) { // if non-empty: do only report matches that do not match the empty string
 						push(extendedMatch);

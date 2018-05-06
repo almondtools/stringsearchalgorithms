@@ -20,7 +20,7 @@ public class SinglePatternTest {
 	@Rule
 	public SinglePatternSearchRule searcher = new SinglePatternSearchRule(
 		new BPGlushkov.Factory(RegexParserOption.DOT_ALL),
-		new MultiFactorRE.Factory(new AhoCorasick.Factory(), new GlushkovPrefixExtender.Factory(RegexParserOption.DOT_ALL), 2),
+		new MultiFactorRE.Factory(new AhoCorasick.Factory(), new GlushkovPrefixExtender.Factory(RegexParserOption.DOT_ALL), 4),
 		new MultiFactorRE.Factory(new AhoCorasick.Factory(), new GlushkovFactorExtender.Factory(RegexParserOption.DOT_ALL), 2)
 		);
 
@@ -531,7 +531,7 @@ public class SinglePatternTest {
 
 	@Test
 	@SearchFor("(a*tgc*|t*acg*)*(cg){1,20}(a|t)*")
-	public void testEcoli1() throws Exception {
+	public void testEcoliLongestLeftmostKillingLongMatchUnhidingShortMatch() throws Exception {
 		StringFinder finder = searcher.createSearcher("ggggcgattgcccggcagcatgatgtccaggcgattcacaat", LONGEST_MATCH, NON_OVERLAP);
 
 		assertThat(finder.findAll(), contains(
@@ -540,7 +540,23 @@ public class SinglePatternTest {
 			new StringMatch(31, 36, "cgatt")));
 	}
 
-	
+	@Test
+	@SearchFor("(a*tgc*|t*acg*)*(cg){1,20}(a|t)*")
+	public void testEcoliFactorExtensionToBegin() throws Exception {
+		StringFinder finder = searcher.createSearcher("tgcg", LONGEST_MATCH, NON_OVERLAP);
 
+		assertThat(finder.findAll(), contains(
+			new StringMatch(0, 4, "tgcg")));
+	}
+	
+	@Test
+	@SearchFor("(a*tgc*|t*acg*)*(cg){1,20}(a|t)*")
+	public void testEcoliPrefixExtension() throws Exception {
+		StringFinder finder = searcher.createSearcher("tgcaacgggcaatatgtctctgtgtggatt", LONGEST_MATCH, NON_OVERLAP);
+
+		assertThat(finder.findAll(), contains(
+			new StringMatch(5, 7, "cg")));
+	}
+	
 
 }
