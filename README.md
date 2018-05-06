@@ -17,3 +17,14 @@ Roadmap
 - Optimizations
 - Regex Matching
 - Tolerant Matching
+
+Maven Dependency
+================
+
+```xml
+<dependency>
+    <groupId>net.amygdalum</groupId>
+    <artifactId>stringsearchalgorithms</artifactId>
+    <version>0.3.19</version>
+</dependency>
+```
