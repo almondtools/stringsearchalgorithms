@@ -10,7 +10,6 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
@@ -34,8 +33,15 @@ import net.amygdalum.regexparser.SpecialCharClassNode;
 import net.amygdalum.regexparser.StringNode;
 import net.amygdalum.regexparser.UnboundedLoopNode;
 import net.amygdalum.util.bits.BitSet;
+import net.amygdalum.util.io.BitMaskCharClassMapper;
+import net.amygdalum.util.io.CharClassMapper;
+import net.amygdalum.util.io.LowByteCharClassMapper;
+import net.amygdalum.util.io.SmallRangeCharClassMapper;
 import net.amygdalum.util.map.BitSetObjectMap;
 import net.amygdalum.util.map.CharObjectMap;
+import net.amygdalum.util.text.CharRange;
+import net.amygdalum.util.text.CharRangeAccumulator;
+import net.amygdalum.util.worklist.WorkSet;
 
 public class GlushkovAnalyzer implements RegexNodeVisitor<Void> {
 
@@ -48,6 +54,7 @@ public class GlushkovAnalyzer implements RegexNodeVisitor<Void> {
 	private Map<RegexNode, Integer> minLength;
 	private DefinedCharNode[] chars;
 	private int len;
+	private CharClassMapper mapper;
 	private char[] alphabet;
 
 	public GlushkovAnalyzer(RegexNode root) {
@@ -61,27 +68,12 @@ public class GlushkovAnalyzer implements RegexNodeVisitor<Void> {
 		this.charCollector.add(null);
 	}
 
-	private DefinedCharNode[] characters() {
-		return charCollector.toArray(new DefinedCharNode[0]);
+	public CharClassMapper mapper() {
+		return mapper;
 	}
 
-	private char[] alphabet() {
-		Set<Character> distinctChars = new LinkedHashSet<>();
-		for (DefinedCharNode node : charCollector) {
-			if (node == null) {
-				continue;
-			}
-			for (char c : node.chars()) {
-				distinctChars.add(c);
-			}
-		}
-		char[] alphabet = new char[distinctChars.size()];
-		int i = 0;
-		for (Character c : distinctChars) {
-			alphabet[i] = c;
-			i++;
-		}
-		return alphabet;
+	private DefinedCharNode[] characters() {
+		return charCollector.toArray(new DefinedCharNode[0]);
 	}
 
 	public Set<Character> firstChars() {
@@ -204,8 +196,54 @@ public class GlushkovAnalyzer implements RegexNodeVisitor<Void> {
 		}
 		chars = characters();
 		len = chars.length;
-		alphabet = alphabet();
+		mapper = computeMapper(chars);
+		alphabet = mapper.representatives();
 		return this;
+	}
+
+	private CharClassMapper computeMapper(DefinedCharNode[] nodes) {
+		CharRangeAccumulator acc = new CharRangeAccumulator();
+
+		for (DefinedCharNode node : nodes) {
+			if (node != null) {
+				acc.split(node.getFrom(), node.getTo());
+			}
+		}
+
+		List<CharRange> liveRanges = acc.getRanges();
+
+		boolean lowByte = computeLowByte(liveRanges);
+		boolean smallRange = computeSmallRange(liveRanges, lowByte);
+		if (smallRange) {
+			return new SmallRangeCharClassMapper(liveRanges);
+		} else if (lowByte) {
+			return new LowByteCharClassMapper(liveRanges);
+		} else {
+			return new BitMaskCharClassMapper(liveRanges);
+		}
+	}
+
+	public boolean computeLowByte(List<CharRange> liveRanges) {
+		Set<Integer> highbytes = new HashSet<>();
+		for (CharRange range : liveRanges) {
+			highbytes.add(range.from & 0xff00);
+			highbytes.add(range.to & 0xff00);
+		}
+		return highbytes.size() <= 1;
+	}
+
+	public boolean computeSmallRange(List<CharRange> liveRanges, boolean lowByte) {
+		if (liveRanges.isEmpty()) {
+			return true;
+		} else {
+			char min = liveRanges.get(0).from;
+			char max = liveRanges.get(liveRanges.size() - 1).to;
+			if (lowByte) {
+				return max - min <= 64;
+			} else {
+				return max - min <= 256;
+			}
+		}
 	}
 
 	public GlushkovAutomaton buildAutomaton(GlushkovAnalyzerOption... options) {
@@ -316,7 +354,7 @@ public class GlushkovAnalyzer implements RegexNodeVisitor<Void> {
 	}
 
 	private void possibleStartsByState(Map<BitSet, BitSet> possible, BitSet start, CharObjectMap<BitSet> reachableByChar, BitSet defaultValue) {
-		Queue<BitSet> nexts = new LinkedList<>();
+		Queue<BitSet> nexts = new WorkSet<>();
 		nexts.add(start);
 		nexts.add(start.or(initial()));
 		while (!nexts.isEmpty()) {

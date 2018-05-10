@@ -19,6 +19,7 @@ import net.amygdalum.stringsearchalgorithms.search.StringMatch;
 import net.amygdalum.stringsearchalgorithms.search.chars.StringSearchAlgorithm;
 import net.amygdalum.stringsearchalgorithms.search.chars.StringSearchAlgorithmFactory;
 import net.amygdalum.util.bits.BitSet;
+import net.amygdalum.util.io.CharClassMapper;
 import net.amygdalum.util.io.CharProvider;
 import net.amygdalum.util.io.ReverseCharProvider;
 
@@ -35,12 +36,14 @@ public class BPGlushkov implements StringSearchAlgorithm {
 
 	private GlushkovAutomaton search;
 	private DualGlushkovAutomaton back;
+	private CharClassMapper mapper;
 	private int minLength;
 
 	public BPGlushkov(String pattern, RegexParserOption... options) {
 		GlushkovAnalyzer analyzer = parseAndNormalizeRegex(pattern, options);
 		search = analyzer.buildAutomaton(SELF_LOOP);
 		back = analyzer.buildReverseAutomaton();
+		mapper = analyzer.mapper();
 		minLength = analyzer.minLength();
 	}
 
@@ -104,7 +107,7 @@ public class BPGlushkov implements StringSearchAlgorithm {
 					if (search.isFinal(state)) {
 						push(createMatches(chars.current(), state));
 					}
-					char c = chars.next();
+					char c = mapper.representative(chars.next());
 					state = search.next(state, c);
 					if (search.isInitial(state) && !isBufferEmpty()) {
 						break;
@@ -139,7 +142,7 @@ public class BPGlushkov implements StringSearchAlgorithm {
 					long start = reverse.current();
 					matches.add(createMatch(start, end));
 				}
-				char c = reverse.next();
+				char c = mapper.representative(reverse.next());
 				state = back.next(state, c);
 			}
 			if (reverse.finished() && back.isFinal(state)) {
