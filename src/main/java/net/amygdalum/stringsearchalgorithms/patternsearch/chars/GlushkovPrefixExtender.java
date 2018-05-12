@@ -1,8 +1,12 @@
 package net.amygdalum.stringsearchalgorithms.patternsearch.chars;
 
 import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.SortedSet;
 
@@ -74,25 +78,50 @@ public class GlushkovPrefixExtender implements FactorExtender {
 		return getPrefixes(automaton.getInitial(), 1, max);
 	}
 
-	private Set<String> getPrefixes(BitSet state, int min, int max) {
-		Set<String> prefixes = new LinkedHashSet<String>();
-		if (min <= 0 && automaton.isFinal(state)) {
-			prefixes.add("");
-			return prefixes;
-		} else if (max <= 0) {
-			prefixes.add("");
-			return prefixes;
-		}
-		for (char c : automaton.supportedChars()) {
-			BitSet next = automaton.next(state, c);
-			if (!next.isEmpty()) {
-				Set<String> subPrefixes = getPrefixes(next, min - 1, max - 1);
-				for (String subPrefix : subPrefixes) {
-					prefixes.add(c + subPrefix);
+	@SuppressWarnings("unchecked")
+	private Set<String> getPrefixes(BitSet initialstate, int min, int max) {
+		Map<String, BitSet>[] prefixes = new Map[max + 1];
+
+		prefixes[0] = new LinkedHashMap<>();
+		prefixes[0].put("", initialstate);
+
+		for (int i = 1; i < prefixes.length; i++) {
+			prefixes[i] = new LinkedHashMap<>();
+			Iterator<Entry<String, BitSet>> prefixIterator = prefixes[i - 1].entrySet().iterator();
+			while (prefixIterator.hasNext()) {
+				Map.Entry<String, BitSet> entry = prefixIterator.next();
+				String prefix = entry.getKey();
+				BitSet state = entry.getValue();
+				if (automaton.isFinal(state)) {
+					if (i < min) {
+						prefixIterator.remove();
+					}
+					continue;
+				}
+				for (char c : automaton.supportedChars()) {
+					String nextString = prefix + c;
+					BitSet nextState = automaton.next(state, c);
+					prefixes[i].put(nextString, nextState);
+				}
+			}
+			Iterator<String> newPrefixIterator = prefixes[i].keySet().iterator();
+			nextPrefix: while (newPrefixIterator.hasNext()) {
+				String newPrefix = newPrefixIterator.next();
+				for (int j = 1; j < i; j++) {
+					String suffix = newPrefix.substring(newPrefix.length() - j, newPrefix.length());
+					if (prefixes[j].containsKey(suffix)) {
+						newPrefixIterator.remove();
+						continue nextPrefix;
+					}
 				}
 			}
 		}
-		return prefixes;
+
+		Set<String> allprefixes = new LinkedHashSet<>();
+		for (int i = 0; i < prefixes.length; i++) {
+			allprefixes.addAll(prefixes[i].keySet());
+		}
+		return allprefixes;
 	}
 
 	@Override

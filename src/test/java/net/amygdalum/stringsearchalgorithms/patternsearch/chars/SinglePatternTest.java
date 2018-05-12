@@ -21,8 +21,7 @@ public class SinglePatternTest {
 	public SinglePatternSearchRule searcher = new SinglePatternSearchRule(
 		new BPGlushkov.Factory(RegexParserOption.DOT_ALL),
 		new MultiFactorRE.Factory(new AhoCorasick.Factory(), new GlushkovPrefixExtender.Factory(RegexParserOption.DOT_ALL), 4),
-		new MultiFactorRE.Factory(new AhoCorasick.Factory(), new GlushkovFactorExtender.Factory(RegexParserOption.DOT_ALL), 2)
-		);
+		new MultiFactorRE.Factory(new AhoCorasick.Factory(), new GlushkovFactorExtender.Factory(RegexParserOption.DOT_ALL), 2));
 
 	@Test
 	@SearchFor("ab")
@@ -362,8 +361,7 @@ public class SinglePatternTest {
 
 		assertThat(finder.findAll(), contains(
 			new StringMatch(0, 5, "abacc"),
-			new StringMatch(6, 15, "aaccccbbc")
-			));
+			new StringMatch(6, 15, "aaccccbbc")));
 	}
 
 	@Test
@@ -373,8 +371,7 @@ public class SinglePatternTest {
 
 		assertThat(finder.findAll(), contains(
 			new StringMatch(0, 5, "abacc"),
-			new StringMatch(6, 15, "aaccccbbc")
-			));
+			new StringMatch(6, 15, "aaccccbbc")));
 	}
 
 	@Test
@@ -505,7 +502,9 @@ public class SinglePatternTest {
 	@Test
 	@SearchFor("(A|a)nd (the )?(B|b)east")
 	public void testKJBPatternOptional() throws Exception {
-		StringFinder finder = searcher.createSearcher("Therefore thus saith the Lord GOD; I will also stretch out mine hand upon Edom, and will cut off man and beast from it; and I will make it desolate from Teman; and they of Dedan shall fall by the sword.", LONGEST_MATCH, NON_OVERLAP);
+		StringFinder finder = searcher.createSearcher(
+			"Therefore thus saith the Lord GOD; I will also stretch out mine hand upon Edom, and will cut off man and beast from it; and I will make it desolate from Teman; and they of Dedan shall fall by the sword.",
+			LONGEST_MATCH, NON_OVERLAP);
 
 		assertThat(finder.findAll(), contains(
 			new StringMatch(101, 110, "and beast")));
@@ -514,7 +513,9 @@ public class SinglePatternTest {
 	@Test
 	@SearchFor("(A|a)nd (the ){0,1}(B|b)east")
 	public void testKJBPatternOptionalAsLoop() throws Exception {
-		StringFinder finder = searcher.createSearcher("Therefore thus saith the Lord GOD; I will also stretch out mine hand upon Edom, and will cut off man and beast from it; and I will make it desolate from Teman; and they of Dedan shall fall by the sword.", LONGEST_MATCH, NON_OVERLAP);
+		StringFinder finder = searcher.createSearcher(
+			"Therefore thus saith the Lord GOD; I will also stretch out mine hand upon Edom, and will cut off man and beast from it; and I will make it desolate from Teman; and they of Dedan shall fall by the sword.",
+			LONGEST_MATCH, NON_OVERLAP);
 
 		assertThat(finder.findAll(), contains(
 			new StringMatch(101, 110, "and beast")));
@@ -523,7 +524,9 @@ public class SinglePatternTest {
 	@Test
 	@SearchFor("(A|a)nd (the )?(B|b)east")
 	public void testKJBPatternNonOptional() throws Exception {
-		StringFinder finder = searcher.createSearcher("So that the fishes of the sea, and the fowls of the heaven, and the beasts of the field, and all creeping things that creep upon the earth, and all the men that are upon the face of the earth, shall shake at my presence, and the mountains shall be thrown down, and the steep places shall fall, and every wall shall fall to the ground. ", LONGEST_MATCH, NON_OVERLAP);
+		StringFinder finder = searcher.createSearcher(
+			"So that the fishes of the sea, and the fowls of the heaven, and the beasts of the field, and all creeping things that creep upon the earth, and all the men that are upon the face of the earth, shall shake at my presence, and the mountains shall be thrown down, and the steep places shall fall, and every wall shall fall to the ground. ",
+			LONGEST_MATCH, NON_OVERLAP);
 
 		assertThat(finder.findAll(), contains(
 			new StringMatch(60, 73, "and the beast")));
@@ -548,7 +551,7 @@ public class SinglePatternTest {
 		assertThat(finder.findAll(), contains(
 			new StringMatch(0, 4, "tgcg")));
 	}
-	
+
 	@Test
 	@SearchFor("(a*tgc*|t*acg*)*(cg){1,20}(a|t)*")
 	public void testEcoliPrefixExtension() throws Exception {
@@ -557,6 +560,15 @@ public class SinglePatternTest {
 		assertThat(finder.findAll(), contains(
 			new StringMatch(5, 7, "cg")));
 	}
-	
+
+	@Test
+	@SearchFor("(a*tgc*|t*acg*)*(cg){1,20}(a|t)*")
+	public void testEcoliShortPrefixCancelsLong() throws Exception {
+		StringFinder finder = searcher.createSearcher("attaccacaggtaacggtgcgggctg",
+			LONGEST_MATCH, NON_OVERLAP);
+
+		assertThat(finder.findAll(), contains(
+			new StringMatch(13, 21, "acggtgcg")));
+	}
 
 }
