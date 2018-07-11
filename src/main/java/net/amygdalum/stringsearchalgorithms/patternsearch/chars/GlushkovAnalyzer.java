@@ -163,15 +163,6 @@ public class GlushkovAnalyzer implements RegexNodeVisitor<Void> {
 		precedeSet.addAll(append);
 	}
 
-	private Set<Integer> precede(Integer i) {
-		Set<Integer> set = precede.get(i);
-		if (set == null) {
-			return Collections.emptySet();
-		} else {
-			return set;
-		}
-	}
-
 	private void minLength(RegexNode node, Integer value) {
 		minLength.put(node, value);
 	}
@@ -299,43 +290,16 @@ public class GlushkovAnalyzer implements RegexNodeVisitor<Void> {
 		BitSet defaultValue = SELF_LOOP.in(options) ? initial() : BitSet.empty(len);
 		BitSet start = FACTORS.in(options) ? all() : initial();
 
-		BitSetObjectMap<BitSet> reachable = new BitSetObjectMap<>(defaultValue);
-		reachableByState(start, reachable, reachableByChar, defaultValue);
-		return reachable;
-	}
-
-	private void reachableByState(BitSet d, BitSetObjectMap<BitSet> reachable, CharObjectMap<BitSet> reachableByChar, BitSet defaultValue) {
-		BitSet td = reachable.get(d);
-		if (td == defaultValue) {
-			td = (BitSet) defaultValue.clone();
-		}
-		for (int i = 0; i < len; i++) {
-			if (d.get(i)) {
-				td = td.or(bits(len, follow(i)));
-			}
-		}
-		reachable.put(d, td);
-
-		BitSet n = (BitSet) td.clone();
-		for (char c : alphabet) {
-			BitSet next = n.and(reachableByChar.get(c));
-			if (reachable.get(next) == defaultValue) {
-				reachableByState(next, reachable, reachableByChar, defaultValue);
-			}
-		}
-
+		return new Collector(len, alphabet, follow, reachableByChar, defaultValue)
+			.collect(start);
 	}
 
 	private BitSetObjectMap<BitSet> sourceableByState(CharObjectMap<BitSet> reachableByChar, GlushkovAnalyzerOption... options) {
 		BitSet defaultValue = SELF_LOOP.in(options) ? finals() : BitSet.empty(len);
 		BitSet start = FACTORS.in(options) ? all() : finals();
 
-		BitSetObjectMap<BitSet> sourceable = new BitSetObjectMap<>(defaultValue);
-		List<BitSet> allFinals = allFinals(start, reachableByChar, options);
-		for (BitSet finals : allFinals) {
-			sourceableByState(finals, len, sourceable, reachableByChar, defaultValue);
-		}
-		return sourceable;
+		return new Collector(len, alphabet, precede, reachableByChar, defaultValue)
+			.collect(allFinals(start, reachableByChar, options));
 	}
 
 	private List<BitSet> allFinals(BitSet initial, CharObjectMap<BitSet> reachableByChar, GlushkovAnalyzerOption... options) {
@@ -398,29 +362,7 @@ public class GlushkovAnalyzer implements RegexNodeVisitor<Void> {
 		return new ArrayList<>(filteredPossible);
 	}
 
-	private void sourceableByState(BitSet d, int len, BitSetObjectMap<BitSet> sourceable, CharObjectMap<BitSet> reachableByChar, BitSet defaultValue) {
-		BitSet td = sourceable.get(d);
-		if (td == defaultValue) {
-			td = (BitSet) defaultValue.clone();
-		}
-		for (int i = 0; i < len; i++) {
-			if (d.get(i)) {
-				td = td.or(bits(len, precede(i)));
-			}
-		}
-		sourceable.put(d, td);
-
-		BitSet n = (BitSet) td.clone();
-		for (char c : alphabet) {
-			BitSet next = n.and(reachableByChar.get(c));
-			if (sourceable.get(next) == defaultValue) {
-				sourceableByState(next, len, sourceable, reachableByChar, defaultValue);
-			}
-		}
-
-	}
-
-	private BitSet bits(int len, Set<Integer> ints) {
+	private static BitSet bits(int len, Set<Integer> ints) {
 		BitSet bits = BitSet.empty(len);
 		for (int i : ints) {
 			bits.set(i);
@@ -673,6 +615,74 @@ public class GlushkovAnalyzer implements RegexNodeVisitor<Void> {
 			sum += value;
 		}
 		return sum;
+	}
+
+	private static class Collector {
+
+		private int len;
+		private char[] alphabet;
+		private Map<Integer, Set<Integer>> next;
+		private BitSetObjectMap<BitSet> accumulator;
+		private CharObjectMap<BitSet> reachableByChar;
+		private BitSet defaultValue;
+		private WorkSet<BitSet> todo;
+
+		public Collector(int len, char[] alphabet, Map<Integer, Set<Integer>> next, CharObjectMap<BitSet> reachableByChar, BitSet defaultValue) {
+			this.len = len;
+			this.alphabet = alphabet;
+			this.next = next;
+			this.accumulator = new BitSetObjectMap<BitSet>(defaultValue);
+			this.reachableByChar = reachableByChar;
+			this.defaultValue = defaultValue;
+			this.todo = new WorkSet<>();
+		}
+
+		public BitSetObjectMap<BitSet> collect(BitSet... start) {
+			return collect(asList(start));
+		}
+
+		public BitSetObjectMap<BitSet> collect(Collection<BitSet> start) {
+			todo.addAll(start);
+
+			while (!todo.isEmpty()) {
+				BitSet current = todo.remove();
+				computeReachables(current);
+			}
+
+			return accumulator;
+		}
+
+		private void computeReachables(BitSet d) {
+			BitSet td = accumulator.get(d);
+			if (td == defaultValue) {
+				td = (BitSet) defaultValue.clone();
+			}
+			for (int i = 0; i < len; i++) {
+				if (d.get(i)) {
+					td = td.or(bits(len, next(i)));
+				}
+			}
+			accumulator.put(d, td);
+
+			BitSet n = (BitSet) td.clone();
+			for (char c : alphabet) {
+				BitSet next = n.and(reachableByChar.get(c));
+				if (accumulator.get(next) == defaultValue) {
+					todo.add(next);
+				}
+			}
+
+		}
+
+		private Set<Integer> next(Integer i) {
+			Set<Integer> set = next.get(i);
+			if (set == null) {
+				return Collections.emptySet();
+			} else {
+				return set;
+			}
+		}
+
 	}
 
 }
