@@ -38,7 +38,7 @@ public class BOM implements StringSearchAlgorithm {
 
 	public BOM(String pattern, CharMapping mapping) {
 		this.patternLength = pattern.length();
-		this.trie = computeTrie(mapping.normalized(pattern.toCharArray()), patternLength, mapping);
+		this.trie = computeTrie(mapping.normalized(pattern.toCharArray()), mapping);
 	}
 
 	private static <T> void applyMapping(CharMapping mapping, PreCharTrieNode<char[]> trie) {
@@ -60,7 +60,7 @@ public class BOM implements StringSearchAlgorithm {
 		}
 	}
 
-	private static CharTrieNode<char[]> computeTrie(char[] pattern, int length, CharMapping mapping) {
+	private static CharTrieNode<char[]> computeTrie(char[] pattern, CharMapping mapping) {
 		PreCharTrieNode<char[]> trie = new PreCharTrieNode<>();
 		PreCharTrieNode<char[]> node = trie.extend(revert(pattern), 0);
 		node.setAttached(pattern);

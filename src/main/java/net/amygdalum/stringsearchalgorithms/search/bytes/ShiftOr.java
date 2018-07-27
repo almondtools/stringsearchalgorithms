@@ -5,7 +5,6 @@ import static java.util.Arrays.fill;
 import static net.amygdalum.util.text.ByteEncoding.encode;
 
 import java.nio.charset.Charset;
-import java.util.Arrays;
 
 import net.amygdalum.stringsearchalgorithms.search.AbstractStringFinder;
 import net.amygdalum.stringsearchalgorithms.search.StringFinder;
@@ -210,7 +209,7 @@ public class ShiftOr implements StringSearchAlgorithm {
 
 		private static long[] computeStates(byte[] pattern) {
 			long[] bytes = new long[256];
-			Arrays.fill(bytes, ALLBITS);
+			fill(bytes, ALLBITS);
 			for (int i = 0; i < pattern.length; i++) {
 				byte b = pattern[i];
 				bytes[b & 0xff] &= ~(1l << i);
@@ -229,7 +228,7 @@ public class ShiftOr implements StringSearchAlgorithm {
 
 		public static long[] computeZero(int length) {
 			long[] zero = new long[((length - 1) / 64) + 1];
-			Arrays.fill(zero, ALLBITS);
+			fill(zero, ALLBITS);
 			return zero;
 		}
 

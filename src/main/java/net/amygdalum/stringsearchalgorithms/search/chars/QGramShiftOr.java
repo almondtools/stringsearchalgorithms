@@ -7,7 +7,6 @@ import static net.amygdalum.util.text.CharUtils.maxLength;
 import static net.amygdalum.util.text.CharUtils.minLength;
 import static net.amygdalum.util.text.StringUtils.toCharArray;
 
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
@@ -51,7 +50,7 @@ public class QGramShiftOr implements StringSearchAlgorithm {
 		this.maxLength = maxLength(charpatterns);
 		this.qmapping = qmapping;
 		this.patterns = new StringSet(charpatterns);
-		this.states = computeStates(charpatterns, qmapping, mapping, minLength, maxLength);
+		this.states = computeStates(charpatterns, qmapping, mapping, maxLength);
 	}
 
 	public static QGramMapping bestMapping(Collection<String> patterns) {
@@ -73,12 +72,12 @@ public class QGramShiftOr implements StringSearchAlgorithm {
 		return new QGramMapping(q, bits);
 	}
 
-	private static BitMapStates computeStates(List<char[]> patterns, QGramMapping qmapping, CharMapping mapping, int minLength, int maxLength) {
+	private static BitMapStates computeStates(List<char[]> patterns, QGramMapping qmapping, CharMapping mapping, int maxLength) {
 		QGramAlphabet alphabet = QGramAlphabet.of(patterns, qmapping);
 		if (maxLength > 64) {
 			return new RelaxedMultiLongStates(patterns, alphabet, mapping, maxLength);
 		} else {
-			return new RelaxedSingleLongStates(patterns, alphabet, mapping, maxLength);
+			return new RelaxedSingleLongStates(patterns, alphabet, mapping);
 		}
 	}
 
@@ -470,18 +469,18 @@ public class QGramShiftOr implements StringSearchAlgorithm {
 		private int maxQGram;
 		private long[] characters;
 
-		public RelaxedSingleLongStates(List<char[]> pattern, QGramAlphabet alphabet, CharMapping mapping, int maxLength) {
+		public RelaxedSingleLongStates(List<char[]> pattern, QGramAlphabet alphabet, CharMapping mapping) {
 			this.minQGram = alphabet.minQGram();
 			this.maxQGram = alphabet.maxQGram();
-			this.characters = computeStates(pattern, alphabet, mapping, maxLength);
+			this.characters = computeStates(pattern, alphabet, mapping);
 		}
 
-		private static long[] computeStates(List<char[]> patterns, QGramAlphabet alphabet, CharMapping mapping, int maxLength) {
+		private static long[] computeStates(List<char[]> patterns, QGramAlphabet alphabet, CharMapping mapping) {
 			QGramMapping qmapping = alphabet.getMapping();
 			int min = alphabet.minQGram();
 			int max = alphabet.maxQGram();
 			long[] characters = new long[max - min + 1];
-			Arrays.fill(characters, ALLBITS);
+			fill(characters, ALLBITS);
 			for (char[] pattern : patterns) {
 				int i = 0;
 				for (int[] qcs : qmapping.iterate(pattern, mapping)) {
@@ -509,7 +508,7 @@ public class QGramShiftOr implements StringSearchAlgorithm {
 
 		public static long[] computeZero(int length) {
 			long[] zero = new long[((length - 1) / 64) + 1];
-			Arrays.fill(zero, ALLBITS);
+			fill(zero, ALLBITS);
 			return zero;
 		}
 

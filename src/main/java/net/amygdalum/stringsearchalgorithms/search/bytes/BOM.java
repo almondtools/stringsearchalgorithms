@@ -36,10 +36,10 @@ public class BOM implements StringSearchAlgorithm {
 	public BOM(String pattern, Charset charset) {
 		byte[] encoded = encode(pattern, charset);
 		this.patternLength = encoded.length;
-		this.trie = computeTrie(encoded, patternLength);
+		this.trie = computeTrie(encoded);
 	}
 
-	private static ByteTrieNode<byte[]> computeTrie(byte[] pattern, int length) {
+	private static ByteTrieNode<byte[]> computeTrie(byte[] pattern) {
 		PreByteTrieNode<byte[]> trie = new PreByteTrieNode<>();
 		PreByteTrieNode<byte[]> node = trie.extend(revert(pattern), 0);
 		node.setAttached(pattern);

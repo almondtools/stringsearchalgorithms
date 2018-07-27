@@ -64,7 +64,7 @@ public class MultiFactorRE implements StringSearchAlgorithm {
 		Map<String, FactorExtender> matchers = computeMatchers(patterns, factorExtender);
 		this.maxLength = maxLength;
 		this.minLength = computeMinLength(matchers);
-		this.extenders = computeExtenders(matchers, minLength, maxLength);
+		this.extenders = computeExtenders(matchers, maxLength);
 		this.searchAlgorithm = factorSearcher.of(extenders.keySet());
 	}
 
@@ -84,7 +84,7 @@ public class MultiFactorRE implements StringSearchAlgorithm {
 		return minLength;
 	}
 
-	private static Map<String, List<FactorExtender>> computeExtenders(Map<String, FactorExtender> matchers, int minLength, int length) {
+	private static Map<String, List<FactorExtender>> computeExtenders(Map<String, FactorExtender> matchers, int length) {
 		Map<String, List<FactorExtender>> factors = new LinkedHashMap<>();
 
 		Collection<FactorExtender> allMatchers = matchers.values();

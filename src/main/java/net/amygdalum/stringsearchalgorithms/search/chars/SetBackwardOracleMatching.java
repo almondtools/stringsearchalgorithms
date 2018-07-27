@@ -129,7 +129,7 @@ public class SetBackwardOracleMatching implements StringSearchAlgorithm {
 
 	private static void computeTerminals(PreCharTrieNode<List<char[]>> trie, List<char[]> patterns, int minLength) {
 		for (char[] pattern : patterns) {
-			char[] prefix = Arrays.copyOfRange(pattern, 0, minLength);
+			char[] prefix = copyOfRange(pattern, 0, minLength);
 			PreCharTrieNode<List<char[]>> terminal = trie.nextNode(revert(prefix));
 			List<char[]> terminalPatterns = terminal.getAttached();
 			if (terminalPatterns == null) {
@@ -137,7 +137,7 @@ public class SetBackwardOracleMatching implements StringSearchAlgorithm {
 				terminal.setAttached(terminalPatterns);
 				terminalPatterns.add(prefix);
 			}
-			char[] tail = Arrays.copyOfRange(pattern, minLength, pattern.length);
+			char[] tail = copyOfRange(pattern, minLength, pattern.length);
 			terminalPatterns.add(tail);
 		}
 	}

@@ -37,8 +37,6 @@ public class WuManber implements StringSearchAlgorithm {
 	private static final int SHIFT_SIZE = 255;
 	private static final int HASH_SIZE = 127;
 
-	private char minChar;
-	private char maxChar;
 	private int minLength;
 	private int maxLength;
 	private int block;
@@ -47,17 +45,17 @@ public class WuManber implements StringSearchAlgorithm {
 
 	public WuManber(Collection<String> patterns) {
 		List<char[]> charpatterns = toCharArray(patterns);
-		this.maxChar = computeMaxChar(charpatterns);
-		this.minChar = computeMinChar(charpatterns);
 		this.minLength = minLength(charpatterns);
 		this.maxLength = maxLength(charpatterns);
-		this.block = blockSize(minLength, minChar, maxChar, charpatterns.size());
+		this.block = blockSize(minLength, charpatterns);
 		this.shift = computeShift(charpatterns, block, minLength);
 		this.hash = computeHash(charpatterns, block);
 	}
 
-	private static int blockSize(int minLength, char minChar, char maxChar, int patterns) {
-		int optSize = (int) Math.ceil(Math.log(2 * minLength * patterns) / Math.log(maxChar - minChar));
+	private static int blockSize(int minLength, List<char[]> charpatterns) {
+		char maxChar = computeMaxChar(charpatterns);
+		char minChar = computeMinChar(charpatterns);
+		int optSize = (int) Math.ceil(Math.log(2 * minLength * charpatterns.size()) / Math.log(maxChar - minChar));
 		if (optSize <= 0) {
 			return 1;
 		} else if (optSize > minLength) {
