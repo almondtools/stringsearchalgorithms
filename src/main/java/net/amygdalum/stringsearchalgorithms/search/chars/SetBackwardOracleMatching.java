@@ -24,8 +24,9 @@ import net.amygdalum.util.io.CharProvider;
 import net.amygdalum.util.map.CharObjectMap;
 import net.amygdalum.util.map.CharObjectMap.Entry;
 import net.amygdalum.util.text.CharMapping;
-import net.amygdalum.util.tries.CharTrieNode;
-import net.amygdalum.util.tries.CharTrieNodeCompiler;
+import net.amygdalum.util.tries.CharTrie;
+import net.amygdalum.util.tries.CharTrieCursor;
+import net.amygdalum.util.tries.CharTrieTreeCompiler;
 import net.amygdalum.util.tries.PreCharTrieNode;
 
 /**
@@ -36,7 +37,7 @@ import net.amygdalum.util.tries.PreCharTrieNode;
 public class SetBackwardOracleMatching implements StringSearchAlgorithm {
 
 	private CharMapping mapping;
-	private CharTrieNode<List<char[]>> trie;
+	private CharTrie<List<char[]>> trie;
 	private int minLength;
 
 	public SetBackwardOracleMatching(Collection<String> patterns) {
@@ -77,7 +78,7 @@ public class SetBackwardOracleMatching implements StringSearchAlgorithm {
 		}
 	}
 
-	private static CharTrieNode<List<char[]>> computeTrie(List<char[]> charpatterns, int length, CharMapping mapping) {
+	private static CharTrie<List<char[]>> computeTrie(List<char[]> charpatterns, int length, CharMapping mapping) {
 		PreCharTrieNode<List<char[]>> trie = new PreCharTrieNode<>();
 		for (char[] pattern : charpatterns) {
 			char[] prefix = copyOfRange(pattern, 0, length);
@@ -86,9 +87,10 @@ public class SetBackwardOracleMatching implements StringSearchAlgorithm {
 		computeOracle(trie);
 		computeTerminals(trie, charpatterns, length);
 		if (mapping != CharMapping.IDENTITY) {
-			applyMapping(mapping, trie); 
+			applyMapping(mapping, trie);
 		}
-		return new CharTrieNodeCompiler<List<char[]>>(false).compileAndLink(trie);
+		return new CharTrieTreeCompiler<List<char[]>>(false)
+			.compileAndLink(trie);
 	}
 
 	private static void computeOracle(PreCharTrieNode<List<char[]>> trie) {
@@ -104,7 +106,8 @@ public class SetBackwardOracleMatching implements StringSearchAlgorithm {
 		}
 	}
 
-	private static List<PreCharTrieNode<List<char[]>>> process(PreCharTrieNode<List<char[]>> parent, Map<PreCharTrieNode<List<char[]>>, PreCharTrieNode<List<char[]>>> oracle, PreCharTrieNode<List<char[]>> init) {
+	private static List<PreCharTrieNode<List<char[]>>> process(PreCharTrieNode<List<char[]>> parent, Map<PreCharTrieNode<List<char[]>>, PreCharTrieNode<List<char[]>>> oracle,
+		PreCharTrieNode<List<char[]>> init) {
 		List<PreCharTrieNode<List<char[]>>> nexts = new ArrayList<>();
 		for (Entry<PreCharTrieNode<List<char[]>>> entry : parent.getNexts().cursor()) {
 			char c = entry.key;
@@ -144,7 +147,7 @@ public class SetBackwardOracleMatching implements StringSearchAlgorithm {
 
 	@Override
 	public StringFinder createFinder(CharProvider chars, StringFinderOption... options) {
-		return new Finder(chars, options);
+		return new Finder(trie, minLength, mapping, chars, options);
 	}
 
 	@Override
@@ -157,14 +160,22 @@ public class SetBackwardOracleMatching implements StringSearchAlgorithm {
 		return getClass().getSimpleName();
 	}
 
-	private class Finder extends AbstractStringFinder {
+	private static class Finder extends AbstractStringFinder {
 
+		private final int minLength;
+		private final int lookahead;
+		private final CharMapping mapping;
 		private CharProvider chars;
+		private CharTrieCursor<List<char[]>> cursor;
 		private Queue<StringMatch> buffer;
 
-		public Finder(CharProvider chars, StringFinderOption... options) {
+		public Finder(CharTrie<List<char[]>> trie, int minLength, CharMapping mapping, CharProvider chars, StringFinderOption... options) {
 			super(options);
+			this.minLength = minLength;
+			this.lookahead = minLength - 1;
+			this.mapping = mapping;
 			this.chars = chars;
+			this.cursor = trie.cursor();
 			this.buffer = new LinkedList<>();
 		}
 
@@ -181,20 +192,20 @@ public class SetBackwardOracleMatching implements StringSearchAlgorithm {
 			if (!buffer.isEmpty()) {
 				return buffer.remove();
 			}
-			final int lookahead = minLength - 1;
 			next: while (!chars.finished(lookahead)) {
-				CharTrieNode<List<char[]>> current = trie;
+				cursor.reset();
 				int j = lookahead;
-				while (j >= 0 && current != null) {
-					current = current.nextNode(chars.lookahead(j));
+				boolean success = true;
+				while (j >= 0 && success) {
+					success = cursor.accept(chars.lookahead(j));
 					j--;
 				}
 				long currentWindowStart = chars.current();
 				long currentPos = currentWindowStart + j + 1;
 				long currentWindowEnd = currentWindowStart + minLength;
 				char[] matchedPrefix = chars.between(currentPos, currentWindowEnd);
-				if (current != null && j < 0) {
-					List<char[]> patterns = current.getAttached();
+				if (success && j < 0) {
+					List<char[]> patterns = cursor.iterator().next();
 					Iterator<char[]> iPatterns = patterns.iterator();
 					char[] prefix = iPatterns.next();
 					if (Arrays.equals(prefix, mapping.normalized(matchedPrefix))) {

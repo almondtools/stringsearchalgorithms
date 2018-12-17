@@ -18,8 +18,9 @@ import net.amygdalum.util.io.CharProvider;
 import net.amygdalum.util.map.CharObjectMap;
 import net.amygdalum.util.map.CharObjectMap.Entry;
 import net.amygdalum.util.text.CharMapping;
-import net.amygdalum.util.tries.CharTrieNode;
-import net.amygdalum.util.tries.CharTrieNodeCompiler;
+import net.amygdalum.util.tries.CharTrie;
+import net.amygdalum.util.tries.CharTrieCursor;
+import net.amygdalum.util.tries.CharTrieTreeCompiler;
 import net.amygdalum.util.tries.PreCharTrieNode;
 
 /**
@@ -29,7 +30,7 @@ import net.amygdalum.util.tries.PreCharTrieNode;
  */
 public class BOM implements StringSearchAlgorithm {
 
-	private CharTrieNode<char[]> trie;
+	private CharTrie<char[]> trie;
 	private int patternLength;
 
 	public BOM(String pattern) {
@@ -60,7 +61,7 @@ public class BOM implements StringSearchAlgorithm {
 		}
 	}
 
-	private static CharTrieNode<char[]> computeTrie(char[] pattern, CharMapping mapping) {
+	private static CharTrie<char[]> computeTrie(char[] pattern, CharMapping mapping) {
 		PreCharTrieNode<char[]> trie = new PreCharTrieNode<>();
 		PreCharTrieNode<char[]> node = trie.extend(revert(pattern), 0);
 		node.setAttached(pattern);
@@ -68,7 +69,8 @@ public class BOM implements StringSearchAlgorithm {
 		if (mapping != CharMapping.IDENTITY) {
 			applyMapping(mapping, trie);
 		}
-		return new CharTrieNodeCompiler<char[]>(false).compileAndLink(trie);
+		return new CharTrieTreeCompiler<char[]>(false)
+			.compileAndLink(trie);
 	}
 
 	private static void computeOracle(PreCharTrieNode<char[]> trie) {
@@ -114,7 +116,7 @@ public class BOM implements StringSearchAlgorithm {
 
 	@Override
 	public StringFinder createFinder(CharProvider chars, StringFinderOption... options) {
-		return new Finder(chars, options);
+		return new Finder(trie, patternLength, chars, options);
 	}
 
 	@Override
@@ -122,13 +124,17 @@ public class BOM implements StringSearchAlgorithm {
 		return getClass().getSimpleName();
 	}
 
-	private class Finder extends AbstractStringFinder {
+	private static class Finder extends AbstractStringFinder {
 
+		private final int lookahead;
 		private CharProvider chars;
+		private CharTrieCursor<char[]> cursor;
 
-		public Finder(CharProvider chars, StringFinderOption... options) {
+		public Finder(CharTrie<char[]> trie, int patternLength, CharProvider chars, StringFinderOption... options) {
 			super(options);
+			this.lookahead = patternLength - 1;
 			this.chars = chars;
+			this.cursor = trie.cursor();
 		}
 
 		@Override
@@ -140,16 +146,16 @@ public class BOM implements StringSearchAlgorithm {
 
 		@Override
 		public StringMatch findNext() {
-			final int lookahead = patternLength - 1;
 			while (!chars.finished(lookahead)) {
-				CharTrieNode<char[]> current = trie;
+				cursor.reset();
 				int j = lookahead;
-				while (j >= 0 && current != null) {
-					current = current.nextNode(chars.lookahead(j));
+				boolean success = true;
+				while (j >= 0 && success) {
+					success = cursor.accept(chars.lookahead(j));
 					j--;
 				}
-				if (current != null && j < 0) {
-					char[] pattern = current.getAttached();
+				if (success && j < 0) {
+					char[] pattern = cursor.iterator().next();
 					long start = chars.current();
 					long end = start + pattern.length;
 					StringMatch match = createMatch(start, end);

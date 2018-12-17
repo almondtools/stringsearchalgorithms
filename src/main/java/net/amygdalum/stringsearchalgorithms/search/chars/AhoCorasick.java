@@ -16,8 +16,9 @@ import net.amygdalum.stringsearchalgorithms.search.StringFinderOption;
 import net.amygdalum.stringsearchalgorithms.search.StringMatch;
 import net.amygdalum.util.io.CharProvider;
 import net.amygdalum.util.map.CharObjectMap.Entry;
-import net.amygdalum.util.tries.CharTrieNode;
-import net.amygdalum.util.tries.CharTrieNodeCompiler;
+import net.amygdalum.util.tries.CharTrie;
+import net.amygdalum.util.tries.CharTrieCursor;
+import net.amygdalum.util.tries.CharTrieTreeCompiler;
 import net.amygdalum.util.tries.PreCharTrieNode;
 
 /**
@@ -27,7 +28,7 @@ import net.amygdalum.util.tries.PreCharTrieNode;
  */
 public class AhoCorasick implements StringSearchAlgorithm {
 
-	private CharTrieNode<String> trie;
+	private CharTrie<String> trie;
 	private int minLength;
 
 	public AhoCorasick(Collection<String> patterns) {
@@ -36,20 +37,20 @@ public class AhoCorasick implements StringSearchAlgorithm {
 		this.minLength = minLength(charpatterns);
 	}
 
-	private static CharTrieNode<String> computeTrie(List<char[]> charpatterns) {
+	private static CharTrie<String> computeTrie(List<char[]> charpatterns) {
 		PreCharTrieNode<String> trie = new PreCharTrieNode<>();
-		for (char[] pattern : charpatterns) {
-			trie.extend(pattern, new String(pattern));
-		}
-		return computeSupportTransition(trie);
+		computeTrie(trie, charpatterns);
+		computeSupportTransition(trie);
+		return new CharTrieTreeCompiler<String>(false)
+			.compileAndLink(trie);
 	}
 
 	@Override
 	public StringFinder createFinder(CharProvider chars, StringFinderOption... options) {
 		if (LONGEST_MATCH.in(options)) {
-			return new LongestMatchFinder(chars, options);
+			return new LongestMatchFinder(trie, chars, options);
 		} else {
-			return new NextMatchFinder(chars, options);
+			return new NextMatchFinder(trie, chars, options);
 		}
 	}
 
@@ -58,52 +59,51 @@ public class AhoCorasick implements StringSearchAlgorithm {
 		return minLength;
 	}
 
-	private static CharTrieNode<String> computeSupportTransition(PreCharTrieNode<String> trie) {
+	private static void computeTrie(PreCharTrieNode<String> trie, List<char[]> charpatterns) {
+		for (char[] pattern : charpatterns) {
+			trie.extend(pattern, new String(pattern));
+		}
+	}
+
+	private static void computeSupportTransition(PreCharTrieNode<String> trie) {
 		Queue<PreCharTrieNode<String>> worklist = new LinkedList<>();
 		worklist.add(trie);
 		while (!worklist.isEmpty()) {
 			PreCharTrieNode<String> current = worklist.remove();
 			for (Entry<PreCharTrieNode<String>> next : current.getNexts().cursor()) {
+				char c = next.key;
 				PreCharTrieNode<String> nextTrie = next.value;
-				computeSupport(current, next.key, nextTrie, trie);
+				PreCharTrieNode<String> down = current.getLink();
+				while (down != null) {
+					PreCharTrieNode<String> nextNode = down.nextNode(c);
+					if (nextNode != null) {
+						nextTrie.link(nextNode);
+						break;
+					}
+					down = down.getLink();
+				}
+				if (down == null) {
+					nextTrie.link(trie);
+				}
 				worklist.add(nextTrie);
 			}
 		}
-		return new CharTrieNodeCompiler<String>(false).compileAndLink(trie);
 	}
 
-	private static void computeSupport(PreCharTrieNode<String> parent, char c, PreCharTrieNode<String> trie, PreCharTrieNode<String> init) {
-		if (parent != null) {
-			PreCharTrieNode<String> down = parent.getLink();
-			while (down != null && down.nextNode(c) == null) {
-				down = down.getLink();
-			}
-			if (down != null) {
-				PreCharTrieNode<String> next = down.nextNode(c);
-				trie.link(next);
-				String nextMatch = next.getAttached();
-				if (nextMatch != null && trie.getAttached() == null) {
-					trie.setAttached(nextMatch);
-				}
-			} else {
-				trie.link(init);
-			}
-		}
-	}
-	
 	@Override
 	public String toString() {
 		return getClass().getSimpleName();
 	}
 
-	private abstract class Finder extends BufferedStringFinder {
-		protected CharProvider chars;
-		protected CharTrieNode<String> current;
+	private static abstract class Finder extends BufferedStringFinder {
 
-		public Finder(CharProvider chars, StringFinderOption... options) {
+		protected CharProvider chars;
+		protected CharTrieCursor<String> cursor;
+		
+		public Finder(CharTrie<String> trie, CharProvider chars, StringFinderOption... options) {
 			super(options);
 			this.chars = chars;
-			this.current = trie;
+			this.cursor = trie.cursor();
 		}
 
 		@Override
@@ -111,22 +111,18 @@ public class AhoCorasick implements StringSearchAlgorithm {
 			if (pos > chars.current()) {
 				chars.move(pos);
 			}
-			current = trie;
+			cursor.reset();
 			clear();
 		}
 
-		protected List<StringMatch> createMatches(CharTrieNode<String> current, long end) {
+		protected List<StringMatch> createMatches(long end) {
 			List<StringMatch> matches = new ArrayList<>();
-			while (current != null) {
-				String currentMatch = current.getAttached();
-				if (currentMatch != null) {
-					long start = end - currentMatch.length();
-					StringMatch nextMatch = createMatch(start, end);
-					if (!matches.contains(nextMatch)) {
-						matches.add(nextMatch);
-					}
+			for (String currentMatch : cursor) {
+				long start = end - currentMatch.length();
+				StringMatch nextMatch = createMatch(start, end);
+				if (!matches.contains(nextMatch)) {
+					matches.add(nextMatch);
 				}
-				current = current.getLink();
 			}
 			return matches;
 		}
@@ -138,10 +134,10 @@ public class AhoCorasick implements StringSearchAlgorithm {
 
 	}
 
-	private class NextMatchFinder extends Finder {
+	private static class NextMatchFinder extends Finder {
 
-		public NextMatchFinder(CharProvider chars, StringFinderOption... options) {
-			super(chars, options);
+		public NextMatchFinder(CharTrie<String> trie, CharProvider chars, StringFinderOption... options) {
+			super(trie, chars, options);
 		}
 
 		@Override
@@ -151,22 +147,12 @@ public class AhoCorasick implements StringSearchAlgorithm {
 			}
 			while (!chars.finished()) {
 				char c = chars.next();
-				CharTrieNode<String> next = current.nextNode(c);
-				while (next == null) {
-					CharTrieNode<String> nextcurrent = current.getLink();
-					if (nextcurrent == null) {
-						break;
-					}
-					current = nextcurrent;
-					next = current.nextNode(c);
+				boolean success = cursor.accept(c);
+				if (!success) {
+					cursor.reset();
 				}
-				if (next != null) {
-					current = next;
-				} else {
-					current = trie;
-				}
-				if (current.getAttached() != null) {
-					push(createMatches(current, chars.current()));
+				if (cursor.hasAttachments()) {
+					push(createMatches(chars.current()));
 					return leftMost();
 				}
 			}
@@ -174,36 +160,27 @@ public class AhoCorasick implements StringSearchAlgorithm {
 		}
 	}
 
-	private class LongestMatchFinder extends Finder {
+	private static class LongestMatchFinder extends Finder {
 
-		public LongestMatchFinder(CharProvider chars, StringFinderOption... options) {
-			super(chars, options);
+		public LongestMatchFinder(CharTrie<String> trie, CharProvider chars, StringFinderOption... options) {
+			super(trie, chars, options);
 		}
 
 		@Override
 		public StringMatch findNext() {
 			while (!chars.finished()) {
 				char c = chars.next();
-				CharTrieNode<String> next = current.nextNode(c);
-				if (next == null && !isBufferEmpty()) {
+				boolean success = cursor.lookahead(c);
+				if (!success && !isBufferEmpty()) {
 					chars.prev();
 					break;
 				}
-				while (next == null) {
-					CharTrieNode<String> nextcurrent = current.getLink();
-					if (nextcurrent == null) {
-						break;
-					}
-					current = nextcurrent;
-					next = current.nextNode(c);
+				success = cursor.accept(c);
+				if (!success) {
+					cursor.reset();
 				}
-				if (next != null) {
-					current = next;
-				} else {
-					current = trie;
-				}
-				if (current.getAttached() != null) {
-					push(createMatches(current, chars.current()));
+				if (cursor.hasAttachments()) {
+					push(createMatches(chars.current()));
 				}
 			}
 			return longestLeftMost();

@@ -21,8 +21,9 @@ import net.amygdalum.stringsearchalgorithms.search.StringFinder;
 import net.amygdalum.stringsearchalgorithms.search.StringFinderOption;
 import net.amygdalum.stringsearchalgorithms.search.StringMatch;
 import net.amygdalum.util.io.CharProvider;
-import net.amygdalum.util.tries.CharTrieNode;
-import net.amygdalum.util.tries.CharTrieNodeCompiler;
+import net.amygdalum.util.tries.CharTrie;
+import net.amygdalum.util.tries.CharTrieCursor;
+import net.amygdalum.util.tries.CharTrieTreeCompiler;
 import net.amygdalum.util.tries.PreCharTrieNode;
 
 /**
@@ -41,7 +42,7 @@ public class WuManber implements StringSearchAlgorithm {
 	private int maxLength;
 	private int block;
 	private int[] shift;
-	private CharTrieNode<String>[] hash;
+	private CharTrie<String>[] hash;
 
 	public WuManber(Collection<String> patterns) {
 		List<char[]> charpatterns = toCharArray(patterns);
@@ -105,7 +106,7 @@ public class WuManber implements StringSearchAlgorithm {
 	}
 
 	@SuppressWarnings("unchecked")
-	private static CharTrieNode<String>[] computeHash(List<char[]> charpatterns, int block) {
+	private static CharTrie<String>[] computeHash(List<char[]> charpatterns, int block) {
 		PreCharTrieNode<String>[] hash = new PreCharTrieNode[HASH_SIZE];
 		for (char[] pattern : charpatterns) {
 			char[] lastBlock = Arrays.copyOfRange(pattern, pattern.length - block, pattern.length);
@@ -118,7 +119,8 @@ public class WuManber implements StringSearchAlgorithm {
 			PreCharTrieNode<String> node = trie.extend(revert(pattern), 0);
 			node.setAttached(new String(pattern));
 		}
-		return new CharTrieNodeCompiler<String>(false).compileAndLink(hash);
+		return new CharTrieTreeCompiler<String>(false)
+			.compileAndLink(hash);
 	}
 
 	public static int hashHash(char[] block) {
@@ -136,9 +138,9 @@ public class WuManber implements StringSearchAlgorithm {
 	@Override
 	public StringFinder createFinder(CharProvider chars, StringFinderOption... options) {
 		if (LONGEST_MATCH.in(options)) {
-			return new LongestMatchFinder(chars, options);
+			return new LongestMatchFinder(minLength, maxLength, block, shift, hash, chars, options);
 		} else {
-			return new NextMatchFinder(chars, options);
+			return new NextMatchFinder(minLength, maxLength, block, shift, hash, chars, options);
 		}
 	}
 
@@ -152,13 +154,35 @@ public class WuManber implements StringSearchAlgorithm {
 		return getClass().getSimpleName();
 	}
 
-	private abstract class Finder extends BufferedStringFinder {
+	private static abstract class Finder extends BufferedStringFinder {
 
+		protected final int minLength;
+		protected final int lookahead;
+		protected final int maxLength;
+		protected final int block;
+		protected final int[] shift;
 		protected CharProvider chars;
+		protected CharTrieCursor<String>[] hash;
 
-		public Finder(CharProvider chars, StringFinderOption... options) {
+		public Finder(int minLength, int maxLength, int block, int[] shift, CharTrie<String>[] hash, CharProvider chars, StringFinderOption... options) {
 			super(options);
+			this.minLength = minLength;
+			this.lookahead = minLength - 1;
+			this.maxLength = maxLength;
+			this.block = block;
+			this.shift = shift;
+			this.hash = cursor(hash);
 			this.chars = chars;
+		}
+
+		@SuppressWarnings("unchecked")
+		private static CharTrieCursor<String>[] cursor(CharTrie<String>[] hash) {
+			CharTrieCursor<String>[] cursors = new CharTrieCursor[hash.length];
+			for (int i = 0; i < hash.length; i++) {
+				CharTrie<String> node = hash[i];
+				cursors[i] = node == null ? CharTrieCursor.NULL : node.cursor();
+			}
+			return cursors;
 		}
 
 		@Override
@@ -176,10 +200,10 @@ public class WuManber implements StringSearchAlgorithm {
 
 	}
 
-	private class NextMatchFinder extends Finder {
+	private static class NextMatchFinder extends Finder {
 
-		public NextMatchFinder(CharProvider chars, StringFinderOption... options) {
-			super(chars, options);
+		public NextMatchFinder(int minLength, int maxLength, int block, int[] shift, CharTrie<String>[] hash, CharProvider chars, StringFinderOption... options) {
+			super(minLength, maxLength, block, shift, hash, chars, options);
 		}
 
 		@Override
@@ -187,7 +211,6 @@ public class WuManber implements StringSearchAlgorithm {
 			if (!isBufferEmpty()) {
 				return leftMost();
 			}
-			int lookahead = minLength - 1;
 			while (!chars.finished(lookahead)) {
 				long pos = chars.current();
 				char[] lastBlock = chars.between(pos + minLength - block, pos + minLength);
@@ -195,23 +218,22 @@ public class WuManber implements StringSearchAlgorithm {
 				int shiftBy = shift[shiftKey];
 				if (shiftBy == 0) {
 					int hashkey = hashHash(lastBlock);
-					CharTrieNode<String> node = hash[hashkey];
-					if (node != null) {
-						int patternPointer = lookahead;
-						node = node.nextNode(chars.lookahead(patternPointer));
-						while (node != null) {
-							String match = node.getAttached();
-							if (match != null) {
-								long start = chars.current() + patternPointer;
-								long end = chars.current() + minLength;
-								push(createMatch(start, end));
-							}
-							patternPointer--;
-							if (pos + patternPointer < 0) {
-								break;
-							}
-							node = node.nextNode(chars.lookahead(patternPointer));
+					CharTrieCursor<String> cursor = hash[hashkey];
+					cursor.reset();
+					int patternPointer = lookahead;
+					boolean success = cursor.accept(chars.lookahead(patternPointer));
+					while (success) {
+						if (cursor.hasAttachments()) {
+							String match = cursor.iterator().next();
+							long start = chars.current() + patternPointer;
+							long end = chars.current() + patternPointer + match.length();
+							push(createMatch(start, end));
 						}
+						patternPointer--;
+						if (pos + patternPointer < 0) {
+							break;
+						}
+						success = cursor.accept(chars.lookahead(patternPointer));
 					}
 					chars.next();
 					if (!isBufferEmpty()) {
@@ -226,16 +248,15 @@ public class WuManber implements StringSearchAlgorithm {
 
 	}
 
-	private class LongestMatchFinder extends Finder {
+	private static class LongestMatchFinder extends Finder {
 
-		public LongestMatchFinder(CharProvider chars, StringFinderOption... options) {
-			super(chars, options);
+		public LongestMatchFinder(int minLength, int maxLength, int block, int[] shift, CharTrie<String>[] hash, CharProvider chars, StringFinderOption... options) {
+			super(minLength, maxLength, block, shift, hash, chars, options);
 		}
 
 		@Override
 		public StringMatch findNext() {
 			long lastStart = lastStartFromBuffer();
-			int lookahead = minLength - 1;
 			while (!chars.finished(lookahead)) {
 				long pos = chars.current();
 				char[] lastBlock = chars.between(pos + minLength - block, pos + minLength);
@@ -243,27 +264,26 @@ public class WuManber implements StringSearchAlgorithm {
 				int shiftBy = shift[shiftKey];
 				if (shiftBy == 0) {
 					int hashkey = hashHash(lastBlock);
-					CharTrieNode<String> node = hash[hashkey];
-					if (node != null) {
-						int patternPointer = lookahead;
-						node = node.nextNode(chars.lookahead(patternPointer));
-						while (node != null) {
-							String match = node.getAttached();
-							if (match != null) {
-								long start = chars.current() + patternPointer;
-								long end = chars.current() + minLength;
-								StringMatch stringMatch = createMatch(start, end);
-								if (lastStart < 0) {
-									lastStart = start;
-								}
-								push(stringMatch);
+					CharTrieCursor<String> cursor = hash[hashkey];
+					cursor.reset();
+					int patternPointer = lookahead;
+					boolean success = cursor.accept(chars.lookahead(patternPointer));
+					while (success) {
+						if (cursor.hasAttachments()) {
+							String match = cursor.iterator().next();
+							long start = chars.current() + patternPointer;
+							long end = chars.current() + patternPointer + match.length();
+							StringMatch stringMatch = createMatch(start, end);
+							if (lastStart < 0) {
+								lastStart = start;
 							}
-							patternPointer--;
-							if (pos + patternPointer < 0) {
-								break;
-							}
-							node = node.nextNode(chars.lookahead(patternPointer));
+							push(stringMatch);
 						}
+						patternPointer--;
+						if (pos + patternPointer < 0) {
+							break;
+						}
+						success = cursor.accept(chars.lookahead(patternPointer));
 					}
 					chars.next();
 					if (bufferContainsLongestMatch(lastStart)) {
