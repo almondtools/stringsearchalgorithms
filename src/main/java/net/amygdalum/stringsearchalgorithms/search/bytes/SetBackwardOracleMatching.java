@@ -24,8 +24,9 @@ import net.amygdalum.stringsearchalgorithms.search.StringMatch;
 import net.amygdalum.util.io.ByteProvider;
 import net.amygdalum.util.map.ByteObjectMap.Entry;
 import net.amygdalum.util.text.ByteString;
-import net.amygdalum.util.tries.ByteTrieNode;
-import net.amygdalum.util.tries.ByteTrieNodeCompiler;
+import net.amygdalum.util.tries.ByteTrie;
+import net.amygdalum.util.tries.ByteTrieCursor;
+import net.amygdalum.util.tries.ByteTrieTreeCompiler;
 import net.amygdalum.util.tries.PreByteTrieNode;
 
 /**
@@ -35,7 +36,7 @@ import net.amygdalum.util.tries.PreByteTrieNode;
  */
 public class SetBackwardOracleMatching implements StringSearchAlgorithm {
 
-	private ByteTrieNode<List<byte[]>> trie;
+	private ByteTrie<List<byte[]>> trie;
 	private int minLength;
 
 	public SetBackwardOracleMatching(Collection<String> patterns, Charset charset) {
@@ -44,7 +45,7 @@ public class SetBackwardOracleMatching implements StringSearchAlgorithm {
 		this.trie = computeTrie(bytepatterns, minLength);
 	}
 
-	private static ByteTrieNode<List<byte[]>> computeTrie(List<byte[]> bytepatterns, int length) {
+	private static ByteTrie<List<byte[]>> computeTrie(List<byte[]> bytepatterns, int length) {
 		PreByteTrieNode<List<byte[]>> trie = new PreByteTrieNode<>();
 		for (byte[] pattern : bytepatterns) {
 			byte[] prefix = copyOfRange(pattern, 0, length);
@@ -52,7 +53,8 @@ public class SetBackwardOracleMatching implements StringSearchAlgorithm {
 		}
 		computeOracle(trie);
 		computeTerminals(trie, bytepatterns, length);
-		return new ByteTrieNodeCompiler<List<byte[]>>(false).compileAndLink(trie);
+		return new ByteTrieTreeCompiler<List<byte[]>>(false)
+			.compileAndLink(trie);
 	}
 
 	private static void computeOracle(PreByteTrieNode<List<byte[]>> trie) {
@@ -108,7 +110,7 @@ public class SetBackwardOracleMatching implements StringSearchAlgorithm {
 
 	@Override
 	public StringFinder createFinder(ByteProvider bytes, StringFinderOption... options) {
-		return new Finder(bytes, options);
+		return new Finder(trie, minLength, bytes, options);
 	}
 
 	@Override
@@ -121,14 +123,20 @@ public class SetBackwardOracleMatching implements StringSearchAlgorithm {
 		return getClass().getSimpleName();
 	}
 
-	private class Finder extends AbstractStringFinder {
+	private static class Finder extends AbstractStringFinder {
 
+		private final int minLength;
+		private final int lookahead;
 		private ByteProvider bytes;
+		private ByteTrieCursor<List<byte[]>> cursor;
 		private Queue<StringMatch> buffer;
 
-		public Finder(ByteProvider bytes, StringFinderOption... options) {
+		public Finder(ByteTrie<List<byte[]>> trie, int minLength, ByteProvider bytes, StringFinderOption... options) {
 			super(options);
+			this.minLength = minLength;
+			this.lookahead = minLength - 1;
 			this.bytes = bytes;
+			this.cursor = trie.cursor();
 			this.buffer = new LinkedList<>();
 		}
 
@@ -145,20 +153,20 @@ public class SetBackwardOracleMatching implements StringSearchAlgorithm {
 			if (!buffer.isEmpty()) {
 				return buffer.remove();
 			}
-			final int lookahead = minLength - 1;
 			next: while (!bytes.finished(lookahead)) {
-				ByteTrieNode<List<byte[]>> current = trie;
+				cursor.reset();
 				int j = lookahead;
-				while (j >= 0 && current != null) {
-					current = current.nextNode(bytes.lookahead(j));
+				boolean success = true;
+				while (j >= 0 && success) {
+					success = cursor.accept(bytes.lookahead(j));
 					j--;
 				}
 				long currentWindowStart = bytes.current();
 				long currentPos = currentWindowStart + j + 1;
 				long currentWindowEnd = currentWindowStart + minLength;
 				byte[] matchedPrefix = bytes.between(currentPos, currentWindowEnd);
-				if (current != null && j < 0) {
-					List<byte[]> patterns = current.getAttached();
+				if (success && j < 0) {
+					List<byte[]> patterns = cursor.iterator().next();
 					Iterator<byte[]> iPatterns = patterns.iterator();
 					byte[] prefix = iPatterns.next();
 					if (Arrays.equals(prefix, matchedPrefix)) {

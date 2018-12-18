@@ -22,8 +22,9 @@ import net.amygdalum.stringsearchalgorithms.search.StringMatch;
 import net.amygdalum.util.io.ByteProvider;
 import net.amygdalum.util.text.ByteString;
 import net.amygdalum.util.text.StringUtils;
-import net.amygdalum.util.tries.ByteTrieNode;
-import net.amygdalum.util.tries.ByteTrieNodeCompiler;
+import net.amygdalum.util.tries.ByteTrie;
+import net.amygdalum.util.tries.ByteTrieCursor;
+import net.amygdalum.util.tries.ByteTrieTreeCompiler;
 import net.amygdalum.util.tries.PreByteTrieNode;
 
 /**
@@ -42,10 +43,10 @@ public class WuManber implements StringSearchAlgorithm {
 	private int maxLength;
 	private int block;
 	private int[] shift;
-	private ByteTrieNode<ByteString>[] hash;
+	private ByteTrie<ByteString>[] hash;
 
 	public WuManber(Collection<String> patterns, Charset charset) {
-		List<byte[]> bytepatterns = StringUtils.toByteArray(patterns,charset);
+		List<byte[]> bytepatterns = StringUtils.toByteArray(patterns, charset);
 		this.minLength = minLength(bytepatterns);
 		this.maxLength = maxLength(bytepatterns);
 		this.block = blockSize(minLength, bytepatterns.size());
@@ -104,7 +105,7 @@ public class WuManber implements StringSearchAlgorithm {
 	}
 
 	@SuppressWarnings("unchecked")
-	private static ByteTrieNode<ByteString>[] computeHash(List<byte[]> bytepatterns, int block, Charset charset) {
+	private static ByteTrie<ByteString>[] computeHash(List<byte[]> bytepatterns, int block, Charset charset) {
 		PreByteTrieNode<ByteString>[] hash = new PreByteTrieNode[HASH_SIZE];
 		for (byte[] pattern : bytepatterns) {
 			byte[] lastBlock = Arrays.copyOfRange(pattern, pattern.length - block, pattern.length);
@@ -117,7 +118,8 @@ public class WuManber implements StringSearchAlgorithm {
 			PreByteTrieNode<ByteString> node = trie.extend(revert(pattern), 0);
 			node.setAttached(new ByteString(pattern, charset));
 		}
-		return new ByteTrieNodeCompiler<ByteString>(false).compileAndLink(hash);
+		return new ByteTrieTreeCompiler<ByteString>(false)
+			.compileAndLink(hash);
 	}
 
 	public static int hashHash(byte[] block) {
@@ -135,9 +137,9 @@ public class WuManber implements StringSearchAlgorithm {
 	@Override
 	public StringFinder createFinder(ByteProvider bytes, StringFinderOption... options) {
 		if (LONGEST_MATCH.in(options)) {
-			return new LongestMatchFinder(bytes, options);
+			return new LongestMatchFinder(minLength, maxLength, block, shift, hash, bytes, options);
 		} else {
-			return new NextMatchFinder(bytes, options);
+			return new NextMatchFinder(minLength, maxLength, block, shift, hash, bytes, options);
 		}
 	}
 
@@ -151,13 +153,35 @@ public class WuManber implements StringSearchAlgorithm {
 		return getClass().getSimpleName();
 	}
 
-	private abstract class Finder extends BufferedStringFinder {
+	private static abstract class Finder extends BufferedStringFinder {
 
+		protected final int minLength;
+		protected final int lookahead;
+		protected final int maxLength;
+		protected final int block;
+		protected final int[] shift;
 		protected ByteProvider bytes;
+		protected ByteTrieCursor<ByteString>[] hash;
 
-		public Finder(ByteProvider bytes, StringFinderOption... options) {
+		public Finder(int minLength, int maxLength, int block, int[] shift, ByteTrie<ByteString>[] hash, ByteProvider bytes, StringFinderOption... options) {
 			super(options);
+			this.minLength = minLength;
+			this.lookahead = minLength - 1;
+			this.maxLength = maxLength;
+			this.block = block;
+			this.shift = shift;
+			this.hash = cursor(hash);
 			this.bytes = bytes;
+		}
+
+		@SuppressWarnings("unchecked")
+		private static ByteTrieCursor<ByteString>[] cursor(ByteTrie<ByteString>[] hash) {
+			ByteTrieCursor<ByteString>[] cursors = new ByteTrieCursor[hash.length];
+			for (int i = 0; i < hash.length; i++) {
+				ByteTrie<ByteString> node = hash[i];
+				cursors[i] = node == null ? ByteTrieCursor.NULL : node.cursor();
+			}
+			return cursors;
 		}
 
 		@Override
@@ -175,10 +199,10 @@ public class WuManber implements StringSearchAlgorithm {
 
 	}
 
-	private class NextMatchFinder extends Finder {
+	private static class NextMatchFinder extends Finder {
 
-		public NextMatchFinder(ByteProvider bytes, StringFinderOption... options) {
-			super(bytes, options);
+		public NextMatchFinder(int minLength, int maxLength, int block, int[] shift, ByteTrie<ByteString>[] hash, ByteProvider bytes, StringFinderOption... options) {
+			super(minLength, maxLength, block, shift, hash, bytes, options);
 		}
 
 		@Override
@@ -186,7 +210,6 @@ public class WuManber implements StringSearchAlgorithm {
 			if (!isBufferEmpty()) {
 				return leftMost();
 			}
-			int lookahead = minLength - 1;
 			while (!bytes.finished(lookahead)) {
 				long pos = bytes.current();
 				byte[] lastBlock = bytes.between(pos + minLength - block, pos + minLength);
@@ -194,23 +217,22 @@ public class WuManber implements StringSearchAlgorithm {
 				int shiftBy = shift[shiftKey];
 				if (shiftBy == 0) {
 					int hashkey = hashHash(lastBlock);
-					ByteTrieNode<ByteString> node = hash[hashkey];
-					if (node != null) {
-						int patternPointer = lookahead;
-						node = node.nextNode(bytes.lookahead(patternPointer));
-						while (node != null) {
-							ByteString match = node.getAttached();
-							if (match != null) {
-								long start = bytes.current() + patternPointer;
-								long end = bytes.current() + patternPointer + match.length();
-								push(createMatch(start, end));
-							}
-							patternPointer--;
-							if (pos + patternPointer < 0) {
-								break;
-							}
-							node = node.nextNode(bytes.lookahead(patternPointer));
+					ByteTrieCursor<ByteString> cursor = hash[hashkey];
+					cursor.reset();
+					int patternPointer = lookahead;
+					boolean success = cursor.accept(bytes.lookahead(patternPointer));
+					while (success) {
+						if (cursor.hasAttachments()) {
+							ByteString match = cursor.iterator().next();
+							long start = bytes.current() + patternPointer;
+							long end = bytes.current() + patternPointer + match.length();
+							push(createMatch(start, end));
 						}
+						patternPointer--;
+						if (pos + patternPointer < 0) {
+							break;
+						}
+						success = cursor.accept(bytes.lookahead(patternPointer));
 					}
 					bytes.next();
 					if (!isBufferEmpty()) {
@@ -225,16 +247,15 @@ public class WuManber implements StringSearchAlgorithm {
 
 	}
 
-	private class LongestMatchFinder extends Finder {
+	private static class LongestMatchFinder extends Finder {
 
-		public LongestMatchFinder(ByteProvider bytes, StringFinderOption... options) {
-			super(bytes, options);
+		public LongestMatchFinder(int minLength, int maxLength, int block, int[] shift, ByteTrie<ByteString>[] hash, ByteProvider bytes, StringFinderOption... options) {
+			super(minLength, maxLength, block, shift, hash, bytes, options);
 		}
 
 		@Override
 		public StringMatch findNext() {
 			long lastStart = lastStartFromBuffer();
-			int lookahead = minLength - 1;
 			while (!bytes.finished(lookahead)) {
 				long pos = bytes.current();
 				byte[] lastBlock = bytes.between(pos + minLength - block, pos + minLength);
@@ -242,27 +263,26 @@ public class WuManber implements StringSearchAlgorithm {
 				int shiftBy = shift[shiftKey];
 				if (shiftBy == 0) {
 					int hashkey = hashHash(lastBlock);
-					ByteTrieNode<ByteString> node = hash[hashkey];
-					if (node != null) {
-						int patternPointer = lookahead;
-						node = node.nextNode(bytes.lookahead(patternPointer));
-						while (node != null) {
-							ByteString match = node.getAttached();
-							if (match != null) {
-								long start = bytes.current() + patternPointer;
-								long end = bytes.current() + patternPointer + match.length();
-								StringMatch stringMatch = createMatch(start, end);
-								if (lastStart < 0) {
-									lastStart = start;
-								}
-								push(stringMatch);
+					ByteTrieCursor<ByteString> cursor = hash[hashkey];
+					cursor.reset();
+					int patternPointer = lookahead;
+					boolean success = cursor.accept(bytes.lookahead(patternPointer));
+					while (success) {
+						if (cursor.hasAttachments()) {
+							ByteString match = cursor.iterator().next();
+							long start = bytes.current() + patternPointer;
+							long end = bytes.current() + patternPointer + match.length();
+							StringMatch stringMatch = createMatch(start, end);
+							if (lastStart < 0) {
+								lastStart = start;
 							}
-							patternPointer--;
-							if (pos + patternPointer < 0) {
-								break;
-							}
-							node = node.nextNode(bytes.lookahead(patternPointer));
+							push(stringMatch);
 						}
+						patternPointer--;
+						if (pos + patternPointer < 0) {
+							break;
+						}
+						success = cursor.accept(bytes.lookahead(patternPointer));
 					}
 					bytes.next();
 					if (bufferContainsLongestMatch(lastStart)) {

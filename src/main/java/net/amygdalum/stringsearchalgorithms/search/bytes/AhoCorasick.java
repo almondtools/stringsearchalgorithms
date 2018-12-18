@@ -19,8 +19,9 @@ import net.amygdalum.stringsearchalgorithms.search.StringMatch;
 import net.amygdalum.util.io.ByteProvider;
 import net.amygdalum.util.map.ByteObjectMap.Entry;
 import net.amygdalum.util.text.ByteString;
-import net.amygdalum.util.tries.ByteTrieNode;
-import net.amygdalum.util.tries.ByteTrieNodeCompiler;
+import net.amygdalum.util.tries.ByteTrie;
+import net.amygdalum.util.tries.ByteTrieCursor;
+import net.amygdalum.util.tries.ByteTrieTreeCompiler;
 import net.amygdalum.util.tries.PreByteTrieNode;
 
 /**
@@ -30,7 +31,7 @@ import net.amygdalum.util.tries.PreByteTrieNode;
  */
 public class AhoCorasick implements StringSearchAlgorithm {
 
-	private ByteTrieNode<ByteString> trie;
+	private ByteTrie<ByteString> trie;
 	private int minLength;
 
 	public AhoCorasick(Collection<String> patterns, Charset charset) {
@@ -39,20 +40,20 @@ public class AhoCorasick implements StringSearchAlgorithm {
 		this.minLength = minLength(bytepatterns);
 	}
 
-	private static ByteTrieNode<ByteString> computeTrie(List<byte[]> bytepatterns, Charset charset) {
+	private static ByteTrie<ByteString> computeTrie(List<byte[]> bytepatterns, Charset charset) {
 		PreByteTrieNode<ByteString> trie = new PreByteTrieNode<>();
-		for (byte[] pattern : bytepatterns) {
-			trie.extend(pattern, new ByteString(pattern, charset));
-		}
-		return computeSupportTransition(trie);
+		computeTrie(trie, bytepatterns, charset);
+		computeSupportTransition(trie);
+		return new ByteTrieTreeCompiler<ByteString>(false)
+			.compileAndLink(trie);
 	}
 
 	@Override
 	public StringFinder createFinder(ByteProvider bytes, StringFinderOption... options) {
 		if (LONGEST_MATCH.in(options)) {
-			return new LongestMatchFinder(bytes, options);
+			return new LongestMatchFinder(trie, bytes, options);
 		} else {
-			return new NextMatchFinder(bytes, options);
+			return new NextMatchFinder(trie, bytes, options);
 		}
 	}
 
@@ -61,52 +62,51 @@ public class AhoCorasick implements StringSearchAlgorithm {
 		return minLength;
 	}
 
-	private static ByteTrieNode<ByteString> computeSupportTransition(PreByteTrieNode<ByteString> trie) {
+	private static void computeTrie(PreByteTrieNode<ByteString> trie, List<byte[]> bytepatterns, Charset charset) {
+		for (byte[] pattern : bytepatterns) {
+			trie.extend(pattern, new ByteString(pattern, charset));
+		}
+	}
+
+	private static void computeSupportTransition(PreByteTrieNode<ByteString> trie) {
 		Queue<PreByteTrieNode<ByteString>> worklist = new LinkedList<>();
 		worklist.add(trie);
 		while (!worklist.isEmpty()) {
 			PreByteTrieNode<ByteString> current = worklist.remove();
 			for (Entry<PreByteTrieNode<ByteString>> next : current.getNexts().cursor()) {
+				byte b = next.key;
 				PreByteTrieNode<ByteString> nextTrie = next.value;
-				computeSupport(current, next.key, nextTrie, trie);
+				PreByteTrieNode<ByteString> down = current.getLink();
+				while (down != null) {
+					PreByteTrieNode<ByteString> nextNode = down.nextNode(b);
+					if (nextNode != null) {
+						nextTrie.link(nextNode);
+						break;
+					}
+					down = down.getLink();
+				}
+				if (down == null) {
+					nextTrie.link(trie);
+				}
 				worklist.add(nextTrie);
 			}
 		}
-		return new ByteTrieNodeCompiler<ByteString>(false).compileAndLink(trie);
 	}
 
-	private static void computeSupport(PreByteTrieNode<ByteString> parent, byte b, PreByteTrieNode<ByteString> trie, PreByteTrieNode<ByteString> init) {
-		if (parent != null) {
-			PreByteTrieNode<ByteString> down = parent.getLink();
-			while (down != null && down.nextNode(b) == null) {
-				down = down.getLink();
-			}
-			if (down != null) {
-				PreByteTrieNode<ByteString> next = down.nextNode(b);
-				trie.link(next);
-				ByteString nextMatch = next.getAttached();
-				if (nextMatch != null && trie.getAttached() == null) {
-					trie.setAttached(nextMatch);
-				}
-			} else {
-				trie.link(init);
-			}
-		}
-	}
-	
 	@Override
 	public String toString() {
 		return getClass().getSimpleName();
 	}
 
-	private abstract class Finder extends BufferedStringFinder {
-		protected ByteProvider bytes;
-		protected ByteTrieNode<ByteString> current;
+	private static abstract class Finder extends BufferedStringFinder {
 
-		public Finder(ByteProvider bytes, StringFinderOption... options) {
+		protected ByteProvider bytes;
+		protected ByteTrieCursor<ByteString> cursor;
+
+		public Finder(ByteTrie<ByteString> trie, ByteProvider bytes, StringFinderOption... options) {
 			super(options);
 			this.bytes = bytes;
-			this.current = trie;
+			this.cursor = trie.cursor();
 		}
 
 		@Override
@@ -114,22 +114,18 @@ public class AhoCorasick implements StringSearchAlgorithm {
 			if (pos > bytes.current()) {
 				bytes.move(pos);
 			}
-			current = trie;
+			cursor.reset();
 			clear();
 		}
 
-		protected List<StringMatch> createMatches(ByteTrieNode<ByteString> current, long end) {
+		protected List<StringMatch> createMatches(long end) {
 			List<StringMatch> matches = new ArrayList<>();
-			while (current != null) {
-				ByteString currentMatch = current.getAttached();
-				if (currentMatch != null) {
-					long start = end - currentMatch.length(); 
-					StringMatch nextMatch = createMatch(start, end);
-					if (!matches.contains(nextMatch)) {
-						matches.add(nextMatch);
-					}
+			for (ByteString currentMatch : cursor) {
+				long start = end - currentMatch.length();
+				StringMatch nextMatch = createMatch(start, end);
+				if (!matches.contains(nextMatch)) {
+					matches.add(nextMatch);
 				}
-				current = current.getLink();
 			}
 			return matches;
 		}
@@ -141,10 +137,10 @@ public class AhoCorasick implements StringSearchAlgorithm {
 
 	}
 
-	private class NextMatchFinder extends Finder {
+	private static class NextMatchFinder extends Finder {
 
-		public NextMatchFinder(ByteProvider bytes, StringFinderOption... options) {
-			super(bytes, options);
+		public NextMatchFinder(ByteTrie<ByteString> trie, ByteProvider bytes, StringFinderOption... options) {
+			super(trie, bytes, options);
 		}
 
 		@Override
@@ -154,22 +150,12 @@ public class AhoCorasick implements StringSearchAlgorithm {
 			}
 			while (!bytes.finished()) {
 				byte b = bytes.next();
-				ByteTrieNode<ByteString> next = current.nextNode(b);
-				while (next == null) {
-					ByteTrieNode<ByteString> nextcurrent = current.getLink();
-					if (nextcurrent == null) {
-						break;
-					}
-					current = nextcurrent;
-					next = current.nextNode(b);
+				boolean success = cursor.accept(b);
+				if (!success) {
+					cursor.reset();
 				}
-				if (next != null) {
-					current = next;
-				} else {
-					current = trie;
-				}
-				if (current.getAttached() != null) {
-					push(createMatches(current, bytes.current()));
+				if (cursor.hasAttachments()) {
+					push(createMatches(bytes.current()));
 					return leftMost();
 				}
 			}
@@ -177,36 +163,27 @@ public class AhoCorasick implements StringSearchAlgorithm {
 		}
 	}
 
-	private class LongestMatchFinder extends Finder {
+	private static class LongestMatchFinder extends Finder {
 
-		public LongestMatchFinder(ByteProvider bytes, StringFinderOption... options) {
-			super(bytes, options);
+		public LongestMatchFinder(ByteTrie<ByteString> trie, ByteProvider bytes, StringFinderOption... options) {
+			super(trie, bytes, options);
 		}
 
 		@Override
 		public StringMatch findNext() {
 			while (!bytes.finished()) {
 				byte b = bytes.next();
-				ByteTrieNode<ByteString> next = current.nextNode(b);
-				if (next == null && !isBufferEmpty()) {
+				boolean success = cursor.lookahead(b);
+				if (!success && !isBufferEmpty()) {
 					bytes.prev();
 					break;
 				}
-				while (next == null) {
-					ByteTrieNode<ByteString> nextcurrent = current.getLink();
-					if (nextcurrent == null) {
-						break;
-					}
-					current = nextcurrent;
-					next = current.nextNode(b);
+				success = cursor.accept(b);
+				if (!success) {
+					cursor.reset();
 				}
-				if (next != null) {
-					current = next;
-				} else {
-					current = trie;
-				}
-				if (current.getAttached() != null) {
-					push(createMatches(current, bytes.current()));
+				if (cursor.hasAttachments()) {
+					push(createMatches(bytes.current()));
 				}
 			}
 			return longestLeftMost();

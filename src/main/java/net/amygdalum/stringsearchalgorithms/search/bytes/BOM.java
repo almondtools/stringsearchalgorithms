@@ -19,8 +19,9 @@ import net.amygdalum.stringsearchalgorithms.search.StringMatch;
 import net.amygdalum.util.io.ByteProvider;
 import net.amygdalum.util.map.ByteObjectMap.Entry;
 import net.amygdalum.util.text.ByteString;
-import net.amygdalum.util.tries.ByteTrieNode;
-import net.amygdalum.util.tries.ByteTrieNodeCompiler;
+import net.amygdalum.util.tries.ByteTrie;
+import net.amygdalum.util.tries.ByteTrieCursor;
+import net.amygdalum.util.tries.ByteTrieTreeCompiler;
 import net.amygdalum.util.tries.PreByteTrieNode;
 
 /**
@@ -30,7 +31,7 @@ import net.amygdalum.util.tries.PreByteTrieNode;
  */
 public class BOM implements StringSearchAlgorithm {
 
-	private ByteTrieNode<byte[]> trie;
+	private ByteTrie<byte[]> trie;
 	private int patternLength;
 
 	public BOM(String pattern, Charset charset) {
@@ -39,12 +40,13 @@ public class BOM implements StringSearchAlgorithm {
 		this.trie = computeTrie(encoded);
 	}
 
-	private static ByteTrieNode<byte[]> computeTrie(byte[] pattern) {
+	private static ByteTrie<byte[]> computeTrie(byte[] pattern) {
 		PreByteTrieNode<byte[]> trie = new PreByteTrieNode<>();
 		PreByteTrieNode<byte[]> node = trie.extend(revert(pattern), 0);
 		node.setAttached(pattern);
 		computeOracle(trie);
-		return new ByteTrieNodeCompiler<byte[]>(false).compileAndLink(trie);
+		return new ByteTrieTreeCompiler<byte[]>(false)
+			.compileAndLink(trie);
 	}
 
 	private static void computeOracle(PreByteTrieNode<byte[]> trie) {
@@ -90,7 +92,7 @@ public class BOM implements StringSearchAlgorithm {
 
 	@Override
 	public StringFinder createFinder(ByteProvider bytes, StringFinderOption... options) {
-		return new Finder(bytes, options);
+		return new Finder(trie, patternLength, bytes, options);
 	}
 
 	@Override
@@ -98,13 +100,17 @@ public class BOM implements StringSearchAlgorithm {
 		return getClass().getSimpleName();
 	}
 
-	private class Finder extends AbstractStringFinder {
+	private static class Finder extends AbstractStringFinder {
 
+		private final int lookahead;
 		private ByteProvider bytes;
+		private ByteTrieCursor<byte[]> cursor;
 
-		public Finder(ByteProvider bytes, StringFinderOption... options) {
+		public Finder(ByteTrie<byte[]> trie, int patternLength, ByteProvider bytes, StringFinderOption... options) {
 			super(options);
+			this.lookahead = patternLength - 1;
 			this.bytes = bytes;
+			this.cursor = trie.cursor();
 		}
 
 		@Override
@@ -116,16 +122,16 @@ public class BOM implements StringSearchAlgorithm {
 
 		@Override
 		public StringMatch findNext() {
-			final int lookahead = patternLength - 1;
 			while (!bytes.finished(lookahead)) {
-				ByteTrieNode<byte[]> current = trie;
+				cursor.reset();
 				int j = lookahead;
-				while (j >= 0 && current != null) {
-					current = current.nextNode(bytes.lookahead(j));
+				boolean success = true;
+				while (j >= 0 && success) {
+					success = cursor.accept(bytes.lookahead(j));
 					j--;
 				}
-				if (current != null && j < 0) {
-					byte[] pattern = current.getAttached();
+				if (success && j < 0) {
+					byte[] pattern = cursor.iterator().next();
 					long start = bytes.current();
 					long end = start + pattern.length;
 					StringMatch match = createMatch(start, end);
