@@ -18,19 +18,21 @@ import net.amygdalum.stringsearchalgorithms.search.StringFinderOption;
 import net.amygdalum.stringsearchalgorithms.search.StringMatch;
 import net.amygdalum.util.io.CharProvider;
 import net.amygdalum.util.map.CharIntMap;
-import net.amygdalum.util.tries.CharTrie;
-import net.amygdalum.util.tries.CharTrieCursor;
-import net.amygdalum.util.tries.CharTrieTreeCompiler;
-import net.amygdalum.util.tries.PreCharTrieNode;
+import net.amygdalum.util.text.CharAutomaton;
+import net.amygdalum.util.text.CharTrieBuilder;
+import net.amygdalum.util.text.CharWordSet;
+import net.amygdalum.util.text.doublearraytrie.DoubleArrayCharCompactTrie;
+import net.amygdalum.util.text.doublearraytrie.DoubleArrayCharTrieBuilder;
 
 /**
  * An implementation of the Set Horspool Algorithm.
  * 
- * This algorithm takes a multiple string patterns as input and generates a finder which can find any of these patterns in documents. 
+ * This algorithm takes a multiple string patterns as input and generates a
+ * finder which can find any of these patterns in documents.
  */
 public class SetHorspool implements StringSearchAlgorithm {
 
-	private CharTrie<String> trie;
+	private CharWordSet<String> trie;
 	private int minLength;
 	private int maxLength;
 	private CharShift charShift;
@@ -63,14 +65,14 @@ public class SetHorspool implements StringSearchAlgorithm {
 		return maxChar - minChar < 256 || maxChar - minChar < minLength * 2;
 	}
 
-	private static CharTrie<String> computeTrie(List<char[]> charpatterns) {
-		PreCharTrieNode<String> trie = new PreCharTrieNode<>();
+	private static CharWordSet<String> computeTrie(List<char[]> charpatterns) {
+		CharTrieBuilder<String> builder = new DoubleArrayCharTrieBuilder<>(new DoubleArrayCharCompactTrie<String>());
+
 		for (char[] pattern : charpatterns) {
-			PreCharTrieNode<String> node = trie.extend(revert(pattern), 0);
-			node.setAttached(new String(pattern));
+			builder.extend(revert(pattern), new String(pattern));
 		}
-		return new CharTrieTreeCompiler<String>(false)
-			.compileAndLink(trie);
+
+		return builder.build();
 	}
 
 	@Override
@@ -92,9 +94,40 @@ public class SetHorspool implements StringSearchAlgorithm {
 		return getClass().getSimpleName();
 	}
 
+	private static abstract class Finder extends BufferedStringFinder {
+
+		protected final int minLength;
+		protected final int maxLength;
+		protected final CharShift charShift;
+		protected CharProvider chars;
+		protected CharAutomaton<String> cursor;
+
+		public Finder(CharWordSet<String> trie, int minLength, int maxLength, CharShift charShift, CharProvider chars, StringFinderOption... options) {
+			super(options);
+			this.minLength = minLength;
+			this.maxLength = maxLength;
+			this.charShift = charShift;
+			this.chars = chars;
+			this.cursor = trie.cursor();
+		}
+
+		@Override
+		public void skipTo(long pos) {
+			long last = removeMatchesBefore(pos);
+			if (last > chars.current()) {
+				chars.move(last);
+			}
+		}
+
+		protected StringMatch createMatch(long start, long end) {
+			String s = chars.slice(start, end);
+			return new StringMatch(start, end, s);
+		}
+	}
+
 	private static class NextMatchFinder extends Finder {
 
-		public NextMatchFinder(CharTrie<String> trie, int minLength, int maxLength, CharShift charShift, CharProvider chars, StringFinderOption... options) {
+		public NextMatchFinder(CharWordSet<String> trie, int minLength, int maxLength, CharShift charShift, CharProvider chars, StringFinderOption... options) {
 			super(trie, minLength, maxLength, charShift, chars, options);
 		}
 
@@ -134,40 +167,9 @@ public class SetHorspool implements StringSearchAlgorithm {
 
 	}
 
-	private static abstract class Finder extends BufferedStringFinder {
-
-		protected final int minLength;
-		protected final int maxLength;
-		protected final CharShift charShift;
-		protected CharProvider chars;
-		protected CharTrieCursor<String> cursor;
-
-		public Finder(CharTrie<String> trie, int minLength, int maxLength, CharShift charShift, CharProvider chars, StringFinderOption... options) {
-			super(options);
-			this.minLength = minLength;
-			this.maxLength = maxLength;
-			this.charShift = charShift;
-			this.chars = chars;
-			this.cursor = trie.cursor();
-		}
-
-		@Override
-		public void skipTo(long pos) {
-			long last = removeMatchesBefore(pos);
-			if (last > chars.current()) {
-				chars.move(last);
-			}
-		}
-
-		protected StringMatch createMatch(long start, long end) {
-			String s = chars.slice(start, end);
-			return new StringMatch(start, end, s);
-		}
-	}
-
 	private static class LongestMatchFinder extends Finder {
 
-		public LongestMatchFinder(CharTrie<String> trie, int minLength, int maxLength, CharShift charShift, CharProvider chars, StringFinderOption... options) {
+		public LongestMatchFinder(CharWordSet<String> trie, int minLength, int maxLength, CharShift charShift, CharProvider chars, StringFinderOption... options) {
 			super(trie, minLength, maxLength, charShift, chars, options);
 		}
 

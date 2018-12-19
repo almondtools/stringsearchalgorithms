@@ -213,6 +213,16 @@ public class MultiStringSearchAlgorithmTest {
 	}
 	
 	@Test
+	@SearchFor({"and wood to fire", "Treasures of wickedness profit nothing", "Then shalt thou enquire","fire"})
+	public void testReverseSubsumptions() throws Exception {
+		List<StringMatch> matches = searcher.createSearcher(""
+			+ "As coals are to burning coals, and wood to fire; so is a contentious man to kindle strife.").findAll();
+		assertThat(matches, containsInAnyOrder(
+			new StringMatch(31, 47, "and wood to fire"),
+			new StringMatch(43, 47, "fire")));
+	}
+	
+	@Test
 	@SearchFor({"abcd","ab","bc","cd"})
 	public void testOverlappingSubsumingPatterns1() throws Exception {
 		List<StringMatch> matches = searcher.createSearcher("abcd", LONGEST_MATCH, NON_OVERLAP).findAll();

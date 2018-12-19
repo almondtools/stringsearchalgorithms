@@ -21,15 +21,17 @@ import net.amygdalum.stringsearchalgorithms.search.StringFinder;
 import net.amygdalum.stringsearchalgorithms.search.StringFinderOption;
 import net.amygdalum.stringsearchalgorithms.search.StringMatch;
 import net.amygdalum.util.io.CharProvider;
-import net.amygdalum.util.tries.CharTrie;
-import net.amygdalum.util.tries.CharTrieCursor;
-import net.amygdalum.util.tries.CharTrieTreeCompiler;
-import net.amygdalum.util.tries.PreCharTrieNode;
+import net.amygdalum.util.text.CharAutomaton;
+import net.amygdalum.util.text.CharTrieBuilder;
+import net.amygdalum.util.text.CharWordSet;
+import net.amygdalum.util.text.doublearraytrie.DoubleArrayCharCompactTrie;
+import net.amygdalum.util.text.doublearraytrie.DoubleArrayCharTrieBuilder;
 
 /**
  * An implementation of the Wu-Manber Algorithm.
  * 
- * This algorithm takes a multiple string patterns as input and generates a finder which can find any of these patterns in documents. 
+ * This algorithm takes a multiple string patterns as input and generates a
+ * finder which can find any of these patterns in documents.
  */
 public class WuManber implements StringSearchAlgorithm {
 
@@ -42,7 +44,7 @@ public class WuManber implements StringSearchAlgorithm {
 	private int maxLength;
 	private int block;
 	private int[] shift;
-	private CharTrie<String>[] hash;
+	private CharWordSet<String>[] hash;
 
 	public WuManber(Collection<String> patterns) {
 		List<char[]> charpatterns = toCharArray(patterns);
@@ -105,22 +107,27 @@ public class WuManber implements StringSearchAlgorithm {
 		return hash;
 	}
 
-	@SuppressWarnings("unchecked")
-	private static CharTrie<String>[] computeHash(List<char[]> charpatterns, int block) {
-		PreCharTrieNode<String>[] hash = new PreCharTrieNode[HASH_SIZE];
+	private static CharWordSet<String>[] computeHash(List<char[]> charpatterns, int block) {
+		@SuppressWarnings("unchecked")
+		CharTrieBuilder<String>[] builders = new CharTrieBuilder[HASH_SIZE];
 		for (char[] pattern : charpatterns) {
 			char[] lastBlock = Arrays.copyOfRange(pattern, pattern.length - block, pattern.length);
 			int hashKey = hashHash(lastBlock);
-			PreCharTrieNode<String> trie = hash[hashKey];
-			if (trie == null) {
-				trie = new PreCharTrieNode<>();
-				hash[hashKey] = trie;
+			CharTrieBuilder<String> builder = builders[hashKey];
+			if (builder == null) {
+				builder = new DoubleArrayCharTrieBuilder<>(new DoubleArrayCharCompactTrie<String>());
+
+				builders[hashKey] = builder;
 			}
-			PreCharTrieNode<String> node = trie.extend(revert(pattern), 0);
-			node.setAttached(new String(pattern));
+			builder.extend(revert(pattern), new String(pattern));
 		}
-		return new CharTrieTreeCompiler<String>(false)
-			.compileAndLink(hash);
+
+		@SuppressWarnings("unchecked")
+		CharWordSet<String>[] hash = new CharWordSet[builders.length];
+		for (int i = 0; i < hash.length; i++) {
+			hash[i] = builders[i] == null ? null : builders[i].build();
+		}
+		return hash;
 	}
 
 	public static int hashHash(char[] block) {
@@ -162,9 +169,9 @@ public class WuManber implements StringSearchAlgorithm {
 		protected final int block;
 		protected final int[] shift;
 		protected CharProvider chars;
-		protected CharTrieCursor<String>[] hash;
+		protected CharAutomaton<String>[] hash;
 
-		public Finder(int minLength, int maxLength, int block, int[] shift, CharTrie<String>[] hash, CharProvider chars, StringFinderOption... options) {
+		public Finder(int minLength, int maxLength, int block, int[] shift, CharWordSet<String>[] hash, CharProvider chars, StringFinderOption... options) {
 			super(options);
 			this.minLength = minLength;
 			this.lookahead = minLength - 1;
@@ -176,11 +183,11 @@ public class WuManber implements StringSearchAlgorithm {
 		}
 
 		@SuppressWarnings("unchecked")
-		private static CharTrieCursor<String>[] cursor(CharTrie<String>[] hash) {
-			CharTrieCursor<String>[] cursors = new CharTrieCursor[hash.length];
+		private static CharAutomaton<String>[] cursor(CharWordSet<String>[] hash) {
+			CharAutomaton<String>[] cursors = new CharAutomaton[hash.length];
 			for (int i = 0; i < hash.length; i++) {
-				CharTrie<String> node = hash[i];
-				cursors[i] = node == null ? CharTrieCursor.NULL : node.cursor();
+				CharWordSet<String> node = hash[i];
+				cursors[i] = node == null ? CharAutomaton.NULL : node.cursor();
 			}
 			return cursors;
 		}
@@ -202,7 +209,7 @@ public class WuManber implements StringSearchAlgorithm {
 
 	private static class NextMatchFinder extends Finder {
 
-		public NextMatchFinder(int minLength, int maxLength, int block, int[] shift, CharTrie<String>[] hash, CharProvider chars, StringFinderOption... options) {
+		public NextMatchFinder(int minLength, int maxLength, int block, int[] shift, CharWordSet<String>[] hash, CharProvider chars, StringFinderOption... options) {
 			super(minLength, maxLength, block, shift, hash, chars, options);
 		}
 
@@ -218,7 +225,7 @@ public class WuManber implements StringSearchAlgorithm {
 				int shiftBy = shift[shiftKey];
 				if (shiftBy == 0) {
 					int hashkey = hashHash(lastBlock);
-					CharTrieCursor<String> cursor = hash[hashkey];
+					CharAutomaton<String> cursor = hash[hashkey];
 					cursor.reset();
 					int patternPointer = lookahead;
 					boolean success = cursor.accept(chars.lookahead(patternPointer));
@@ -250,7 +257,7 @@ public class WuManber implements StringSearchAlgorithm {
 
 	private static class LongestMatchFinder extends Finder {
 
-		public LongestMatchFinder(int minLength, int maxLength, int block, int[] shift, CharTrie<String>[] hash, CharProvider chars, StringFinderOption... options) {
+		public LongestMatchFinder(int minLength, int maxLength, int block, int[] shift, CharWordSet<String>[] hash, CharProvider chars, StringFinderOption... options) {
 			super(minLength, maxLength, block, shift, hash, chars, options);
 		}
 
@@ -264,7 +271,7 @@ public class WuManber implements StringSearchAlgorithm {
 				int shiftBy = shift[shiftKey];
 				if (shiftBy == 0) {
 					int hashkey = hashHash(lastBlock);
-					CharTrieCursor<String> cursor = hash[hashkey];
+					CharAutomaton<String> cursor = hash[hashkey];
 					cursor.reset();
 					int patternPointer = lookahead;
 					boolean success = cursor.accept(chars.lookahead(patternPointer));

@@ -20,17 +20,19 @@ import net.amygdalum.stringsearchalgorithms.search.StringFinder;
 import net.amygdalum.stringsearchalgorithms.search.StringFinderOption;
 import net.amygdalum.stringsearchalgorithms.search.StringMatch;
 import net.amygdalum.util.io.ByteProvider;
+import net.amygdalum.util.text.ByteAutomaton;
 import net.amygdalum.util.text.ByteString;
+import net.amygdalum.util.text.ByteTrieBuilder;
+import net.amygdalum.util.text.ByteWordSet;
 import net.amygdalum.util.text.StringUtils;
-import net.amygdalum.util.tries.ByteTrie;
-import net.amygdalum.util.tries.ByteTrieCursor;
-import net.amygdalum.util.tries.ByteTrieTreeCompiler;
-import net.amygdalum.util.tries.PreByteTrieNode;
+import net.amygdalum.util.text.doublearraytrie.DoubleArrayByteCompactTrie;
+import net.amygdalum.util.text.doublearraytrie.DoubleArrayByteTrieBuilder;
 
 /**
  * An implementation of the Wu-Manber Algorithm.
  * 
- * This algorithm takes a multiple string patterns as input and generates a finder which can find any of these patterns in documents. 
+ * This algorithm takes a multiple string patterns as input and generates a
+ * finder which can find any of these patterns in documents.
  */
 public class WuManber implements StringSearchAlgorithm {
 
@@ -43,7 +45,7 @@ public class WuManber implements StringSearchAlgorithm {
 	private int maxLength;
 	private int block;
 	private int[] shift;
-	private ByteTrie<ByteString>[] hash;
+	private ByteWordSet<ByteString>[] hash;
 
 	public WuManber(Collection<String> patterns, Charset charset) {
 		List<byte[]> bytepatterns = StringUtils.toByteArray(patterns, charset);
@@ -104,22 +106,27 @@ public class WuManber implements StringSearchAlgorithm {
 		return hash;
 	}
 
-	@SuppressWarnings("unchecked")
-	private static ByteTrie<ByteString>[] computeHash(List<byte[]> bytepatterns, int block, Charset charset) {
-		PreByteTrieNode<ByteString>[] hash = new PreByteTrieNode[HASH_SIZE];
+	private static ByteWordSet<ByteString>[] computeHash(List<byte[]> bytepatterns, int block, Charset charset) {
+		@SuppressWarnings("unchecked")
+		ByteTrieBuilder<ByteString>[] builders = new ByteTrieBuilder[HASH_SIZE];
 		for (byte[] pattern : bytepatterns) {
 			byte[] lastBlock = Arrays.copyOfRange(pattern, pattern.length - block, pattern.length);
 			int hashKey = hashHash(lastBlock);
-			PreByteTrieNode<ByteString> trie = hash[hashKey];
-			if (trie == null) {
-				trie = new PreByteTrieNode<>();
-				hash[hashKey] = trie;
+			ByteTrieBuilder<ByteString> builder = builders[hashKey];
+			if (builder == null) {
+				builder = new DoubleArrayByteTrieBuilder<>(new DoubleArrayByteCompactTrie<ByteString>());
+
+				builders[hashKey] = builder;
 			}
-			PreByteTrieNode<ByteString> node = trie.extend(revert(pattern), 0);
-			node.setAttached(new ByteString(pattern, charset));
+			builder.extend(revert(pattern), new ByteString(pattern, charset));
 		}
-		return new ByteTrieTreeCompiler<ByteString>(false)
-			.compileAndLink(hash);
+
+		@SuppressWarnings("unchecked")
+		ByteWordSet<ByteString>[] hash = new ByteWordSet[builders.length];
+		for (int i = 0; i < hash.length; i++) {
+			hash[i] = builders[i] == null ? null : builders[i].build();
+		}
+		return hash;
 	}
 
 	public static int hashHash(byte[] block) {
@@ -161,9 +168,9 @@ public class WuManber implements StringSearchAlgorithm {
 		protected final int block;
 		protected final int[] shift;
 		protected ByteProvider bytes;
-		protected ByteTrieCursor<ByteString>[] hash;
+		protected ByteAutomaton<ByteString>[] hash;
 
-		public Finder(int minLength, int maxLength, int block, int[] shift, ByteTrie<ByteString>[] hash, ByteProvider bytes, StringFinderOption... options) {
+		public Finder(int minLength, int maxLength, int block, int[] shift, ByteWordSet<ByteString>[] hash, ByteProvider bytes, StringFinderOption... options) {
 			super(options);
 			this.minLength = minLength;
 			this.lookahead = minLength - 1;
@@ -175,11 +182,11 @@ public class WuManber implements StringSearchAlgorithm {
 		}
 
 		@SuppressWarnings("unchecked")
-		private static ByteTrieCursor<ByteString>[] cursor(ByteTrie<ByteString>[] hash) {
-			ByteTrieCursor<ByteString>[] cursors = new ByteTrieCursor[hash.length];
+		private static ByteAutomaton<ByteString>[] cursor(ByteWordSet<ByteString>[] hash) {
+			ByteAutomaton<ByteString>[] cursors = new ByteAutomaton[hash.length];
 			for (int i = 0; i < hash.length; i++) {
-				ByteTrie<ByteString> node = hash[i];
-				cursors[i] = node == null ? ByteTrieCursor.NULL : node.cursor();
+				ByteWordSet<ByteString> node = hash[i];
+				cursors[i] = node == null ? ByteAutomaton.NULL : node.cursor();
 			}
 			return cursors;
 		}
@@ -201,7 +208,7 @@ public class WuManber implements StringSearchAlgorithm {
 
 	private static class NextMatchFinder extends Finder {
 
-		public NextMatchFinder(int minLength, int maxLength, int block, int[] shift, ByteTrie<ByteString>[] hash, ByteProvider bytes, StringFinderOption... options) {
+		public NextMatchFinder(int minLength, int maxLength, int block, int[] shift, ByteWordSet<ByteString>[] hash, ByteProvider bytes, StringFinderOption... options) {
 			super(minLength, maxLength, block, shift, hash, bytes, options);
 		}
 
@@ -217,7 +224,7 @@ public class WuManber implements StringSearchAlgorithm {
 				int shiftBy = shift[shiftKey];
 				if (shiftBy == 0) {
 					int hashkey = hashHash(lastBlock);
-					ByteTrieCursor<ByteString> cursor = hash[hashkey];
+					ByteAutomaton<ByteString> cursor = hash[hashkey];
 					cursor.reset();
 					int patternPointer = lookahead;
 					boolean success = cursor.accept(bytes.lookahead(patternPointer));
@@ -249,7 +256,7 @@ public class WuManber implements StringSearchAlgorithm {
 
 	private static class LongestMatchFinder extends Finder {
 
-		public LongestMatchFinder(int minLength, int maxLength, int block, int[] shift, ByteTrie<ByteString>[] hash, ByteProvider bytes, StringFinderOption... options) {
+		public LongestMatchFinder(int minLength, int maxLength, int block, int[] shift, ByteWordSet<ByteString>[] hash, ByteProvider bytes, StringFinderOption... options) {
 			super(minLength, maxLength, block, shift, hash, bytes, options);
 		}
 
@@ -263,7 +270,7 @@ public class WuManber implements StringSearchAlgorithm {
 				int shiftBy = shift[shiftKey];
 				if (shiftBy == 0) {
 					int hashkey = hashHash(lastBlock);
-					ByteTrieCursor<ByteString> cursor = hash[hashkey];
+					ByteAutomaton<ByteString> cursor = hash[hashkey];
 					cursor.reset();
 					int patternPointer = lookahead;
 					boolean success = cursor.accept(bytes.lookahead(patternPointer));

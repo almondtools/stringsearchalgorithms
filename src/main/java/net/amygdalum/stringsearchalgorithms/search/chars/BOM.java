@@ -1,13 +1,15 @@
 package net.amygdalum.stringsearchalgorithms.search.chars;
 
+import static java.util.Arrays.asList;
 import static net.amygdalum.util.text.CharUtils.revert;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.IdentityHashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Queue;
 import java.util.Set;
 
 import net.amygdalum.stringsearchalgorithms.search.AbstractStringFinder;
@@ -15,22 +17,26 @@ import net.amygdalum.stringsearchalgorithms.search.StringFinder;
 import net.amygdalum.stringsearchalgorithms.search.StringFinderOption;
 import net.amygdalum.stringsearchalgorithms.search.StringMatch;
 import net.amygdalum.util.io.CharProvider;
-import net.amygdalum.util.map.CharObjectMap;
-import net.amygdalum.util.map.CharObjectMap.Entry;
+import net.amygdalum.util.text.CharAutomaton;
+import net.amygdalum.util.text.CharConnectionAdaptor;
+import net.amygdalum.util.text.CharDawgBuilder;
 import net.amygdalum.util.text.CharMapping;
-import net.amygdalum.util.tries.CharTrie;
-import net.amygdalum.util.tries.CharTrieCursor;
-import net.amygdalum.util.tries.CharTrieTreeCompiler;
-import net.amygdalum.util.tries.PreCharTrieNode;
+import net.amygdalum.util.text.CharNode;
+import net.amygdalum.util.text.CharTask;
+import net.amygdalum.util.text.CharWordSet;
+import net.amygdalum.util.text.linkeddawg.CharClassicDawgFactory;
+import net.amygdalum.util.text.linkeddawg.LinkedCharDawgBuilder;
 
 /**
- * An implementation of the String Search Algorithm BOM (Backward Oracle Matching).
+ * An implementation of the String Search Algorithm BOM (Backward Oracle
+ * Matching).
  * 
- * This algorithm takes a single pattern as input and generates a finder which can find this pattern in documents
+ * This algorithm takes a single pattern as input and generates a finder which
+ * can find this pattern in documents
  */
 public class BOM implements StringSearchAlgorithm {
 
-	private CharTrie<char[]> trie;
+	private CharWordSet<char[]> trie;
 	private int patternLength;
 
 	public BOM(String pattern) {
@@ -39,74 +45,20 @@ public class BOM implements StringSearchAlgorithm {
 
 	public BOM(String pattern, CharMapping mapping) {
 		this.patternLength = pattern.length();
-		this.trie = computeTrie(mapping.normalized(pattern.toCharArray()), mapping);
+		this.trie = computeTrie(pattern.toCharArray(), mapping);
 	}
 
-	private static <T> void applyMapping(CharMapping mapping, PreCharTrieNode<char[]> trie) {
-		Set<PreCharTrieNode<char[]>> nodes = trie.nodes();
-		for (PreCharTrieNode<char[]> node : nodes) {
-			applyMapping(node, mapping);
-		}
-	}
-
-	private static void applyMapping(PreCharTrieNode<char[]> node, CharMapping mapping) {
-		CharObjectMap<PreCharTrieNode<char[]>> nexts = node.getNexts();
-		node.reset();
-		for (Entry<PreCharTrieNode<char[]>> entry : nexts.cursor()) {
-			char ec = entry.key;
-			PreCharTrieNode<char[]> next = entry.value;
-			for (char c : mapping.map(ec)) {
-				node.addNext(c, next);
-			}
-		}
-	}
-
-	private static CharTrie<char[]> computeTrie(char[] pattern, CharMapping mapping) {
-		PreCharTrieNode<char[]> trie = new PreCharTrieNode<>();
-		PreCharTrieNode<char[]> node = trie.extend(revert(pattern), 0);
-		node.setAttached(pattern);
-		computeOracle(trie);
+	private static CharWordSet<char[]> computeTrie(char[] pattern, CharMapping mapping) {
 		if (mapping != CharMapping.IDENTITY) {
-			applyMapping(mapping, trie);
+			pattern = mapping.normalized(pattern);
 		}
-		return new CharTrieTreeCompiler<char[]>(false)
-			.compileAndLink(trie);
-	}
 
-	private static void computeOracle(PreCharTrieNode<char[]> trie) {
-		Map<PreCharTrieNode<char[]>, PreCharTrieNode<char[]>> oracle = new IdentityHashMap<>();
-		PreCharTrieNode<char[]> init = trie;
-		oracle.put(init, null);
-		Queue<PreCharTrieNode<char[]>> worklist = new LinkedList<>();
-		worklist.add(trie);
-		while (!worklist.isEmpty()) {
-			PreCharTrieNode<char[]> current = worklist.remove();
-			List<PreCharTrieNode<char[]>> nexts = process(current, oracle, init);
-			worklist.addAll(nexts);
-		}
-	}
+		CharDawgBuilder<char[]> builder = new LinkedCharDawgBuilder<>(new CharClassicDawgFactory<char[]>());
+		builder.extend(revert(pattern), pattern);
+		builder.work(new BuildOracle());
+		builder.work(new UseCharClasses(mapping));
 
-	private static List<PreCharTrieNode<char[]>> process(PreCharTrieNode<char[]> parent, Map<PreCharTrieNode<char[]>, PreCharTrieNode<char[]>> oracle, PreCharTrieNode<char[]> init) {
-		List<PreCharTrieNode<char[]>> nexts = new ArrayList<>();
-		for (Entry<PreCharTrieNode<char[]>> entry : parent.getNexts().cursor()) {
-			char c = entry.key;
-			PreCharTrieNode<char[]> trie = entry.value;
-
-			PreCharTrieNode<char[]> down = oracle.get(parent);
-			while (down != null && down.nextNode(c) == null) {
-				down.addNext(c, trie);
-				down = oracle.get(down);
-			}
-			if (down != null) {
-				PreCharTrieNode<char[]> next = down.nextNode(c);
-				oracle.put(trie, next);
-			} else {
-				oracle.put(trie, init);
-			}
-
-			nexts.add(trie);
-		}
-		return nexts;
+		return builder.build();
 	}
 
 	@Override
@@ -124,13 +76,101 @@ public class BOM implements StringSearchAlgorithm {
 		return getClass().getSimpleName();
 	}
 
+	public static class BuildOracle implements CharTask<char[]> {
+		private Map<CharNode<char[]>, CharNode<char[]>> oracle;
+		private CharNode<char[]> init;
+
+		public BuildOracle() {
+			oracle = new IdentityHashMap<>();
+		}
+
+		@Override
+		public List<CharNode<char[]>> init(CharNode<char[]> root) {
+			this.init = root;
+			return asList(root);
+		}
+
+		@Override
+		public List<CharNode<char[]>> process(CharNode<char[]> node) {
+			List<CharNode<char[]>> nexts = new ArrayList<>();
+			for (char c : node.getAlternatives()) {
+				CharNode<char[]> current = node.nextNode(c);
+
+				CharNode<char[]> down = oracle.get(node);
+				while (down != null) {
+					CharNode<char[]> next = down.nextNode(c);
+					if (next != null) {
+						oracle.put(current, next);
+						break;
+					}
+					addNextNode(down, c, current);
+					down = oracle.get(down);
+				}
+				if (down == null) {
+					oracle.put(current, init);
+				}
+
+				nexts.add(current);
+			}
+			return nexts;
+		}
+
+		@SuppressWarnings("unchecked")
+		private void addNextNode(CharNode<char[]> node, char c, CharNode<char[]> next) {
+			((CharConnectionAdaptor<char[]>) node).addNextNode(c, next);
+		}
+
+	}
+
+	public static class UseCharClasses implements CharTask<char[]> {
+
+		private CharMapping mapping;
+		private Set<CharNode<char[]>> done;
+
+		public UseCharClasses(CharMapping mapping) {
+			this.mapping = mapping;
+			this.done = new HashSet<>();
+		}
+
+		@Override
+		public List<CharNode<char[]>> init(CharNode<char[]> root) {
+			if (mapping == CharMapping.IDENTITY) {
+				return Collections.emptyList();
+			}
+			return Arrays.asList(root);
+		}
+
+		@Override
+		public List<CharNode<char[]>> process(CharNode<char[]> node) {
+			List<CharNode<char[]>> nexts = new ArrayList<>();
+
+			for (char c : node.getAlternatives()) {
+				CharNode<char[]> next = node.nextNode(c);
+				for (char cc : mapping.map(c)) {
+					addNextNode(node, cc, next);
+				}
+				if (done.add(next)) {
+					nexts.add(next);
+				}
+			}
+
+			return nexts;
+		}
+
+		@SuppressWarnings("unchecked")
+		private void addNextNode(CharNode<char[]> node, char c, CharNode<char[]> next) {
+			((CharConnectionAdaptor<char[]>) node).addNextNode(c, next);
+		}
+
+	}
+
 	private static class Finder extends AbstractStringFinder {
 
 		private final int lookahead;
 		private CharProvider chars;
-		private CharTrieCursor<char[]> cursor;
+		private CharAutomaton<char[]> cursor;
 
-		public Finder(CharTrie<char[]> trie, int patternLength, CharProvider chars, StringFinderOption... options) {
+		public Finder(CharWordSet<char[]> trie, int patternLength, CharProvider chars, StringFinderOption... options) {
 			super(options);
 			this.lookahead = patternLength - 1;
 			this.chars = chars;

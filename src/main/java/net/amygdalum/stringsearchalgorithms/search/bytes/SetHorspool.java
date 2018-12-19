@@ -16,21 +16,23 @@ import net.amygdalum.stringsearchalgorithms.search.StringFinder;
 import net.amygdalum.stringsearchalgorithms.search.StringFinderOption;
 import net.amygdalum.stringsearchalgorithms.search.StringMatch;
 import net.amygdalum.util.io.ByteProvider;
+import net.amygdalum.util.text.ByteAutomaton;
 import net.amygdalum.util.text.ByteString;
+import net.amygdalum.util.text.ByteTrieBuilder;
+import net.amygdalum.util.text.ByteWordSet;
 import net.amygdalum.util.text.StringUtils;
-import net.amygdalum.util.tries.ByteTrie;
-import net.amygdalum.util.tries.ByteTrieCursor;
-import net.amygdalum.util.tries.ByteTrieTreeCompiler;
-import net.amygdalum.util.tries.PreByteTrieNode;
+import net.amygdalum.util.text.doublearraytrie.DoubleArrayByteCompactTrie;
+import net.amygdalum.util.text.doublearraytrie.DoubleArrayByteTrieBuilder;
 
 /**
  * An implementation of the Set Horspool Algorithm.
  * 
- * This algorithm takes a multiple string patterns as input and generates a finder which can find any of these patterns in documents. 
+ * This algorithm takes a multiple string patterns as input and generates a
+ * finder which can find any of these patterns in documents.
  */
 public class SetHorspool implements StringSearchAlgorithm {
 
-	private ByteTrie<ByteString> trie;
+	private ByteWordSet<ByteString> trie;
 	private int minLength;
 	private int maxLength;
 	private ByteShift byteShift;
@@ -47,14 +49,14 @@ public class SetHorspool implements StringSearchAlgorithm {
 		return new QuickShift(bytepatterns, minLength);
 	}
 
-	private static ByteTrie<ByteString> computeTrie(List<byte[]> bytepatterns, Charset charset) {
-		PreByteTrieNode<ByteString> trie = new PreByteTrieNode<>();
+	private static ByteWordSet<ByteString> computeTrie(List<byte[]> bytepatterns, Charset charset) {
+		ByteTrieBuilder<ByteString> builder = new DoubleArrayByteTrieBuilder<>(new DoubleArrayByteCompactTrie<ByteString>());
+
 		for (byte[] pattern : bytepatterns) {
-			PreByteTrieNode<ByteString> node = trie.extend(revert(pattern), 0);
-			node.setAttached(new ByteString(pattern, charset));
+			builder.extend(revert(pattern), new ByteString(pattern, charset));
 		}
-		return new ByteTrieTreeCompiler<ByteString>(false)
-			.compileAndLink(trie);
+
+		return builder.build();
 	}
 
 	@Override
@@ -76,9 +78,40 @@ public class SetHorspool implements StringSearchAlgorithm {
 		return getClass().getSimpleName();
 	}
 
+	private static abstract class Finder extends BufferedStringFinder {
+
+		protected final int minLength;
+		protected final int maxLength;
+		protected final ByteShift byteShift;
+		protected ByteProvider bytes;
+		protected ByteAutomaton<ByteString> cursor;
+
+		public Finder(ByteWordSet<ByteString> trie, int minLength, int maxLength, ByteShift byteShift, ByteProvider bytes, StringFinderOption... options) {
+			super(options);
+			this.minLength = minLength;
+			this.maxLength = maxLength;
+			this.byteShift = byteShift;
+			this.bytes = bytes;
+			this.cursor = trie.cursor();
+		}
+
+		@Override
+		public void skipTo(long pos) {
+			long last = removeMatchesBefore(pos);
+			if (last > bytes.current()) {
+				bytes.move(last);
+			}
+		}
+
+		protected StringMatch createMatch(long start, long end) {
+			ByteString slice = bytes.slice(start, end);
+			return new StringMatch(start, end, slice.getString());
+		}
+	}
+
 	private static class NextMatchFinder extends Finder {
 
-		public NextMatchFinder(ByteTrie<ByteString> trie, int minLength, int maxLength, ByteShift byteShift, ByteProvider bytes, StringFinderOption... options) {
+		public NextMatchFinder(ByteWordSet<ByteString> trie, int minLength, int maxLength, ByteShift byteShift, ByteProvider bytes, StringFinderOption... options) {
 			super(trie, minLength, maxLength, byteShift, bytes, options);
 		}
 
@@ -118,40 +151,9 @@ public class SetHorspool implements StringSearchAlgorithm {
 
 	}
 
-	private static abstract class Finder extends BufferedStringFinder {
-
-		protected final int minLength;
-		protected final int maxLength;
-		protected final ByteShift byteShift;
-		protected ByteProvider bytes;
-		protected ByteTrieCursor<ByteString> cursor;
-
-		public Finder(ByteTrie<ByteString> trie, int minLength, int maxLength, ByteShift byteShift, ByteProvider bytes, StringFinderOption... options) {
-			super(options);
-			this.minLength = minLength;
-			this.maxLength = maxLength;
-			this.byteShift = byteShift;
-			this.bytes = bytes;
-			this.cursor = trie.cursor();
-		}
-
-		@Override
-		public void skipTo(long pos) {
-			long last = removeMatchesBefore(pos);
-			if (last > bytes.current()) {
-				bytes.move(last);
-			}
-		}
-
-		protected StringMatch createMatch(long start, long end) {
-			ByteString slice = bytes.slice(start, end);
-			return new StringMatch(start, end, slice.getString());
-		}
-	}
-
 	private static class LongestMatchFinder extends Finder {
 
-		public LongestMatchFinder(ByteTrie<ByteString> trie, int minLength, int maxLength, ByteShift byteShift, ByteProvider bytes, StringFinderOption... options) {
+		public LongestMatchFinder(ByteWordSet<ByteString> trie, int minLength, int maxLength, ByteShift byteShift, ByteProvider bytes, StringFinderOption... options) {
 			super(trie, minLength, maxLength, byteShift, bytes, options);
 		}
 

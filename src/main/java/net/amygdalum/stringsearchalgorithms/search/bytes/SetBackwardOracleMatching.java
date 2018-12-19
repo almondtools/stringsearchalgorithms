@@ -1,6 +1,7 @@
 package net.amygdalum.stringsearchalgorithms.search.bytes;
 
 import static java.nio.charset.StandardCharsets.UTF_16LE;
+import static java.util.Arrays.asList;
 import static java.util.Arrays.copyOfRange;
 import static net.amygdalum.util.text.ByteUtils.minLength;
 import static net.amygdalum.util.text.ByteUtils.revert;
@@ -22,12 +23,16 @@ import net.amygdalum.stringsearchalgorithms.search.StringFinder;
 import net.amygdalum.stringsearchalgorithms.search.StringFinderOption;
 import net.amygdalum.stringsearchalgorithms.search.StringMatch;
 import net.amygdalum.util.io.ByteProvider;
-import net.amygdalum.util.map.ByteObjectMap.Entry;
+import net.amygdalum.util.text.ByteAutomaton;
+import net.amygdalum.util.text.ByteConnectionAdaptor;
+import net.amygdalum.util.text.ByteDawgBuilder;
+import net.amygdalum.util.text.ByteNode;
 import net.amygdalum.util.text.ByteString;
-import net.amygdalum.util.tries.ByteTrie;
-import net.amygdalum.util.tries.ByteTrieCursor;
-import net.amygdalum.util.tries.ByteTrieTreeCompiler;
-import net.amygdalum.util.tries.PreByteTrieNode;
+import net.amygdalum.util.text.ByteTask;
+import net.amygdalum.util.text.ByteWordSet;
+import net.amygdalum.util.text.JoinStrategy;
+import net.amygdalum.util.text.linkeddawg.ByteClassicDawgFactory;
+import net.amygdalum.util.text.linkeddawg.LinkedByteDawgBuilder;
 
 /**
  * An implementation of the Set Backward Oracle Matching Algorithm.
@@ -36,7 +41,7 @@ import net.amygdalum.util.tries.PreByteTrieNode;
  */
 public class SetBackwardOracleMatching implements StringSearchAlgorithm {
 
-	private ByteTrie<List<byte[]>> trie;
+	private ByteWordSet<List<byte[]>> trie;
 	private int minLength;
 
 	public SetBackwardOracleMatching(Collection<String> patterns, Charset charset) {
@@ -45,67 +50,18 @@ public class SetBackwardOracleMatching implements StringSearchAlgorithm {
 		this.trie = computeTrie(bytepatterns, minLength);
 	}
 
-	private static ByteTrie<List<byte[]>> computeTrie(List<byte[]> bytepatterns, int length) {
-		PreByteTrieNode<List<byte[]>> trie = new PreByteTrieNode<>();
+	private static ByteWordSet<List<byte[]>> computeTrie(List<byte[]> bytepatterns, int length) {
+		ByteDawgBuilder<List<byte[]>> builder = new LinkedByteDawgBuilder<>(new ByteClassicDawgFactory<List<byte[]>>(), new MergePatterns());
+
 		for (byte[] pattern : bytepatterns) {
 			byte[] prefix = copyOfRange(pattern, 0, length);
-			trie.extend(revert(prefix), 0);
+			byte[] reversePrefix = revert(prefix);
+			byte[] suffix = copyOfRange(pattern, length, pattern.length);
+			builder.extend(reversePrefix, asList(prefix, suffix));
 		}
-		computeOracle(trie);
-		computeTerminals(trie, bytepatterns, length);
-		return new ByteTrieTreeCompiler<List<byte[]>>(false)
-			.compileAndLink(trie);
-	}
+		builder.work(new BuildOracle());
 
-	private static void computeOracle(PreByteTrieNode<List<byte[]>> trie) {
-		Map<PreByteTrieNode<List<byte[]>>, PreByteTrieNode<List<byte[]>>> oracle = new IdentityHashMap<>();
-		PreByteTrieNode<List<byte[]>> init = trie;
-		oracle.put(init, null);
-		Queue<PreByteTrieNode<List<byte[]>>> worklist = new LinkedList<>();
-		worklist.add(trie);
-		while (!worklist.isEmpty()) {
-			PreByteTrieNode<List<byte[]>> current = worklist.remove();
-			List<PreByteTrieNode<List<byte[]>>> nexts = process(current, oracle, init);
-			worklist.addAll(nexts);
-		}
-	}
-
-	private static List<PreByteTrieNode<List<byte[]>>> process(PreByteTrieNode<List<byte[]>> parent, Map<PreByteTrieNode<List<byte[]>>, PreByteTrieNode<List<byte[]>>> oracle, PreByteTrieNode<List<byte[]>> init) {
-		List<PreByteTrieNode<List<byte[]>>> nexts = new ArrayList<>();
-		for (Entry<PreByteTrieNode<List<byte[]>>> entry : parent.getNexts().cursor()) {
-			byte c = entry.key;
-			PreByteTrieNode<List<byte[]>> trie = entry.value;
-
-			PreByteTrieNode<List<byte[]>> down = oracle.get(parent);
-			while (down != null && down.nextNode(c) == null) {
-				down.addNext(c, trie);
-				down = oracle.get(down);
-			}
-			if (down != null) {
-				PreByteTrieNode<List<byte[]>> next = down.nextNode(c);
-				oracle.put(trie, next);
-			} else {
-				oracle.put(trie, init);
-			}
-
-			nexts.add(trie);
-		}
-		return nexts;
-	}
-
-	private static void computeTerminals(PreByteTrieNode<List<byte[]>> trie, List<byte[]> patterns, int minLength) {
-		for (byte[] pattern : patterns) {
-			byte[] prefix = copyOfRange(pattern, 0, minLength);
-			PreByteTrieNode<List<byte[]>> terminal = trie.nextNode(revert(prefix));
-			List<byte[]> terminalPatterns = terminal.getAttached();
-			if (terminalPatterns == null) {
-				terminalPatterns = new ArrayList<>();
-				terminal.setAttached(terminalPatterns);
-				terminalPatterns.add(prefix);
-			}
-			byte[] tail = copyOfRange(pattern, minLength, pattern.length);
-			terminalPatterns.add(tail);
-		}
+		return builder.build();
 	}
 
 	@Override
@@ -123,15 +79,74 @@ public class SetBackwardOracleMatching implements StringSearchAlgorithm {
 		return getClass().getSimpleName();
 	}
 
+	public static class MergePatterns implements JoinStrategy<List<byte[]>> {
+
+		@Override
+		public List<byte[]> join(List<byte[]> existing, List<byte[]> next) {
+			if (existing == null) {
+				return new ArrayList<>(next);
+			} else {
+				existing.add(next.get(1));
+				return existing;
+			}
+		}
+
+	}
+
+	public static class BuildOracle implements ByteTask<List<byte[]>> {
+		private Map<ByteNode<List<byte[]>>, ByteNode<List<byte[]>>> oracle;
+		private ByteNode<List<byte[]>> init;
+
+		public BuildOracle() {
+			oracle = new IdentityHashMap<>();
+		}
+
+		@Override
+		public List<ByteNode<List<byte[]>>> init(ByteNode<List<byte[]>> root) {
+			this.init = root;
+			return asList(root);
+		}
+
+		@Override
+		public List<ByteNode<List<byte[]>>> process(ByteNode<List<byte[]>> node) {
+			List<ByteNode<List<byte[]>>> nexts = new ArrayList<>();
+			for (byte b : node.getAlternatives()) {
+				ByteNode<List<byte[]>> current = node.nextNode(b);
+
+				ByteNode<List<byte[]>> down = oracle.get(node);
+				while (down != null) {
+					ByteNode<List<byte[]>> next = down.nextNode(b);
+					if (next != null) {
+						oracle.put(current, next);
+						break;
+					}
+					addNextNode(down, b, current);
+					down = oracle.get(down);
+				}
+				if (down == null) {
+					oracle.put(current, init);
+				}
+
+				nexts.add(current);
+			}
+			return nexts;
+		}
+
+		@SuppressWarnings("unchecked")
+		private void addNextNode(ByteNode<List<byte[]>> node, byte b, ByteNode<List<byte[]>> next) {
+			((ByteConnectionAdaptor<List<byte[]>>) node).addNextNode(b, next);
+		}
+	}
+
 	private static class Finder extends AbstractStringFinder {
 
 		private final int minLength;
 		private final int lookahead;
 		private ByteProvider bytes;
-		private ByteTrieCursor<List<byte[]>> cursor;
+		private ByteAutomaton<List<byte[]>> cursor;
 		private Queue<StringMatch> buffer;
 
-		public Finder(ByteTrie<List<byte[]>> trie, int minLength, ByteProvider bytes, StringFinderOption... options) {
+		public Finder(ByteWordSet<List<byte[]>> trie, int minLength, ByteProvider bytes, StringFinderOption... options) {
 			super(options);
 			this.minLength = minLength;
 			this.lookahead = minLength - 1;

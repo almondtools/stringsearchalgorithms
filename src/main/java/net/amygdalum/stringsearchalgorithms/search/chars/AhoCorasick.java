@@ -1,25 +1,29 @@
 package net.amygdalum.stringsearchalgorithms.search.chars;
 
+import static java.util.Arrays.asList;
 import static net.amygdalum.stringsearchalgorithms.search.MatchOption.LONGEST_MATCH;
+import static net.amygdalum.util.text.AttachmentAdaptor.attach;
+import static net.amygdalum.util.text.CharFallbackAdaptor.getFallback;
+import static net.amygdalum.util.text.CharFallbackAdaptor.setFallback;
 import static net.amygdalum.util.text.CharUtils.minLength;
 import static net.amygdalum.util.text.StringUtils.toCharArray;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.LinkedList;
 import java.util.List;
-import java.util.Queue;
 
 import net.amygdalum.stringsearchalgorithms.search.BufferedStringFinder;
 import net.amygdalum.stringsearchalgorithms.search.StringFinder;
 import net.amygdalum.stringsearchalgorithms.search.StringFinderOption;
 import net.amygdalum.stringsearchalgorithms.search.StringMatch;
 import net.amygdalum.util.io.CharProvider;
-import net.amygdalum.util.map.CharObjectMap.Entry;
-import net.amygdalum.util.tries.CharTrie;
-import net.amygdalum.util.tries.CharTrieCursor;
-import net.amygdalum.util.tries.CharTrieTreeCompiler;
-import net.amygdalum.util.tries.PreCharTrieNode;
+import net.amygdalum.util.text.CharAutomaton;
+import net.amygdalum.util.text.CharNode;
+import net.amygdalum.util.text.CharTask;
+import net.amygdalum.util.text.CharTrieBuilder;
+import net.amygdalum.util.text.CharWordSet;
+import net.amygdalum.util.text.doublearraytrie.DoubleArrayCharFallbackTrie;
+import net.amygdalum.util.text.doublearraytrie.DoubleArrayCharTrieBuilder;
 
 /**
  * An implementation of the Aho-Corasick Algorithm.
@@ -28,7 +32,7 @@ import net.amygdalum.util.tries.PreCharTrieNode;
  */
 public class AhoCorasick implements StringSearchAlgorithm {
 
-	private CharTrie<String> trie;
+	private CharWordSet<String> trie;
 	private int minLength;
 
 	public AhoCorasick(Collection<String> patterns) {
@@ -37,12 +41,16 @@ public class AhoCorasick implements StringSearchAlgorithm {
 		this.minLength = minLength(charpatterns);
 	}
 
-	private static CharTrie<String> computeTrie(List<char[]> charpatterns) {
-		PreCharTrieNode<String> trie = new PreCharTrieNode<>();
-		computeTrie(trie, charpatterns);
-		computeSupportTransition(trie);
-		return new CharTrieTreeCompiler<String>(false)
-			.compileAndLink(trie);
+	private static CharWordSet<String> computeTrie(List<char[]> charpatterns) {
+		CharTrieBuilder<String> builder = new DoubleArrayCharTrieBuilder<>(new DoubleArrayCharFallbackTrie<String>());
+
+		for (char[] pattern : charpatterns) {
+			builder.extend(pattern, new String(pattern));
+		}
+
+		return builder
+			.work(new FallbackLinks())
+			.build();
 	}
 
 	@Override
@@ -59,48 +67,58 @@ public class AhoCorasick implements StringSearchAlgorithm {
 		return minLength;
 	}
 
-	private static void computeTrie(PreCharTrieNode<String> trie, List<char[]> charpatterns) {
-		for (char[] pattern : charpatterns) {
-			trie.extend(pattern, new String(pattern));
-		}
-	}
-
-	private static void computeSupportTransition(PreCharTrieNode<String> trie) {
-		Queue<PreCharTrieNode<String>> worklist = new LinkedList<>();
-		worklist.add(trie);
-		while (!worklist.isEmpty()) {
-			PreCharTrieNode<String> current = worklist.remove();
-			for (Entry<PreCharTrieNode<String>> next : current.getNexts().cursor()) {
-				char c = next.key;
-				PreCharTrieNode<String> nextTrie = next.value;
-				PreCharTrieNode<String> down = current.getLink();
-				while (down != null) {
-					PreCharTrieNode<String> nextNode = down.nextNode(c);
-					if (nextNode != null) {
-						nextTrie.link(nextNode);
-						break;
-					}
-					down = down.getLink();
-				}
-				if (down == null) {
-					nextTrie.link(trie);
-				}
-				worklist.add(nextTrie);
-			}
-		}
-	}
-
 	@Override
 	public String toString() {
 		return getClass().getSimpleName();
 	}
 
+	private static class FallbackLinks implements CharTask<String> {
+
+		private CharNode<String> root;
+
+		@Override
+		public List<CharNode<String>> init(CharNode<String> root) {
+			this.root = root;
+			setFallback(root, null);
+			return asList(root);
+		}
+
+		@Override
+		public List<CharNode<String>> process(CharNode<String> node) {
+			List<CharNode<String>> nexts = new ArrayList<>();
+			for (char c : node.getAlternatives()) {
+				CharNode<String> next = node.nextNode(c);
+				CharNode<String> down = getFallback(node);
+				nextdown: while (down != null) {
+					CharNode<String> nextNode = down.nextNode(c);
+					if (nextNode != null) {
+						setFallback(next, nextNode);
+						if (next.getAttached() == null) {
+							String attachment = nextNode.getAttached();
+							if (attachment != null) {
+								attach(next, attachment);
+							}
+						}
+						break nextdown;
+					}
+					down = getFallback(down);
+				}
+				if (down == null) {
+					setFallback(next, root);
+				}
+				nexts.add(next);
+			}
+			return nexts;
+		}
+
+	}
+
 	private static abstract class Finder extends BufferedStringFinder {
 
 		protected CharProvider chars;
-		protected CharTrieCursor<String> cursor;
-		
-		public Finder(CharTrie<String> trie, CharProvider chars, StringFinderOption... options) {
+		protected CharAutomaton<String> cursor;
+
+		public Finder(CharWordSet<String> trie, CharProvider chars, StringFinderOption... options) {
 			super(options);
 			this.chars = chars;
 			this.cursor = trie.cursor();
@@ -136,7 +154,7 @@ public class AhoCorasick implements StringSearchAlgorithm {
 
 	private static class NextMatchFinder extends Finder {
 
-		public NextMatchFinder(CharTrie<String> trie, CharProvider chars, StringFinderOption... options) {
+		public NextMatchFinder(CharWordSet<String> trie, CharProvider chars, StringFinderOption... options) {
 			super(trie, chars, options);
 		}
 
@@ -162,7 +180,7 @@ public class AhoCorasick implements StringSearchAlgorithm {
 
 	private static class LongestMatchFinder extends Finder {
 
-		public LongestMatchFinder(CharTrie<String> trie, CharProvider chars, StringFinderOption... options) {
+		public LongestMatchFinder(CharWordSet<String> trie, CharProvider chars, StringFinderOption... options) {
 			super(trie, chars, options);
 		}
 

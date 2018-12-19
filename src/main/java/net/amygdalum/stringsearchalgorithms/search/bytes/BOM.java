@@ -1,37 +1,41 @@
 package net.amygdalum.stringsearchalgorithms.search.bytes;
 
 import static java.nio.charset.StandardCharsets.UTF_16LE;
+import static java.util.Arrays.asList;
 import static net.amygdalum.util.text.ByteEncoding.encode;
 import static net.amygdalum.util.text.ByteUtils.revert;
 
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.IdentityHashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Queue;
 
 import net.amygdalum.stringsearchalgorithms.search.AbstractStringFinder;
 import net.amygdalum.stringsearchalgorithms.search.StringFinder;
 import net.amygdalum.stringsearchalgorithms.search.StringFinderOption;
 import net.amygdalum.stringsearchalgorithms.search.StringMatch;
 import net.amygdalum.util.io.ByteProvider;
-import net.amygdalum.util.map.ByteObjectMap.Entry;
+import net.amygdalum.util.text.ByteAutomaton;
+import net.amygdalum.util.text.ByteConnectionAdaptor;
+import net.amygdalum.util.text.ByteDawgBuilder;
+import net.amygdalum.util.text.ByteNode;
 import net.amygdalum.util.text.ByteString;
-import net.amygdalum.util.tries.ByteTrie;
-import net.amygdalum.util.tries.ByteTrieCursor;
-import net.amygdalum.util.tries.ByteTrieTreeCompiler;
-import net.amygdalum.util.tries.PreByteTrieNode;
+import net.amygdalum.util.text.ByteTask;
+import net.amygdalum.util.text.ByteWordSet;
+import net.amygdalum.util.text.linkeddawg.ByteClassicDawgFactory;
+import net.amygdalum.util.text.linkeddawg.LinkedByteDawgBuilder;
 
 /**
- * An implementation of the String Search Algorithm BOM (Backward Oracle Matching).
+ * An implementation of the String Search Algorithm BOM (Backward Oracle
+ * Matching).
  * 
- * This algorithm takes a single pattern as input and generates a finder which can find this pattern in documents
+ * This algorithm takes a single pattern as input and generates a finder which
+ * can find this pattern in documents
  */
 public class BOM implements StringSearchAlgorithm {
 
-	private ByteTrie<byte[]> trie;
+	private ByteWordSet<byte[]> trie;
 	private int patternLength;
 
 	public BOM(String pattern, Charset charset) {
@@ -40,49 +44,12 @@ public class BOM implements StringSearchAlgorithm {
 		this.trie = computeTrie(encoded);
 	}
 
-	private static ByteTrie<byte[]> computeTrie(byte[] pattern) {
-		PreByteTrieNode<byte[]> trie = new PreByteTrieNode<>();
-		PreByteTrieNode<byte[]> node = trie.extend(revert(pattern), 0);
-		node.setAttached(pattern);
-		computeOracle(trie);
-		return new ByteTrieTreeCompiler<byte[]>(false)
-			.compileAndLink(trie);
-	}
+	private static ByteWordSet<byte[]> computeTrie(byte[] pattern) {
+		ByteDawgBuilder<byte[]> builder = new LinkedByteDawgBuilder<>(new ByteClassicDawgFactory<byte[]>());
+		builder.extend(revert(pattern), pattern);
+		builder.work(new BuildOracle());
 
-	private static void computeOracle(PreByteTrieNode<byte[]> trie) {
-		Map<PreByteTrieNode<byte[]>, PreByteTrieNode<byte[]>> oracle = new IdentityHashMap<>();
-		PreByteTrieNode<byte[]> init = trie;
-		oracle.put(init, null);
-		Queue<PreByteTrieNode<byte[]>> worklist = new LinkedList<>();
-		worklist.add(trie);
-		while (!worklist.isEmpty()) {
-			PreByteTrieNode<byte[]> current = worklist.remove();
-			List<PreByteTrieNode<byte[]>> nexts = process(current, oracle, init);
-			worklist.addAll(nexts);
-		}
-	}
-
-	private static List<PreByteTrieNode<byte[]>> process(PreByteTrieNode<byte[]> parent, Map<PreByteTrieNode<byte[]>, PreByteTrieNode<byte[]>> oracle, PreByteTrieNode<byte[]> init) {
-		List<PreByteTrieNode<byte[]>> nexts = new ArrayList<>();
-		for (Entry<PreByteTrieNode<byte[]>> entry : parent.getNexts().cursor()) {
-			byte b = entry.key;
-			PreByteTrieNode<byte[]> trie = entry.value;
-
-			PreByteTrieNode<byte[]> down = oracle.get(parent);
-			while (down != null && down.nextNode(b) == null) {
-				down.addNext(b, trie);
-				down = oracle.get(down);
-			}
-			if (down != null) {
-				PreByteTrieNode<byte[]> next = down.nextNode(b);
-				oracle.put(trie, next);
-			} else {
-				oracle.put(trie, init);
-			}
-
-			nexts.add(trie);
-		}
-		return nexts;
+		return builder.build();
 	}
 
 	@Override
@@ -100,13 +67,59 @@ public class BOM implements StringSearchAlgorithm {
 		return getClass().getSimpleName();
 	}
 
+	public static class BuildOracle implements ByteTask<byte[]> {
+		private Map<ByteNode<byte[]>, ByteNode<byte[]>> oracle;
+		private ByteNode<byte[]> init;
+
+		public BuildOracle() {
+			oracle = new IdentityHashMap<>();
+		}
+
+		@Override
+		public List<ByteNode<byte[]>> init(ByteNode<byte[]> root) {
+			this.init = root;
+			return asList(root);
+		}
+
+		@Override
+		public List<ByteNode<byte[]>> process(ByteNode<byte[]> node) {
+			List<ByteNode<byte[]>> nexts = new ArrayList<>();
+			for (byte b : node.getAlternatives()) {
+				ByteNode<byte[]> current = node.nextNode(b);
+
+				ByteNode<byte[]> down = oracle.get(node);
+				while (down != null) {
+					ByteNode<byte[]> next = down.nextNode(b);
+					if (next != null) {
+						oracle.put(current, next);
+						break;
+					}
+					addNextNode(down, b, current);
+					down = oracle.get(down);
+				}
+				if (down == null) {
+					oracle.put(current, init);
+				}
+
+				nexts.add(current);
+			}
+			return nexts;
+		}
+
+		@SuppressWarnings("unchecked")
+		private void addNextNode(ByteNode<byte[]> node, byte b, ByteNode<byte[]> next) {
+			((ByteConnectionAdaptor<byte[]>) node).addNextNode(b, next);
+		}
+
+	}
+
 	private static class Finder extends AbstractStringFinder {
 
 		private final int lookahead;
 		private ByteProvider bytes;
-		private ByteTrieCursor<byte[]> cursor;
+		private ByteAutomaton<byte[]> cursor;
 
-		public Finder(ByteTrie<byte[]> trie, int patternLength, ByteProvider bytes, StringFinderOption... options) {
+		public Finder(ByteWordSet<byte[]> trie, int patternLength, ByteProvider bytes, StringFinderOption... options) {
 			super(options);
 			this.lookahead = patternLength - 1;
 			this.bytes = bytes;
