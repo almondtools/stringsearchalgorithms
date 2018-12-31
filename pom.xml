@@ -41,12 +41,12 @@
 		<dependency>
 			<groupId>net.amygdalum</groupId>
 			<artifactId>regexparser</artifactId>
-			<version>0.1.0</version>
+			<version>0.2.1</version>
 		</dependency>
 		<dependency>
 			<groupId>net.amygdalum</groupId>
 			<artifactId>compilerutils</artifactId>
-			<version>0.1.1-SNAPSHOT</version>
+			<version>0.2.0</version>
 		</dependency>
 		<dependency>
 			<groupId>junit</groupId>
@@ -55,23 +55,23 @@
 			<scope>test</scope>
 		</dependency>
 		<dependency>
-			<groupId>com.github.almondtools</groupId>
-			<artifactId>picklock</artifactId>
-			<version>0.2.7</version>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>com.github.almondtools</groupId>
-			<artifactId>conmatch</artifactId>
-			<version>0.1.13</version>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
 			<groupId>org.hamcrest</groupId>
 			<artifactId>hamcrest-library</artifactId>
 			<version>1.3</version>
 			<scope>test</scope>
 		</dependency>
+        <dependency>
+            <groupId>net.amygdalum</groupId>
+            <artifactId>hamcrest-extensions</artifactId>
+            <version>0.1.19</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>net.amygdalum</groupId>
+            <artifactId>xrayinterface</artifactId>
+            <version>0.3.2</version>
+            <scope>test</scope>
+        </dependency>
 		<dependency>
 			<groupId>org.mockito</groupId>
 			<artifactId>mockito-core</artifactId>

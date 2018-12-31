@@ -1,6 +1,6 @@
 package net.amygdalum.stringsearchalgorithms.search;
 
-import static com.almondtools.conmatch.conventions.EnumMatcher.isEnum;
+import static net.amygdalum.extensions.hamcrest.conventions.EnumMatcher.isEnum;
 import static net.amygdalum.stringsearchalgorithms.search.MatchOption.LONGEST_MATCH;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
