@@ -21,7 +21,6 @@ import net.amygdalum.util.text.CharMapping;
 import net.amygdalum.util.text.QGramAlphabet;
 import net.amygdalum.util.text.QGramMapping;
 import net.amygdalum.util.text.StringSet;
-import net.amygdalum.util.text.StringUtils;
 
 /**
  * An implementation of the String Search Algorithm Shift-Or (or Baeza-Yates–Gonnet).
@@ -45,7 +44,7 @@ public class QGramShiftOr implements StringSearchAlgorithm {
 	}
 
 	public QGramShiftOr(Collection<String> patterns, QGramMapping qmapping, CharMapping mapping) {
-		List<char[]> charpatterns = StringUtils.toCharArray(patterns);
+		List<char[]> charpatterns = toCharArray(patterns);
 		this.minLength = minLength(charpatterns);
 		this.maxLength = maxLength(charpatterns);
 		this.qmapping = qmapping;

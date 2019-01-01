@@ -170,7 +170,7 @@ public class SetBackwardOracleMatching implements StringSearchAlgorithm {
 			if (mapping == CharMapping.IDENTITY) {
 				return Collections.emptyList();
 			}
-			return Arrays.asList(root);
+			return asList(root);
 		}
 
 		@Override

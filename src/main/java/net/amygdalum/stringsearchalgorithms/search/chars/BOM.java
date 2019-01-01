@@ -4,7 +4,6 @@ import static java.util.Arrays.asList;
 import static net.amygdalum.util.text.CharUtils.revert;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
@@ -137,7 +136,7 @@ public class BOM implements StringSearchAlgorithm {
 			if (mapping == CharMapping.IDENTITY) {
 				return Collections.emptyList();
 			}
-			return Arrays.asList(root);
+			return asList(root);
 		}
 
 		@Override
