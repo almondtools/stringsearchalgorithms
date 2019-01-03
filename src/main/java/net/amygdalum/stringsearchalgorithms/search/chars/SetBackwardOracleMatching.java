@@ -26,14 +26,14 @@ import net.amygdalum.stringsearchalgorithms.search.StringMatch;
 import net.amygdalum.util.io.CharProvider;
 import net.amygdalum.util.text.CharAutomaton;
 import net.amygdalum.util.text.CharConnectionAdaptor;
-import net.amygdalum.util.text.CharDawgBuilder;
+import net.amygdalum.util.text.CharDawg;
 import net.amygdalum.util.text.CharMapping;
 import net.amygdalum.util.text.CharNode;
 import net.amygdalum.util.text.CharTask;
 import net.amygdalum.util.text.CharWordSet;
+import net.amygdalum.util.text.CharWordSetBuilder;
 import net.amygdalum.util.text.JoinStrategy;
-import net.amygdalum.util.text.linkeddawg.CharClassicDawgFactory;
-import net.amygdalum.util.text.linkeddawg.LinkedCharDawgBuilder;
+import net.amygdalum.util.text.linkeddawg.LinkedCharDawgCompiler;
 
 /**
  * An implementation of the Set Backward Oracle Matching Algorithm.
@@ -67,7 +67,7 @@ public class SetBackwardOracleMatching implements StringSearchAlgorithm {
 	}
 
 	private static CharWordSet<List<char[]>> computeTrie(List<char[]> charpatterns, int length, CharMapping mapping) {
-		CharDawgBuilder<List<char[]>> builder = new LinkedCharDawgBuilder<>(new CharClassicDawgFactory<List<char[]>>(), new MergePatterns());
+		CharWordSetBuilder<List<char[]>, CharDawg<List<char[]>>> builder = new CharWordSetBuilder<>(new LinkedCharDawgCompiler<List<char[]>>(), new MergePatterns());
 
 		for (char[] pattern : charpatterns) {
 			char[] prefix = copyOfRange(pattern, 0, length);

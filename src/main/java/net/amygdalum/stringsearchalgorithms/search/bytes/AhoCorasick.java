@@ -23,10 +23,10 @@ import net.amygdalum.util.text.ByteAutomaton;
 import net.amygdalum.util.text.ByteNode;
 import net.amygdalum.util.text.ByteString;
 import net.amygdalum.util.text.ByteTask;
-import net.amygdalum.util.text.ByteTrieBuilder;
+import net.amygdalum.util.text.ByteTrie;
 import net.amygdalum.util.text.ByteWordSet;
-import net.amygdalum.util.text.doublearraytrie.DoubleArrayByteFallbackTrie;
-import net.amygdalum.util.text.doublearraytrie.DoubleArrayByteTrieBuilder;
+import net.amygdalum.util.text.ByteWordSetBuilder;
+import net.amygdalum.util.text.doublearraytrie.DoubleArrayByteFallbackTrieCompiler;
 
 /**
  * An implementation of the Aho-Corasick Algorithm.
@@ -45,7 +45,7 @@ public class AhoCorasick implements StringSearchAlgorithm {
 	}
 
 	private static ByteWordSet<ByteString> computeTrie(List<byte[]> bytepatterns, Charset charset) {
-		ByteTrieBuilder<ByteString> builder = new DoubleArrayByteTrieBuilder<>(new DoubleArrayByteFallbackTrie<ByteString>());
+		ByteWordSetBuilder<ByteString, ByteTrie<ByteString>> builder = new ByteWordSetBuilder<>(new DoubleArrayByteFallbackTrieCompiler<ByteString>());
 
 		for (byte[] pattern : bytepatterns) {
 			builder.extend(pattern, new ByteString(pattern, charset));

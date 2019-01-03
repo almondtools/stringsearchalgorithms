@@ -18,13 +18,13 @@ import net.amygdalum.stringsearchalgorithms.search.StringMatch;
 import net.amygdalum.util.io.ByteProvider;
 import net.amygdalum.util.text.ByteAutomaton;
 import net.amygdalum.util.text.ByteConnectionAdaptor;
-import net.amygdalum.util.text.ByteDawgBuilder;
+import net.amygdalum.util.text.ByteDawg;
 import net.amygdalum.util.text.ByteNode;
 import net.amygdalum.util.text.ByteString;
 import net.amygdalum.util.text.ByteTask;
 import net.amygdalum.util.text.ByteWordSet;
-import net.amygdalum.util.text.linkeddawg.ByteClassicDawgFactory;
-import net.amygdalum.util.text.linkeddawg.LinkedByteDawgBuilder;
+import net.amygdalum.util.text.ByteWordSetBuilder;
+import net.amygdalum.util.text.linkeddawg.LinkedByteDawgCompiler;
 
 /**
  * An implementation of the String Search Algorithm BOM (Backward Oracle
@@ -45,7 +45,8 @@ public class BOM implements StringSearchAlgorithm {
 	}
 
 	private static ByteWordSet<byte[]> computeTrie(byte[] pattern) {
-		ByteDawgBuilder<byte[]> builder = new LinkedByteDawgBuilder<>(new ByteClassicDawgFactory<byte[]>());
+		ByteWordSetBuilder<byte[], ByteDawg<byte[]>> builder = new ByteWordSetBuilder<>(new LinkedByteDawgCompiler<byte[]>());
+
 		builder.extend(revert(pattern), pattern);
 		builder.work(new BuildOracle());
 

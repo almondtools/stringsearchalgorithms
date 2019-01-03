@@ -19,10 +19,10 @@ import net.amygdalum.stringsearchalgorithms.search.StringMatch;
 import net.amygdalum.util.io.CharProvider;
 import net.amygdalum.util.map.CharIntMap;
 import net.amygdalum.util.text.CharAutomaton;
-import net.amygdalum.util.text.CharTrieBuilder;
+import net.amygdalum.util.text.CharTrie;
 import net.amygdalum.util.text.CharWordSet;
-import net.amygdalum.util.text.doublearraytrie.DoubleArrayCharCompactTrie;
-import net.amygdalum.util.text.doublearraytrie.DoubleArrayCharTrieBuilder;
+import net.amygdalum.util.text.CharWordSetBuilder;
+import net.amygdalum.util.text.doublearraytrie.DoubleArrayCharCompactTrieCompiler;
 
 /**
  * An implementation of the Set Horspool Algorithm.
@@ -66,7 +66,7 @@ public class SetHorspool implements StringSearchAlgorithm {
 	}
 
 	private static CharWordSet<String> computeTrie(List<char[]> charpatterns) {
-		CharTrieBuilder<String> builder = new DoubleArrayCharTrieBuilder<>(new DoubleArrayCharCompactTrie<String>());
+		CharWordSetBuilder<String, CharTrie<String>> builder = new CharWordSetBuilder<>(new DoubleArrayCharCompactTrieCompiler<String>());
 
 		for (char[] pattern : charpatterns) {
 			builder.extend(revert(pattern), new String(pattern));

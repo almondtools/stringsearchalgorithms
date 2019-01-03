@@ -20,21 +20,22 @@ public class MultiStringSearchAlgorithmTest {
 
 	@Rule
 	public MultiStringSearchRule searcher = new MultiStringSearchRule(
-		new AhoCorasick.Factory(),
-		new SetHorspool.Factory(),
-		new SetHorspool.Factory(true),
-		new WuManber.Factory(),
-		new SetBackwardOracleMatching.Factory(),
-		new QGramShiftOr.Factory());
+//		new AhoCorasick.Factory(),
+		new SetHorspool.Factory()//,
+//		new SetHorspool.Factory(true),
+//		new WuManber.Factory(),
+//		new SetBackwardOracleMatching.Factory(),
+//		new QGramShiftOr.Factory()
+		);
 
 	@Test
 	@SearchFor({"x"})
 	public void testAlgorithmDesign() throws Exception {
 		assertThat(searcher.getAlgorithm().getClass(), isMultiStringSearchAlgorithm());
 	}
-	
+
 	@Test
-	@SearchFor({"a","b"})
+	@SearchFor({"a", "b"})
 	public void testPattern1() throws Exception {
 		List<StringMatch> matches = searcher.createSearcher("abacacab").findAll();
 		assertThat(matches, contains(
@@ -45,9 +46,9 @@ public class MultiStringSearchAlgorithmTest {
 			new StringMatch(6, 7, "a"),
 			new StringMatch(7, 8, "b")));
 	}
-	
+
 	@Test
-	@SearchFor({"ab","ac"})
+	@SearchFor({"ab", "ac"})
 	public void testPattern2() throws Exception {
 		List<StringMatch> matches = searcher.createSearcher("abacacab").findAll();
 		assertThat(matches, contains(
@@ -56,9 +57,9 @@ public class MultiStringSearchAlgorithmTest {
 			new StringMatch(4, 6, "ac"),
 			new StringMatch(6, 8, "ab")));
 	}
-	
+
 	@Test
-	@SearchFor({"abc","bcd"})
+	@SearchFor({"abc", "bcd"})
 	public void testPattern3() throws Exception {
 		List<StringMatch> matches = searcher.createSearcher("abcacbcdacabcdaabc").findAll();
 		assertThat(matches, contains(
@@ -68,9 +69,9 @@ public class MultiStringSearchAlgorithmTest {
 			new StringMatch(11, 14, "bcd"),
 			new StringMatch(15, 18, "abc")));
 	}
-	
+
 	@Test
-	@SearchFor({"bbcc","ccbb"})
+	@SearchFor({"bbcc", "ccbb"})
 	public void testPattern4() throws Exception {
 		List<StringMatch> matches = searcher.createSearcher("bbccbbccbb").findAll();
 		assertThat(matches, contains(
@@ -79,9 +80,9 @@ public class MultiStringSearchAlgorithmTest {
 			new StringMatch(4, 8, "bbcc"),
 			new StringMatch(6, 10, "ccbb")));
 	}
-	
+
 	@Test
-	@SearchFor({"bbcc","ccbb"})
+	@SearchFor({"bbcc", "ccbb"})
 	public void testPattern5() throws Exception {
 		List<StringMatch> matches = searcher.createSearcher("abccbbccbb").findAll();
 		assertThat(matches, contains(
@@ -89,9 +90,9 @@ public class MultiStringSearchAlgorithmTest {
 			new StringMatch(4, 8, "bbcc"),
 			new StringMatch(6, 10, "ccbb")));
 	}
-	
+
 	@Test
-	@SearchFor({"abc","cd","defghi","gh"})
+	@SearchFor({"abc", "cd", "defghi", "gh"})
 	public void testPatternDifferentLengthSubsumingAndOverlapping() throws Exception {
 		List<StringMatch> matches = searcher.createSearcher("abcdghcdefcdefghiabcd").findAll();
 		assertThat(matches, containsInAnyOrder(
@@ -105,9 +106,9 @@ public class MultiStringSearchAlgorithmTest {
 			new StringMatch(17, 20, "abc"),
 			new StringMatch(19, 21, "cd")));
 	}
-	
+
 	@Test
-	@SearchFor({"abcd","ab","bc","cd"})
+	@SearchFor({"abcd", "ab", "bc", "cd"})
 	public void testSubsumingPatterns1() throws Exception {
 		List<StringMatch> matches = searcher.createSearcher("abcd").findAll();
 		assertThat(matches, containsInAnyOrder(
@@ -116,9 +117,9 @@ public class MultiStringSearchAlgorithmTest {
 			new StringMatch(0, 4, "abcd"),
 			new StringMatch(2, 4, "cd")));
 	}
-	
+
 	@Test
-	@SearchFor({"aaa","aa","a"})
+	@SearchFor({"aaa", "aa", "a"})
 	public void testSubsumingPatterns2() throws Exception {
 		List<StringMatch> matches = searcher.createSearcher("aaaa").findAll();
 		assertThat(matches, containsInAnyOrder(
@@ -132,9 +133,9 @@ public class MultiStringSearchAlgorithmTest {
 			new StringMatch(2, 4, "aa"),
 			new StringMatch(3, 4, "a")));
 	}
-	
+
 	@Test
-	@SearchFor({"a","b"})
+	@SearchFor({"a", "b"})
 	public void testOverlappingPattern1() throws Exception {
 		List<StringMatch> matches = searcher.createSearcher("abacacab", LONGEST_MATCH, NON_OVERLAP).findAll();
 		assertThat(matches, contains(
@@ -145,9 +146,9 @@ public class MultiStringSearchAlgorithmTest {
 			new StringMatch(6, 7, "a"),
 			new StringMatch(7, 8, "b")));
 	}
-	
+
 	@Test
-	@SearchFor({"ab","ac"})
+	@SearchFor({"ab", "ac"})
 	public void testOverlappingPattern2() throws Exception {
 		List<StringMatch> matches = searcher.createSearcher("abacacab", LONGEST_MATCH, NON_OVERLAP).findAll();
 		assertThat(matches, contains(
@@ -156,9 +157,9 @@ public class MultiStringSearchAlgorithmTest {
 			new StringMatch(4, 6, "ac"),
 			new StringMatch(6, 8, "ab")));
 	}
-	
+
 	@Test
-	@SearchFor({"abc","bcd"})
+	@SearchFor({"abc", "bcd"})
 	public void testOverlappingPattern3() throws Exception {
 		List<StringMatch> matches = searcher.createSearcher("abcacbcdacabcdaabc", LONGEST_MATCH, NON_OVERLAP).findAll();
 		assertThat(matches, contains(
@@ -167,27 +168,27 @@ public class MultiStringSearchAlgorithmTest {
 			new StringMatch(10, 13, "abc"),
 			new StringMatch(15, 18, "abc")));
 	}
-	
+
 	@Test
-	@SearchFor({"bbcc","ccbb"})
+	@SearchFor({"bbcc", "ccbb"})
 	public void testOverlappingPattern4() throws Exception {
 		List<StringMatch> matches = searcher.createSearcher("bbccbbccbb", LONGEST_MATCH, NON_OVERLAP).findAll();
 		assertThat(matches, contains(
 			new StringMatch(0, 4, "bbcc"),
 			new StringMatch(4, 8, "bbcc")));
 	}
-	
+
 	@Test
-	@SearchFor({"bbcc","ccbb"})
+	@SearchFor({"bbcc", "ccbb"})
 	public void testOverlappingPattern5() throws Exception {
 		List<StringMatch> matches = searcher.createSearcher("abccbbccbb", LONGEST_MATCH, NON_OVERLAP).findAll();
 		assertThat(matches, contains(
 			new StringMatch(2, 6, "ccbb"),
 			new StringMatch(6, 10, "ccbb")));
 	}
-	
+
 	@Test
-	@SearchFor({"abc","cd","defghi","gh"})
+	@SearchFor({"abc", "cd", "defghi", "gh"})
 	public void testOverlappingPatternDifferentLengthSubsumingAndOverlapping() throws Exception {
 		List<StringMatch> matches = searcher.createSearcher("abcdghcdefcdefghiabcd", LONGEST_MATCH, NON_OVERLAP).findAll();
 		assertThat(matches, containsInAnyOrder(
@@ -198,9 +199,9 @@ public class MultiStringSearchAlgorithmTest {
 			new StringMatch(14, 16, "gh"),
 			new StringMatch(17, 20, "abc")));
 	}
-	
+
 	@Test
-	@SearchFor({"And God called the firmament Heaven","Let the waters under the heaven be gathered together unto one place","And God called the dry land Earth"})
+	@SearchFor({"And God called the firmament Heaven", "Let the waters under the heaven be gathered together unto one place", "And God called the dry land Earth"})
 	public void testLongPatternsDifferentLengths() throws Exception {
 		List<StringMatch> matches = searcher.createSearcher(""
 			+ "And God called the firmament Heaven. And the evening and the morning were the second day.\n"
@@ -211,9 +212,9 @@ public class MultiStringSearchAlgorithmTest {
 			new StringMatch(104, 171, "Let the waters under the heaven be gathered together unto one place"),
 			new StringMatch(217, 250, "And God called the dry land Earth")));
 	}
-	
+
 	@Test
-	@SearchFor({"and wood to fire", "Treasures of wickedness profit nothing", "Then shalt thou enquire","fire"})
+	@SearchFor({"and wood to fire", "Treasures of wickedness profit nothing", "Then shalt thou enquire", "fire"})
 	public void testReverseSubsumptions() throws Exception {
 		List<StringMatch> matches = searcher.createSearcher(""
 			+ "As coals are to burning coals, and wood to fire; so is a contentious man to kindle strife.").findAll();
@@ -221,24 +222,24 @@ public class MultiStringSearchAlgorithmTest {
 			new StringMatch(31, 47, "and wood to fire"),
 			new StringMatch(43, 47, "fire")));
 	}
-	
+
 	@Test
-	@SearchFor({"abcd","ab","bc","cd"})
+	@SearchFor({"abcd", "ab", "bc", "cd"})
 	public void testOverlappingSubsumingPatterns1() throws Exception {
 		List<StringMatch> matches = searcher.createSearcher("abcd", LONGEST_MATCH, NON_OVERLAP).findAll();
 		assertThat(matches, containsInAnyOrder(
 			new StringMatch(0, 4, "abcd")));
 	}
-	
+
 	@Test
-	@SearchFor({"aaa","aa","a"})
+	@SearchFor({"aaa", "aa", "a"})
 	public void testOverlappingSubsumingPatterns2() throws Exception {
 		List<StringMatch> matches = searcher.createSearcher("aaaa", LONGEST_MATCH, NON_OVERLAP).findAll();
 		assertThat(matches, containsInAnyOrder(
 			new StringMatch(0, 3, "aaa"),
 			new StringMatch(3, 4, "a")));
 	}
-	
+
 	@Test
 	@SearchFor({"aa\u0262ba", "a\u0262baa"})
 	public void testPatternLargeAlphabet() throws Exception {
@@ -247,7 +248,7 @@ public class MultiStringSearchAlgorithmTest {
 			new StringMatch(5, 10, "aa\u0262ba"),
 			new StringMatch(9, 14, "a\u0262baa")));
 	}
-	
+
 	@Test
 	@SearchFor("aaaa aaaa bbbb bbbb aaaa aaaa bbbb bbbb aaaa")
 	public void testPatternMiddleSize1() throws Exception {
@@ -258,11 +259,11 @@ public class MultiStringSearchAlgorithmTest {
 	}
 
 	@Test
-	@SearchFor({"1001110000001001000000101101011100011011101110001101110010110110","1110100011101001110000001011110111000010011110111110110000011111"})
+	@SearchFor({"1001110000001001000000101101011100011011101110001101110010110110", "1110100011101001110000001011110111000010011110111110110000011111"})
 	public void testPatternMiddleSize2() throws Exception {
 		List<StringMatch> matches = searcher.createSearcher(""
-            + "1001110000001001000000101101011100011011101110001101110010110110"
-            + "1110100011101001110000001011110111000010011110111110110000011111"
+			+ "1001110000001001000000101101011100011011101110001101110010110110"
+			+ "1110100011101001110000001011110111000010011110111110110000011111"
 			+ "010101111111100001001011011101111").findAll();
 		assertThat(matches, contains(
 			new StringMatch(0, 64, "1001110000001001000000101101011100011011101110001101110010110110"),
@@ -270,7 +271,7 @@ public class MultiStringSearchAlgorithmTest {
 	}
 
 	@Test
-	@SearchFor({"GGCTCATA","CATACATC"})
+	@SearchFor({"GGCTCATA", "CATACATC"})
 	public void testPatternMiddleSize3() throws Exception {
 		List<StringMatch> matches = searcher.createSearcher(""
 			+ "CCTTTAAGTAGGACAA"
@@ -279,7 +280,7 @@ public class MultiStringSearchAlgorithmTest {
 		assertThat(matches, contains(
 			new StringMatch(16, 24, "GGCTCATA")));
 	}
-	
+
 	@Test
 	@SearchFor("aaaa aaaa bbbb bbbb aaaa aaaa bbbb bbbb aaaa aaaa bbbb bbbb aaaa aaaa bbbb bbbb")
 	public void testPatternLargeSize1() throws Exception {
@@ -289,7 +290,8 @@ public class MultiStringSearchAlgorithmTest {
 	}
 
 	@Test
-	@SearchFor({"10011100000010010000001011010111000110111011100011011100101101101110100011101001110000001011110111000010011110111110110000011111","10011100000010010000001011010111001010111111110000100101101110111100010111101110000100111101111101100000111110101011111111000010"})
+	@SearchFor({"10011100000010010000001011010111000110111011100011011100101101101110100011101001110000001011110111000010011110111110110000011111",
+		"10011100000010010000001011010111001010111111110000100101101110111100010111101110000100111101111101100000111110101011111111000010"})
 	public void testPatternLargeSize2() throws Exception {
 		List<StringMatch> matches = searcher.createSearcher(""
 			+ "10011100000010010000001011010111000110111011100011011100101101101110100011101001110000001011110111000010011110111110110000011111"
@@ -302,7 +304,8 @@ public class MultiStringSearchAlgorithmTest {
 	}
 
 	@Test
-	@SearchFor({"10011100000010010000001011010111000110111011100011011100101101101110100011101001110000001011110111000010011100000010010000001011","10011100000010010000001011010111001010111111110000100101101110111100010111101110000100111101111101100000111110101011111111000010"})
+	@SearchFor({"10011100000010010000001011010111000110111011100011011100101101101110100011101001110000001011110111000010011100000010010000001011",
+		"10011100000010010000001011010111001010111111110000100101101110111100010111101110000100111101111101100000111110101011111111000010"})
 	public void testPatternLargeSize3() throws Exception {
 		List<StringMatch> matches = searcher.createSearcher(""
 			+ "0101"
@@ -325,13 +328,13 @@ public class MultiStringSearchAlgorithmTest {
 	public void testPatternLength1() throws Exception {
 		assertThat(searcher.getAlgorithm().getPatternLength(), equalTo(1));
 	}
-	
+
 	@Test
 	@SearchFor("ab")
 	public void testPatternLength2() throws Exception {
 		assertThat(searcher.getAlgorithm().getPatternLength(), equalTo(2));
 	}
-	
+
 	@Test
 	@SearchFor("abcab")
 	public void testPatternLength5() throws Exception {

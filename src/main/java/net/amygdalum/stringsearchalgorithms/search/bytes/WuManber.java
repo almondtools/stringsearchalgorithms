@@ -22,11 +22,11 @@ import net.amygdalum.stringsearchalgorithms.search.StringMatch;
 import net.amygdalum.util.io.ByteProvider;
 import net.amygdalum.util.text.ByteAutomaton;
 import net.amygdalum.util.text.ByteString;
-import net.amygdalum.util.text.ByteTrieBuilder;
+import net.amygdalum.util.text.ByteTrie;
 import net.amygdalum.util.text.ByteWordSet;
+import net.amygdalum.util.text.ByteWordSetBuilder;
 import net.amygdalum.util.text.StringUtils;
-import net.amygdalum.util.text.doublearraytrie.DoubleArrayByteCompactTrie;
-import net.amygdalum.util.text.doublearraytrie.DoubleArrayByteTrieBuilder;
+import net.amygdalum.util.text.doublearraytrie.DoubleArrayByteCompactTrieCompiler;
 
 /**
  * An implementation of the Wu-Manber Algorithm.
@@ -108,14 +108,14 @@ public class WuManber implements StringSearchAlgorithm {
 
 	private static ByteWordSet<ByteString>[] computeHash(List<byte[]> bytepatterns, int block, Charset charset) {
 		@SuppressWarnings("unchecked")
-		ByteTrieBuilder<ByteString>[] builders = new ByteTrieBuilder[HASH_SIZE];
+		ByteWordSetBuilder<ByteString, ByteTrie<ByteString>>[] builders = new ByteWordSetBuilder[HASH_SIZE];
 		for (byte[] pattern : bytepatterns) {
 			byte[] lastBlock = Arrays.copyOfRange(pattern, pattern.length - block, pattern.length);
 			int hashKey = hashHash(lastBlock);
-			ByteTrieBuilder<ByteString> builder = builders[hashKey];
+			ByteWordSetBuilder<ByteString, ByteTrie<ByteString>> builder = builders[hashKey];
 			if (builder == null) {
-				builder = new DoubleArrayByteTrieBuilder<>(new DoubleArrayByteCompactTrie<ByteString>());
-
+				builder = new ByteWordSetBuilder<>(new DoubleArrayByteCompactTrieCompiler<ByteString>());
+				
 				builders[hashKey] = builder;
 			}
 			builder.extend(revert(pattern), new ByteString(pattern, charset));

@@ -22,10 +22,10 @@ import net.amygdalum.stringsearchalgorithms.search.StringFinderOption;
 import net.amygdalum.stringsearchalgorithms.search.StringMatch;
 import net.amygdalum.util.io.CharProvider;
 import net.amygdalum.util.text.CharAutomaton;
-import net.amygdalum.util.text.CharTrieBuilder;
+import net.amygdalum.util.text.CharTrie;
 import net.amygdalum.util.text.CharWordSet;
-import net.amygdalum.util.text.doublearraytrie.DoubleArrayCharCompactTrie;
-import net.amygdalum.util.text.doublearraytrie.DoubleArrayCharTrieBuilder;
+import net.amygdalum.util.text.CharWordSetBuilder;
+import net.amygdalum.util.text.doublearraytrie.DoubleArrayCharCompactTrieCompiler;
 
 /**
  * An implementation of the Wu-Manber Algorithm.
@@ -109,13 +109,13 @@ public class WuManber implements StringSearchAlgorithm {
 
 	private static CharWordSet<String>[] computeHash(List<char[]> charpatterns, int block) {
 		@SuppressWarnings("unchecked")
-		CharTrieBuilder<String>[] builders = new CharTrieBuilder[HASH_SIZE];
+		CharWordSetBuilder<String, CharTrie<String>>[] builders = new CharWordSetBuilder[HASH_SIZE];
 		for (char[] pattern : charpatterns) {
 			char[] lastBlock = Arrays.copyOfRange(pattern, pattern.length - block, pattern.length);
 			int hashKey = hashHash(lastBlock);
-			CharTrieBuilder<String> builder = builders[hashKey];
+			CharWordSetBuilder<String, CharTrie<String>> builder = builders[hashKey];
 			if (builder == null) {
-				builder = new DoubleArrayCharTrieBuilder<>(new DoubleArrayCharCompactTrie<String>());
+				builder = new CharWordSetBuilder<>(new DoubleArrayCharCompactTrieCompiler<String>());
 
 				builders[hashKey] = builder;
 			}

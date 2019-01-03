@@ -18,13 +18,13 @@ import net.amygdalum.stringsearchalgorithms.search.StringMatch;
 import net.amygdalum.util.io.CharProvider;
 import net.amygdalum.util.text.CharAutomaton;
 import net.amygdalum.util.text.CharConnectionAdaptor;
-import net.amygdalum.util.text.CharDawgBuilder;
+import net.amygdalum.util.text.CharDawg;
 import net.amygdalum.util.text.CharMapping;
 import net.amygdalum.util.text.CharNode;
 import net.amygdalum.util.text.CharTask;
 import net.amygdalum.util.text.CharWordSet;
-import net.amygdalum.util.text.linkeddawg.CharClassicDawgFactory;
-import net.amygdalum.util.text.linkeddawg.LinkedCharDawgBuilder;
+import net.amygdalum.util.text.CharWordSetBuilder;
+import net.amygdalum.util.text.linkeddawg.LinkedCharDawgCompiler;
 
 /**
  * An implementation of the String Search Algorithm BOM (Backward Oracle
@@ -52,7 +52,8 @@ public class BOM implements StringSearchAlgorithm {
 			pattern = mapping.normalized(pattern);
 		}
 
-		CharDawgBuilder<char[]> builder = new LinkedCharDawgBuilder<>(new CharClassicDawgFactory<char[]>());
+		CharWordSetBuilder<char[], CharDawg<char[]>> builder = new CharWordSetBuilder<>(new LinkedCharDawgCompiler<char[]>());
+
 		builder.extend(revert(pattern), pattern);
 		builder.work(new BuildOracle());
 		builder.work(new UseCharClasses(mapping));

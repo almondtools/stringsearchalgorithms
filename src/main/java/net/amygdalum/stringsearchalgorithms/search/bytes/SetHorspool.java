@@ -18,11 +18,11 @@ import net.amygdalum.stringsearchalgorithms.search.StringMatch;
 import net.amygdalum.util.io.ByteProvider;
 import net.amygdalum.util.text.ByteAutomaton;
 import net.amygdalum.util.text.ByteString;
-import net.amygdalum.util.text.ByteTrieBuilder;
+import net.amygdalum.util.text.ByteTrie;
 import net.amygdalum.util.text.ByteWordSet;
+import net.amygdalum.util.text.ByteWordSetBuilder;
 import net.amygdalum.util.text.StringUtils;
-import net.amygdalum.util.text.doublearraytrie.DoubleArrayByteCompactTrie;
-import net.amygdalum.util.text.doublearraytrie.DoubleArrayByteTrieBuilder;
+import net.amygdalum.util.text.doublearraytrie.DoubleArrayByteCompactTrieCompiler;
 
 /**
  * An implementation of the Set Horspool Algorithm.
@@ -50,7 +50,7 @@ public class SetHorspool implements StringSearchAlgorithm {
 	}
 
 	private static ByteWordSet<ByteString> computeTrie(List<byte[]> bytepatterns, Charset charset) {
-		ByteTrieBuilder<ByteString> builder = new DoubleArrayByteTrieBuilder<>(new DoubleArrayByteCompactTrie<ByteString>());
+		ByteWordSetBuilder<ByteString, ByteTrie<ByteString>> builder = new ByteWordSetBuilder<>(new DoubleArrayByteCompactTrieCompiler<ByteString>());
 
 		for (byte[] pattern : bytepatterns) {
 			builder.extend(revert(pattern), new ByteString(pattern, charset));

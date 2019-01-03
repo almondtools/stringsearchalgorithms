@@ -20,10 +20,10 @@ import net.amygdalum.util.io.CharProvider;
 import net.amygdalum.util.text.CharAutomaton;
 import net.amygdalum.util.text.CharNode;
 import net.amygdalum.util.text.CharTask;
-import net.amygdalum.util.text.CharTrieBuilder;
+import net.amygdalum.util.text.CharTrie;
 import net.amygdalum.util.text.CharWordSet;
-import net.amygdalum.util.text.doublearraytrie.DoubleArrayCharFallbackTrie;
-import net.amygdalum.util.text.doublearraytrie.DoubleArrayCharTrieBuilder;
+import net.amygdalum.util.text.CharWordSetBuilder;
+import net.amygdalum.util.text.doublearraytrie.DoubleArrayCharFallbackTrieCompiler;
 
 /**
  * An implementation of the Aho-Corasick Algorithm.
@@ -42,7 +42,7 @@ public class AhoCorasick implements StringSearchAlgorithm {
 	}
 
 	private static CharWordSet<String> computeTrie(List<char[]> charpatterns) {
-		CharTrieBuilder<String> builder = new DoubleArrayCharTrieBuilder<>(new DoubleArrayCharFallbackTrie<String>());
+		CharWordSetBuilder<String, CharTrie<String>> builder = new CharWordSetBuilder<>(new DoubleArrayCharFallbackTrieCompiler<String>());
 
 		for (char[] pattern : charpatterns) {
 			builder.extend(pattern, new String(pattern));
