@@ -5,11 +5,11 @@
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/f95ab1df5ced4bffa229ec656f9e6358)](https://www.codacy.com/project/almondtools/stringsearchalgorithms/dashboard?utm_source=github.com&utm_medium=referral&utm_content=almondtools/stringsearchalgorithms&utm_campaign=Badge_Grade_Dashboard)
 
 
-StringSearchAlgorithms (formerly StringAndChars) is a library for exact string matching algorithms (or string search algorithms).
+StringSearchAlgorithms (formerly StringAndChars) is a library for exact string matching algorithms (or string search algorithms). 
 
 It is planned that also complex string matching (with wildcards, regular expressions, string metrics) is supported.
 
-This Readme contains technical infos to the project (e.g. Problems, Roadmap or the State of Work)
+This Readme contains technical information on the project (e.g. Problems, Roadmap or the State of Work)
 
 Information on Usage and Download can be found on [StringSearchAlgorithms](http://stringsearchalgorithms.amygdalum.net/). 
 
