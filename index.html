@@ -98,16 +98,25 @@
   </a>.
                     There exist many algorithms that process text more efficiently. Yet the majority of these algorithms is only described in papers or books or listed on websites (and the language they are specified is usually C) 
                     - and not available as library (in Java).  </p>
-                  <p>                    StringSearchAlgorithms provides a Java library of various algorithms to support you in string searching - supporting single patterns and multi patterns. While most algorithms outperform the naive algorithm provided by 
-                    the Java-API (via       <code >String.indexOf</code>), the performance of the algorithms differs in the dimensions of:
-                      <ul>
-                              <li>size of the alphabet (e.g. {A,C,G,T} vs [A-Za-z])</li>
-                          <li>size of the pattern (e.g. CG vs ACGCTACGACGCTTTTTACGAC)</li>
-                          <li>the number of patterns to match in one pass</li>
+                  <p>                      <strong>StringSearchAlgorithms</strong> provides a Java library of various algorithms to support you in string searching -   <strong>supporting single patterns and multi patterns.</strong> While most algorithms outperform the naive algorithm provided by 
+                    the Java-API (via       <code >String.indexOf</code>), the performance of the algorithms differs in the dimensions of:</p>
+                  <ul>
+                          <li>size of the alphabet (e.g. {A,C,G,T} vs [A-Za-z])</li>
+                      <li>size of the pattern (e.g. CG vs ACGCTACGACGCTTTTTACGAC)</li>
+                      <li>the number of patterns to match in one pass</li>
   </ul>
-                    Some heuristics how to choose the best algorithm for your scenario will be presented in a   <a href="#chooseAlgorithm">
-    later chapter
+                  <p>                    Some heuristics how to choose the best algorithm for your scenario will be presented in   <a href="#chooseAlgorithm">
+    Choosing the Best Algorithm
   </a>. </p>
+                  <p>                      <strong>How does StringSearchAlgorithms compare to other libraries or handcoded algorithms?</strong> Pretty well, but note that the main design goals of StringSearchAlgorithms were:</p>
+                  <ul>
+                          <li>correctness all algorithms</li>
+                      <li>common api for all algorithms</li>
+                      <li>common features for all algorithms</li>
+  </ul>
+                  <p>                    We are proud of having the most complete suite of integration tests of all known libraries, consequently making StringSearchAlgorithms to one of the few libraries that produce correct
+                    results in all tested scenarios. There are very few algorithms libraries that are correct and (in some scenarios) faster than StringSearchAlgorithms (two are known to us, both support
+                    less features than us).</p>
   </div>
   </div>
   </section>
