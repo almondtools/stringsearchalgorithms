@@ -16,240 +16,116 @@
             <body>
                     <header>
                               <nav class="navbar navbar-dark bg-dark navbar-expand-sm" role="navigation">
-      <div class="container-fluid">
-                  <div class="navbar-header">
-              <button type="button" class="navbar-toggler" data-toggle="collapse" data-target=".navbar-collapse">
-                  <span class="navbar-toggler-icon"></span>
-  </button>
-          <a href="download.html" class="navbar-brand">
-    String Search Algorithms
-  </a>
-  </div>
-              <div class="collapse navbar-collapse">
-      <ul class="navbar-nav">
-              <li class="nav-item active">  <a class="nav-link" href="index.html">
-    Home
-  </a></li>
-          <li class="nav-item">  <a class="nav-link" href="download.html">
-    Get it!
-  </a></li>
-          <li class="nav-item">  <a class="nav-link" href="license.html">
-    License
-  </a></li>
-  </ul>
-  </div>
-  </div>
+    <div class="container-fluid">            <div class="navbar-header">        <button type="button" class="navbar-toggler" data-toggle="collapse" data-target=".navbar-collapse">            <span class="navbar-toggler-icon"></span></button>
+        <a href="download.html" class="navbar-brand">String Search Algorithms</a></div>
+            <div class="collapse navbar-collapse"><ul class="navbar-nav">        <li class="nav-item active"><a class="nav-link" href="index.html">Home</a></li>
+        <li class="nav-item"><a class="nav-link" href="download.html">Get it!</a></li>
+        <li class="nav-item"><a class="nav-link" href="license.html">License</a></li></ul></div></div>
   </nav>
-                        <div class="jumbotron">
-      <div class="container">
-              <h1>String Search Algorithms</h1>
-          <p>StringSearchAlgorithms provides highly efficient algorithms for (multiple) string search (string matching), e.g. Knuth-Morris-Pratt, Boyer-Moore, Aho-Corasick. StringSearchAlgorithms supports search in Strings, char-arrays, byte-arrays, InputStreams, Readers and Buffers.</p>
-          <p>  <a href="download.html" class="btn btn-primary">
-    Get String Search Algorithms
-  </a>   <a href="https://github.com/almondtools/stringsearchalgorithms" class="btn btn-light">
-    Github
-  </a></p>
-  </div>
-  </div>
+                      <div class="jumbotron"><div class="container">        <h1>String Search Algorithms</h1>
+        <p>StringSearchAlgorithms provides highly efficient algorithms for (multiple) string search (string matching), e.g. Knuth-Morris-Pratt, Boyer-Moore, Aho-Corasick. StringSearchAlgorithms supports search in Strings, char-arrays, byte-arrays, InputStreams, Readers and Buffers.</p>
+        <p><a href="download.html" class="btn btn-primary">Get String Search Algorithms</a> <a href="https://github.com/almondtools/stringsearchalgorithms" class="btn btn-light">Github</a></p></div></div>
   </header>
               <main>
-      <div class="container">
-                  <section class="page-section">
-              <h2>Why should I use String Search Algorithms?</h2>
+    <div class="container">              <section class="page-section">
+            <h2>Why should I use String Search Algorithms?</h2>
               <section class="page-section">
-              <div class="row">
-                  <div class="order-2 col-lg-4">
-                          <div class="card info-card">
-              <div class="card-header">
-      <h4 class="panel-title">Available algorithms (single string):</h4>
-  </div>
-          <div class="card-body">
-                          <ul>
-                              <li>Horspool (or Boyer-Moore-Horspool)</li>
-                          <li>Shift-And</li>
-                          <li>Shift-Or</li>
-                          <li>Knuth-Morris-Pratt</li>
-                          <li>Sunday</li>
-                          <li>BNDM (Backward Nondet. Dawg Matching)</li>
-                          <li>BOM (Backward Oracle Matching)</li>
-  </ul>
-  </div>
-  </div>
-                      <div class="card info-card">
-              <div class="card-header">
-      <h4 class="panel-title">Available algorithms (multiple strings):</h4>
-  </div>
-          <div class="card-body">
-                          <ul>
-                              <li>Set Backward Oracle Matching</li>
-                          <li>Aho-Corasick</li>
-                          <li>Set Horspool</li>
-                          <li>Wu-Manber</li>
-  </ul>
-  </div>
-  </div>
-  </div>
-              <div class="order-1 col-lg-8">
-                      <p>                      <a href="https://en.wikipedia.org/wiki/String_searching_algorithm">
-    String searching
-  </a> is about finding a pattern in a longer text.
-                    The support of the Java Standard API for searching strings is limited - one may get an impression   <a href="http://blog.amygdalum.net/en/string-searching-using-the-java-api/">
-    here
-  </a>.
+            <div class="row">            <div class="order-2 col-lg-4">                    <div class="card info-card">        <div class="card-header"><h4 class="panel-title">Available algorithms (single string):</h4></div>
+        <div class="card-body">                    <ul>                        <li>Horspool (or Boyer-Moore-Horspool)</li>
+                        <li>Shift-And</li>
+                        <li>Shift-Or</li>
+                        <li>Knuth-Morris-Pratt</li>
+                        <li>Sunday</li>
+                        <li>BNDM (Backward Nondet. Dawg Matching)</li>
+                        <li>BOM (Backward Oracle Matching)</li></ul></div></div>
+                    <div class="card info-card">        <div class="card-header"><h4 class="panel-title">Available algorithms (multiple strings):</h4></div>
+        <div class="card-body">                    <ul>                        <li>Set Backward Oracle Matching</li>
+                        <li>Aho-Corasick</li>
+                        <li>Set Horspool</li>
+                        <li>Wu-Manber</li></ul></div></div></div>
+            <div class="order-1 col-lg-8">                <p>                    <a href="https://en.wikipedia.org/wiki/String_searching_algorithm">String searching</a> is about finding a pattern in a longer text.
+                    The support of the Java Standard API for searching strings is limited - one may get an impression <a href="http://blog.amygdalum.net/en/string-searching-using-the-java-api/">here</a>.
                     There exist many algorithms that process text more efficiently. Yet the majority of these algorithms is only described in papers or books or listed on websites (and the language they are specified is usually C) 
-                    - and not available as library (in Java).  </p>
-                  <p>                      <strong>StringSearchAlgorithms</strong> provides a Java library of various algorithms to support you in string searching -   <strong>supporting single patterns and multi patterns.</strong> While most algorithms outperform the naive algorithm provided by 
-                    the Java-API (via       <code >String.indexOf</code>), the performance of the algorithms differs in the dimensions of:</p>
-                  <ul>
-                          <li>size of the alphabet (e.g. {A,C,G,T} vs [A-Za-z])</li>
-                      <li>size of the pattern (e.g. CG vs ACGCTACGACGCTTTTTACGAC)</li>
-                      <li>the number of patterns to match in one pass</li>
-  </ul>
-                  <p>                    Some heuristics how to choose the best algorithm for your scenario will be presented in   <a href="#chooseAlgorithm">
-    Choosing the Best Algorithm
-  </a>. </p>
-                  <p>                      <strong>How does StringSearchAlgorithms compare to other libraries or handcoded algorithms?</strong> Pretty well, but note that the main design goals of StringSearchAlgorithms were:</p>
-                  <ul>
-                          <li>correctness all algorithms</li>
-                      <li>common api for all algorithms</li>
-                      <li>common features for all algorithms</li>
-  </ul>
-                  <p>                    We are proud of having the most complete suite of integration tests of all known libraries, consequently making StringSearchAlgorithms to one of the few libraries that produce correct
-                    results in all tested scenarios. There are very few algorithms libraries that are correct and (in some scenarios) faster than StringSearchAlgorithms (two are known to us, both support
-                    less features than us).</p>
-  </div>
-  </div>
+                    - and not available as library (in Java).</p>
+                <p>                    <strong>StringSearchAlgorithms</strong> provides a Java library of various algorithms to support you in string searching - <strong>supporting single patterns and multi patterns.</strong> While most algorithms outperform the naive algorithm provided by 
+                    the Java-API (via     <code >String.indexOf</code>), the performance of the algorithms differs in the dimensions of:</p>
+                <ul>                    <li>size of the alphabet (e.g. {A,C,G,T} vs [A-Za-z])</li>
+                    <li>size of the pattern (e.g. CG vs ACGCTACGACGCTTTTTACGAC)</li>
+                    <li>the number of patterns to match in one pass</li></ul>
+                <p>                    Some heuristics how to choose the best algorithm for your scenario will be presented in <a href="#chooseAlgorithm">Choosing the Best Algorithm</a>. </p>
+                <p>                    <strong>How does StringSearchAlgorithms compare to other libraries or handcoded algorithms?</strong> Pretty well, but note that the main design goals of StringSearchAlgorithms were:</p>
+                <ul>                    <li>correctness of all algorithms</li>
+                    <li>common api for all algorithms</li>
+                    <li>common features for all algorithms</li></ul>
+                <p>                    Together with <a href="https://github.com/almondtools/stringbench/">StringBench</a> StringSearchAlgorithm is the best tested library known to us. Many other libraries do not even deliver 
+                    correct results in all tested scenarios. Yet there are two libraries known to us that are correct and faster than StringSearchAlgorithms
+                    (actually their outperformance is limited to certain scenarios and the feature set is not as rich).</p></div></div>
   </section>
   </section>
               <section class="page-section">
-              <h2>Usage</h2>
-              <div class="row">
-              <div class="order-2 col-lg-4">
-                      <div class="card info-card">
-              <div class="card-header">
-      <h4 class="panel-title">Available StringFinderOptions:</h4>
-  </div>
-          <div class="card-body">
-                      <ul>
-                          <li>  <small>MatchOption</small>.<strong>LONGEST_MATCH</strong>:   <p>only the longest match starting at one char will be reported</p></li>
-                      <li>  <small>MatchOption</small>.<strong>NON_OVERLAP</strong>:   <p>overlapping matches are not reported</p></li>
-                      <li>  <small>MatchOption</small>.<strong>NON_EMPTY</strong>:   <p>empty matches (strings of length 0) are not reported</p></li>
-  </ul>
-  </div>
-  </div>
-  </div>
-          <div class="order-1 col-lg-8">
-                  <h3>Searching Strings:</h3>
-              <p>To search a single string:   <ul>
-                      <li>Select a search algorithm, e.g. Horspool</li>
-                  <li>Create a Finder</li>
-                          <div>
-      <pre><code class="java">Horspool stringSearch = new Horspool(&quot;word&quot;);
+            <h2>Usage</h2>
+            <div class="row">        <div class="order-2 col-lg-4">                <div class="card info-card">        <div class="card-header"><h4 class="panel-title">Available StringFinderOptions:</h4></div>
+        <div class="card-body">                <ul>                    <li><small>MatchOption</small>.<strong>LONGEST_MATCH</strong>: <p>only the longest match starting at one char will be reported</p></li>
+                    <li><small>MatchOption</small>.<strong>NON_OVERLAP</strong>: <p>overlapping matches are not reported</p></li>
+                    <li><small>MatchOption</small>.<strong>NON_EMPTY</strong>: <p>empty matches (strings of length 0) are not reported</p></li></ul></div></div></div>
+        <div class="order-1 col-lg-8">            <h3>Searching Strings:</h3>
+            <p>To search a single string: <ul>                <li>Select a search algorithm, e.g. Horspool</li>
+                <li>Create a Finder</li>
+                        <div><pre><code class="java">Horspool stringSearch = new Horspool(&quot;word&quot;);
 CharProvider text = new StringCharProvider(&quot;text with word in it&quot;, 0);
-StringFinder finder = stringSearch.createFinder(text);</code></pre>
-  </div>
-                  <li>Find the next match with:</li>
-                          <div>
-      <pre><code class="java">StringMatch next = finder.findNext();</code></pre>
-  </div>
-                  <li>Find all matches (may overlap):</li>
-                          <div>
-      <pre><code class="java">List&lt;StringMatch&gt; all = finder.findAll();</code></pre>
-  </div>
-  </ul></p>
-              <h3>Restricting to Non-Overlapping Results:</h3>
-              <p>The basic string finder reports all matches, i.e. a match may overlap or subsume another. Of course this is only relevant for
-                algorithms searching multiple strings. To restrict their matches to the longest non-overlapping ones:   <ul>
-                      <li>Select the multi-string search algorithm, e.g. AhoCorasick</li>
-                  <li>Create a Finder</li>
-                          <div>
-      <pre><code class="java">AhoCorasick stringSearch = new AhoCorasick(asList(&quot;word&quot;, &quot;longer word&quot;));
+StringFinder finder = stringSearch.createFinder(text);</code></pre></div>
+                <li>Find the next match with:</li>
+                        <div><pre><code class="java">StringMatch next = finder.findNext();</code></pre></div>
+                <li>Find all matches (may overlap):</li>
+                        <div><pre><code class="java">List&lt;StringMatch&gt; all = finder.findAll();</code></pre></div></ul></p>
+            <h3>Restricting to Non-Overlapping Results:</h3>
+            <p>The basic string finder reports all matches, i.e. a match may overlap or subsume another. Of course this is only relevant for
+                algorithms searching multiple strings. To restrict their matches to the longest non-overlapping ones: <ul>                <li>Select the multi-string search algorithm, e.g. AhoCorasick</li>
+                <li>Create a Finder</li>
+                        <div><pre><code class="java">AhoCorasick stringSearch = new AhoCorasick(asList(&quot;word&quot;, &quot;longer word&quot;));
 CharProvider text = new StringCharProvider(&quot;text with longer word and word in it&quot;, 0);
-StringFinder finder = stringSearch.createFinder(text, LONGEST_MATCH, NON_OVERLAP);</code></pre>
-  </div>
-                  <li>Finding matches is the same as above</li>
-  </ul></p>
-  </div>
-  </div>
+StringFinder finder = stringSearch.createFinder(text, LONGEST_MATCH, NON_OVERLAP);</code></pre></div>
+                <li>Finding matches is the same as above</li></ul></p></div></div>
         
         
   </section>
               <section class="page-section" id="chooseAlgorithm">
-              <h2>Choosing the Best Algorithm</h2>
-          <div class="row">
-                  <div class="col-lg-8">
-                          <h3>For Searching a Single String</h3>
-      <p>        We compared each single-word algorithm in a benchmark, characterized by   <ul>
-                  <li>pattern size (the number of chars in the pattern)</li>
-              <li>alphabet size (the number of different chars used in the text)</li>
-  </ul>
-        From experimental benchmarks following heuristics could be derived:   <ul>
-                  <li>  <strong>ShiftOr</strong> for smaller patterns (length <= 16) with small alphabet (<= 4 chars)</li>
-              <li>  <strong>BNDM</strong> for middle-sized patterns (16 <= length <= 64) with small to mid-sized alphabet (<= 16 chars)</li>
-              <li>  <strong>Horspool/Sunday</strong> for large patterns with large alphabet</li>
-              <li>  <strong>BOM</strong> for large patterns (length >= 64) with small to mid-sized alphabet</li>
-  </ul></p> 
-                      <h3>For Searching Multiple Strings</h3>
-      <p>        We compared each multi-word algorithm in a benchmark, characterized by   <ul>
-                  <li>pattern number (the number of words to search)</li>
-              <li>pattern size (the number of chars in the pattern)</li>
-              <li>alphabet size (the number of different chars used in the text)</li>
-  </ul>
-        From experimental benchmarks following heuristics could be derived:   <ul>
-                  <li>searching for a small pattern number prefers the naive implementation, yet we cannot explain why (benchmark problem?)</li>
-              <li>large patterns are dominated by   <strong>SetBackwardOracleMatching</strong></li>
-              <li>small patterns with small alphabet are dominated by   <strong>AhoCorasick</strong></li>
-              <li>small patterns with large alphabets are dominated by   <strong>SetHorspool</strong></li>
-              <li>  <strong>WuManber</strong> seems to good for middle-sized pattern number, being competitive between   <strong>SetHorspool</strong> and   <strong>SetBackwardOracleMatching</strong></li>
-  </ul></p> 
-  </div>
-              <div class="col-lg-4">
-                              <div class="card info-card">
-              <div class="card-header">
-    String searching with Java SDK:
-  </div>
-          <div class="card-body">
-              <p>            The Java SDK method to find strings,       <code class="java">String.indexOf(String)</code>, uses naive string search. This is sufficient if patterns are small and few.
+            <h2>Choosing the Best Algorithm</h2>
+        <div class="row">            <div class="col-lg-8">                    <h3>For Searching a Single String</h3>
+    <p>        We compared each single-word algorithm in a benchmark, characterized by <ul>            <li>pattern size (the number of chars in the pattern)</li>
+            <li>alphabet size (the number of different chars used in the text)</li></ul>
+        From experimental benchmarks following heuristics could be derived: <ul>            <li><strong>ShiftOr</strong> for smaller patterns (length <= 16) with small alphabet (<= 4 chars)</li>
+            <li><strong>BNDM</strong> for middle-sized patterns (16 <= length <= 64) with small to mid-sized alphabet (<= 16 chars)</li>
+            <li><strong>Horspool/Sunday</strong> for large patterns with large alphabet</li>
+            <li><strong>BOM</strong> for large patterns (length >= 64) with small to mid-sized alphabet</li></ul></p> 
+                    <h3>For Searching Multiple Strings</h3>
+    <p>        We compared each multi-word algorithm in a benchmark, characterized by <ul>            <li>pattern number (the number of words to search)</li>
+            <li>pattern size (the number of chars in the pattern)</li>
+            <li>alphabet size (the number of different chars used in the text)</li></ul>
+        From experimental benchmarks following heuristics could be derived: <ul>            <li>searching for a small pattern number prefers the naive implementation, yet we cannot explain why (benchmark problem?)</li>
+            <li>large patterns are dominated by <strong>SetBackwardOracleMatching</strong></li>
+            <li>small patterns with small alphabet are dominated by <strong>AhoCorasick</strong></li>
+            <li>small patterns with large alphabets are dominated by <strong>SetHorspool</strong></li>
+            <li><strong>WuManber</strong> seems to good for middle-sized pattern number, being competitive between <strong>SetHorspool</strong> and <strong>SetBackwardOracleMatching</strong></li></ul></p> </div>
+            <div class="col-lg-4">                        <div class="card info-card">        <div class="card-header">String searching with Java SDK:</div>
+        <div class="card-body">        <p>            The Java SDK method to find strings,     <code class="java">String.indexOf(String)</code>, uses naive string search. This is sufficient if patterns are small and few.
             Yet this method does not scale for any dimension.</p>
-          <p>            Yet the Java SDK offers a hidden string search in its Regexp package.       <code >java.util.Pattern</code> with a constant pattern (i.e no regex control characters) will create
-                  <code >java.util.Matcher</code>s that use the algorithm of   <strong>Boyer-Moore</strong>. This is very similar to ours   <strong>Horspool</strong> and   <strong>Sunday</strong> - in implementation and performance.</p>
-  </div>
-  </div>
-  </div>
-  </div>
+        <p>            Yet the Java SDK offers a hidden string search in its Regexp package.     <code >java.util.Pattern</code> with a constant pattern (i.e no regex control characters) will create
+                <code >java.util.Matcher</code>s that use the algorithm of <strong>Boyer-Moore</strong>. This is very similar to ours <strong>Horspool</strong> and <strong>Sunday</strong> - in implementation and performance.</p></div></div></div></div>
   </section>
               <section class="page-section">
-              <h2>Benchmarks</h2>
-          <div class="row">
-                  <div class="col-lg-8">
-                          <p>        To keep track of the performance of each algorithm we created the benchmark project   <a href="https://github.com/almondtools/stringbench/">
-    StringBench
-  </a>.</p>
-      <p>          <strong>StringBench</strong> compares all available algorithms (of   <strong>String Search Algorithms</strong> and other libraries) in different scenarios 
+            <h2>Benchmarks</h2>
+        <div class="row">            <div class="col-lg-8">                    <p>        To keep track of the performance of each algorithm we created the benchmark project <a href="https://github.com/almondtools/stringbench/">StringBench</a>.</p>
+    <p>        <strong>StringBench</strong> compares all available algorithms (of <strong>String Search Algorithms</strong> and other libraries) in different scenarios 
         (differing in number of patterns, size of patterns and size of alphabet).</p>
-      <p>        The benchmark results can be found   <a href="https://github.com/almondtools/stringbench/tree/master/benchmarkresults">
-    here
-  </a>.</p> 
-  </div>
-              <div class="col-lg-4">
-                
-  </div>
-  </div>
+    <p>        The benchmark results can be found <a href="https://github.com/almondtools/stringbench/tree/master/benchmarkresults">here</a>.</p> </div>
+            <div class="col-lg-4">            </div></div>
   </section>
               <section class="page-section">
-              <div class="row">
-                  <div class="order-2 col-lg-4">
-                
-  </div>
-              <div class="order-1 col-lg-8">
-                      <h2>Authors</h2>
-                  <p>  <a href="http://www.amygdalum.net">
-    Stefan Mandel
-  </a></p>
-  </div>
-  </div>
-  </section>
-  </div>
+            <div class="row">            <div class="order-2 col-lg-4">            </div>
+            <div class="order-1 col-lg-8">                <h2>Authors</h2>
+                <p><a href="http://www.amygdalum.net">Stefan Mandel</a></p></div></div>
+  </section></div>
   </main>
               <script src="https://code.jquery.com/jquery-1.11.3.min.js"></script>
               <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
