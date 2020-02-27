@@ -20,13 +20,12 @@ public class MultiStringSearchAlgorithmTest {
 
 	@Rule
 	public MultiStringSearchRule searcher = new MultiStringSearchRule(
-//		new AhoCorasick.Factory(),
-		new SetHorspool.Factory()//,
-//		new SetHorspool.Factory(true),
-//		new WuManber.Factory(),
-//		new SetBackwardOracleMatching.Factory(),
-//		new QGramShiftOr.Factory()
-		);
+		new AhoCorasick.Factory(),
+		new SetHorspool.Factory(),
+		new SetHorspool.Factory(true),
+		new WuManber.Factory(),
+		new SetBackwardOracleMatching.Factory(),
+		new QGramShiftOr.Factory());
 
 	@Test
 	@SearchFor({"x"})
@@ -132,6 +131,20 @@ public class MultiStringSearchAlgorithmTest {
 			new StringMatch(2, 3, "a"),
 			new StringMatch(2, 4, "aa"),
 			new StringMatch(3, 4, "a")));
+	}
+
+	@Test
+	@SearchFor({"ab", "abc"})
+	public void testLongestMatchOnSubsumingPatternsInIncreasingLengthOrder() throws Exception {
+		List<StringMatch> matches = searcher.createSearcher("abc", LONGEST_MATCH, NON_OVERLAP).findAll();
+		assertThat(matches, containsInAnyOrder(new StringMatch(0, 3, "abc")));
+	}
+
+	@Test
+	@SearchFor({"abc", "ab"})
+	public void testLongestMatchOnSubsumingPatternsInDecreasingLengthOrder() throws Exception {
+		List<StringMatch> matches = searcher.createSearcher("abc", LONGEST_MATCH, NON_OVERLAP).findAll();
+		assertThat(matches, containsInAnyOrder(new StringMatch(0, 3, "abc")));
 	}
 
 	@Test

@@ -12,7 +12,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.IdentityHashMap;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -41,23 +40,23 @@ import net.amygdalum.util.text.linkeddawg.LinkedByteDawgCompiler;
  */
 public class SetBackwardOracleMatching implements StringSearchAlgorithm {
 
-	private ByteWordSet<List<byte[]>> trie;
+	private ByteWordSet<byte[][]> trie;
 	private int minLength;
 
 	public SetBackwardOracleMatching(Collection<String> patterns, Charset charset) {
-		List<byte[]> bytepatterns = toByteArray(patterns, charset);
+		byte[][] bytepatterns = toByteArray(patterns, charset).toArray(new byte[0][]);
 		this.minLength = minLength(bytepatterns);
 		this.trie = computeTrie(bytepatterns, minLength);
 	}
 
-	private static ByteWordSet<List<byte[]>> computeTrie(List<byte[]> bytepatterns, int length) {
-		ByteWordSetBuilder<List<byte[]>, ByteDawg<List<byte[]>>> builder = new ByteWordSetBuilder<>(new LinkedByteDawgCompiler<List<byte[]>>(), new MergePatterns());
+	private static ByteWordSet<byte[][]> computeTrie(byte[][] bytepatterns, int length) {
+		ByteWordSetBuilder<byte[][], ByteDawg<byte[][]>> builder = new ByteWordSetBuilder<>(new LinkedByteDawgCompiler<byte[][]>(), new MergePatterns());
 
 		for (byte[] pattern : bytepatterns) {
 			byte[] prefix = copyOfRange(pattern, 0, length);
 			byte[] reversePrefix = revert(prefix);
 			byte[] suffix = copyOfRange(pattern, length, pattern.length);
-			builder.extend(reversePrefix, asList(prefix, suffix));
+			builder.extend(reversePrefix, new byte[][] {prefix, suffix});
 		}
 		builder.work(new BuildOracle());
 
@@ -79,43 +78,53 @@ public class SetBackwardOracleMatching implements StringSearchAlgorithm {
 		return getClass().getSimpleName();
 	}
 
-	public static class MergePatterns implements JoinStrategy<List<byte[]>> {
+	public static class MergePatterns implements JoinStrategy<byte[][]> {
 
 		@Override
-		public List<byte[]> join(List<byte[]> existing, List<byte[]> next) {
+		public byte[][] join(byte[][] existing, byte[][] next) {
 			if (existing == null) {
-				return new ArrayList<>(next);
+				return next;
 			} else {
-				existing.add(next.get(1));
-				return existing;
+				byte[][] result = new byte[existing.length + 1][];
+				byte[] insert = next[1];
+				int i = 1;
+				while (i < existing.length && existing[i].length > insert.length) {
+					i++;
+				}
+				System.arraycopy(existing, 0, result, 0, i);
+				result[i] = insert;
+				if (i < existing.length) {
+					System.arraycopy(existing, i, result, i + 1, existing.length - i);
+				}
+				return result;
 			}
 		}
 
 	}
 
-	public static class BuildOracle implements ByteTask<List<byte[]>> {
-		private Map<ByteNode<List<byte[]>>, ByteNode<List<byte[]>>> oracle;
-		private ByteNode<List<byte[]>> init;
+	public static class BuildOracle implements ByteTask<byte[][]> {
+		private Map<ByteNode<byte[][]>, ByteNode<byte[][]>> oracle;
+		private ByteNode<byte[][]> init;
 
 		public BuildOracle() {
 			oracle = new IdentityHashMap<>();
 		}
 
 		@Override
-		public List<ByteNode<List<byte[]>>> init(ByteNode<List<byte[]>> root) {
+		public List<ByteNode<byte[][]>> init(ByteNode<byte[][]> root) {
 			this.init = root;
 			return asList(root);
 		}
 
 		@Override
-		public List<ByteNode<List<byte[]>>> process(ByteNode<List<byte[]>> node) {
-			List<ByteNode<List<byte[]>>> nexts = new ArrayList<>();
+		public List<ByteNode<byte[][]>> process(ByteNode<byte[][]> node) {
+			List<ByteNode<byte[][]>> nexts = new ArrayList<>();
 			for (byte b : node.getAlternatives()) {
-				ByteNode<List<byte[]>> current = node.nextNode(b);
+				ByteNode<byte[][]> current = node.nextNode(b);
 
-				ByteNode<List<byte[]>> down = oracle.get(node);
+				ByteNode<byte[][]> down = oracle.get(node);
 				while (down != null) {
-					ByteNode<List<byte[]>> next = down.nextNode(b);
+					ByteNode<byte[][]> next = down.nextNode(b);
 					if (next != null) {
 						oracle.put(current, next);
 						break;
@@ -133,8 +142,8 @@ public class SetBackwardOracleMatching implements StringSearchAlgorithm {
 		}
 
 		@SuppressWarnings("unchecked")
-		private void addNextNode(ByteNode<List<byte[]>> node, byte b, ByteNode<List<byte[]>> next) {
-			((ByteConnectionAdaptor<List<byte[]>>) node).addNextNode(b, next);
+		private void addNextNode(ByteNode<byte[][]> node, byte b, ByteNode<byte[][]> next) {
+			((ByteConnectionAdaptor<byte[][]>) node).addNextNode(b, next);
 		}
 	}
 
@@ -143,10 +152,10 @@ public class SetBackwardOracleMatching implements StringSearchAlgorithm {
 		private final int minLength;
 		private final int lookahead;
 		private ByteProvider bytes;
-		private ByteAutomaton<List<byte[]>> cursor;
+		private ByteAutomaton<byte[][]> cursor;
 		private Queue<StringMatch> buffer;
 
-		public Finder(ByteWordSet<List<byte[]>> trie, int minLength, ByteProvider bytes, StringFinderOption... options) {
+		public Finder(ByteWordSet<byte[][]> trie, int minLength, ByteProvider bytes, StringFinderOption... options) {
 			super(options);
 			this.minLength = minLength;
 			this.lookahead = minLength - 1;
@@ -181,12 +190,11 @@ public class SetBackwardOracleMatching implements StringSearchAlgorithm {
 				long currentWindowEnd = currentWindowStart + minLength;
 				byte[] matchedPrefix = bytes.between(currentPos, currentWindowEnd);
 				if (success && j < 0) {
-					List<byte[]> patterns = cursor.iterator().next();
-					Iterator<byte[]> iPatterns = patterns.iterator();
-					byte[] prefix = iPatterns.next();
+					byte[][] patterns = cursor.iterator().next();
+					byte[] prefix = patterns[0];
 					if (Arrays.equals(prefix, matchedPrefix)) {
-						while (iPatterns.hasNext()) {
-							byte[] suffix = iPatterns.next();
+						for (int i = 1; i < patterns.length; i++) {
+							byte[] suffix = patterns[i];
 							long currentWordEnd = currentWindowEnd + suffix.length;
 							if (!bytes.finished((int) (currentWordEnd - currentWindowStart - 1))) {
 								byte[] matchedSuffix = bytes.between(currentWindowEnd, currentWordEnd);

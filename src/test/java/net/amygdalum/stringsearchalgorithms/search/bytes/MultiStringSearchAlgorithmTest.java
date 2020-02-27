@@ -145,6 +145,20 @@ public class MultiStringSearchAlgorithmTest {
 	}
 	
 	@Test
+	@SearchFor({"ab", "abc"})
+	public void testLongestMatchOnSubsumingPatternsInIncreasingLengthOrder() throws Exception {
+		List<StringMatch> matches = searcher.createSearcher("abc", LONGEST_MATCH, NON_OVERLAP).findAll();
+		assertThat(matches, containsInAnyOrder(new StringMatch(0, 6, "abc")));
+	}
+
+	@Test
+	@SearchFor({"abc", "ab"})
+	public void testLongestMatchOnSubsumingPatternsInDecreasingLengthOrder() throws Exception {
+		List<StringMatch> matches = searcher.createSearcher("abc", LONGEST_MATCH, NON_OVERLAP).findAll();
+		assertThat(matches, containsInAnyOrder(new StringMatch(0, 6, "abc")));
+	}
+
+	@Test
 	@SearchFor({"a","b"})
 	public void testOverlappingPattern1() throws Exception {
 		List<StringMatch> matches = searcher.createSearcher("abacacab", LONGEST_MATCH, NON_OVERLAP).findAll();

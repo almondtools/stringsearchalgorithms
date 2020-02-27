@@ -12,7 +12,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -44,7 +43,7 @@ import net.amygdalum.util.text.linkeddawg.LinkedCharDawgCompiler;
 public class SetBackwardOracleMatching implements StringSearchAlgorithm {
 
 	private CharMapping mapping;
-	private CharWordSet<List<char[]>> trie;
+	private CharWordSet<char[][]> trie;
 	private int minLength;
 
 	public SetBackwardOracleMatching(Collection<String> patterns) {
@@ -58,22 +57,22 @@ public class SetBackwardOracleMatching implements StringSearchAlgorithm {
 		this.trie = computeTrie(normalized(mapping, charpatterns), minLength, mapping);
 	}
 
-	private List<char[]> normalized(CharMapping mapping, List<char[]> charpatterns) {
+	private char[][] normalized(CharMapping mapping, List<char[]> charpatterns) {
 		List<char[]> normalized = new ArrayList<>(charpatterns.size());
 		for (char[] cs : charpatterns) {
 			normalized.add(mapping.normalized(cs));
 		}
-		return normalized;
+		return normalized.toArray(new char[0][]);
 	}
 
-	private static CharWordSet<List<char[]>> computeTrie(List<char[]> charpatterns, int length, CharMapping mapping) {
-		CharWordSetBuilder<List<char[]>, CharDawg<List<char[]>>> builder = new CharWordSetBuilder<>(new LinkedCharDawgCompiler<List<char[]>>(), new MergePatterns());
+	private static CharWordSet<char[][]> computeTrie(char[][] charpatterns, int length, CharMapping mapping) {
+		CharWordSetBuilder<char[][], CharDawg<char[][]>> builder = new CharWordSetBuilder<>(new LinkedCharDawgCompiler<char[][]>(), new MergePatterns());
 
 		for (char[] pattern : charpatterns) {
 			char[] prefix = copyOfRange(pattern, 0, length);
 			char[] reversePrefix = revert(prefix);
 			char[] suffix = copyOfRange(pattern, length, pattern.length);
-			builder.extend(reversePrefix, asList(prefix, suffix));
+			builder.extend(reversePrefix, new char[][] {prefix, suffix});
 		}
 		builder.work(new BuildOracle());
 		builder.work(new UseCharClasses(mapping));
@@ -96,43 +95,53 @@ public class SetBackwardOracleMatching implements StringSearchAlgorithm {
 		return getClass().getSimpleName();
 	}
 
-	public static class MergePatterns implements JoinStrategy<List<char[]>> {
+	public static class MergePatterns implements JoinStrategy<char[][]> {
 
 		@Override
-		public List<char[]> join(List<char[]> existing, List<char[]> next) {
+		public char[][] join(char[][] existing, char[][] next) {
 			if (existing == null) {
-				return new ArrayList<>(next);
+				return next;
 			} else {
-				existing.add(next.get(1));
-				return existing;
+				char[][] result = new char[existing.length + 1][];
+				char[] insert = next[1];
+				int i = 1;
+				while (i < existing.length && existing[i].length > insert.length) {
+					i++;
+				}
+				System.arraycopy(existing, 0, result, 0, i);
+				result[i] = insert;
+				if (i < existing.length) {
+					System.arraycopy(existing, i, result, i + 1, existing.length - i);
+				}
+				return result;
 			}
 		}
 
 	}
 
-	public static class BuildOracle implements CharTask<List<char[]>> {
-		private Map<CharNode<List<char[]>>, CharNode<List<char[]>>> oracle;
-		private CharNode<List<char[]>> init;
+	public static class BuildOracle implements CharTask<char[][]> {
+		private Map<CharNode<char[][]>, CharNode<char[][]>> oracle;
+		private CharNode<char[][]> init;
 
 		public BuildOracle() {
 			oracle = new IdentityHashMap<>();
 		}
 
 		@Override
-		public List<CharNode<List<char[]>>> init(CharNode<List<char[]>> root) {
+		public List<CharNode<char[][]>> init(CharNode<char[][]> root) {
 			this.init = root;
 			return asList(root);
 		}
 
 		@Override
-		public List<CharNode<List<char[]>>> process(CharNode<List<char[]>> node) {
-			List<CharNode<List<char[]>>> nexts = new ArrayList<>();
+		public List<CharNode<char[][]>> process(CharNode<char[][]> node) {
+			List<CharNode<char[][]>> nexts = new ArrayList<>();
 			for (char c : node.getAlternatives()) {
-				CharNode<List<char[]>> current = node.nextNode(c);
+				CharNode<char[][]> current = node.nextNode(c);
 
-				CharNode<List<char[]>> down = oracle.get(node);
+				CharNode<char[][]> down = oracle.get(node);
 				while (down != null) {
-					CharNode<List<char[]>> next = down.nextNode(c);
+					CharNode<char[][]> next = down.nextNode(c);
 					if (next != null) {
 						oracle.put(current, next);
 						break;
@@ -150,15 +159,15 @@ public class SetBackwardOracleMatching implements StringSearchAlgorithm {
 		}
 
 		@SuppressWarnings("unchecked")
-		private void addNextNode(CharNode<List<char[]>> node, char c, CharNode<List<char[]>> next) {
-			((CharConnectionAdaptor<List<char[]>>) node).addNextNode(c, next);
+		private void addNextNode(CharNode<char[][]> node, char c, CharNode<char[][]> next) {
+			((CharConnectionAdaptor<char[][]>) node).addNextNode(c, next);
 		}
 	}
 
-	public static class UseCharClasses implements CharTask<List<char[]>> {
+	public static class UseCharClasses implements CharTask<char[][]> {
 
 		private CharMapping mapping;
-		private Set<CharNode<List<char[]>>> done;
+		private Set<CharNode<char[][]>> done;
 
 		public UseCharClasses(CharMapping mapping) {
 			this.mapping = mapping;
@@ -166,7 +175,7 @@ public class SetBackwardOracleMatching implements StringSearchAlgorithm {
 		}
 
 		@Override
-		public List<CharNode<List<char[]>>> init(CharNode<List<char[]>> root) {
+		public List<CharNode<char[][]>> init(CharNode<char[][]> root) {
 			if (mapping == CharMapping.IDENTITY) {
 				return Collections.emptyList();
 			}
@@ -174,11 +183,11 @@ public class SetBackwardOracleMatching implements StringSearchAlgorithm {
 		}
 
 		@Override
-		public List<CharNode<List<char[]>>> process(CharNode<List<char[]>> node) {
-			List<CharNode<List<char[]>>> nexts = new ArrayList<>();
+		public List<CharNode<char[][]>> process(CharNode<char[][]> node) {
+			List<CharNode<char[][]>> nexts = new ArrayList<>();
 
 			for (char c : node.getAlternatives()) {
-				CharNode<List<char[]>> next = node.nextNode(c);
+				CharNode<char[][]> next = node.nextNode(c);
 				for (char cc : mapping.map(c)) {
 					addNextNode(node, cc, next);
 				}
@@ -191,8 +200,8 @@ public class SetBackwardOracleMatching implements StringSearchAlgorithm {
 		}
 
 		@SuppressWarnings("unchecked")
-		private void addNextNode(CharNode<List<char[]>> node, char c, CharNode<List<char[]>> next) {
-			((CharConnectionAdaptor<List<char[]>>) node).addNextNode(c, next);
+		private void addNextNode(CharNode<char[][]> node, char c, CharNode<char[][]> next) {
+			((CharConnectionAdaptor<char[][]>) node).addNextNode(c, next);
 		}
 	}
 
@@ -202,10 +211,10 @@ public class SetBackwardOracleMatching implements StringSearchAlgorithm {
 		private final int lookahead;
 		private final CharMapping mapping;
 		private CharProvider chars;
-		private CharAutomaton<List<char[]>> cursor;
+		private CharAutomaton<char[][]> cursor;
 		private Queue<StringMatch> buffer;
 
-		public Finder(CharWordSet<List<char[]>> trie, int minLength, CharMapping mapping, CharProvider chars, StringFinderOption... options) {
+		public Finder(CharWordSet<char[][]> trie, int minLength, CharMapping mapping, CharProvider chars, StringFinderOption... options) {
 			super(options);
 			this.minLength = minLength;
 			this.lookahead = minLength - 1;
@@ -241,12 +250,11 @@ public class SetBackwardOracleMatching implements StringSearchAlgorithm {
 				long currentWindowEnd = currentWindowStart + minLength;
 				char[] matchedPrefix = chars.between(currentPos, currentWindowEnd);
 				if (success && j < 0) {
-					List<char[]> patterns = cursor.iterator().next();
-					Iterator<char[]> iPatterns = patterns.iterator();
-					char[] prefix = iPatterns.next();
+					char[][] patterns = cursor.iterator().next();
+					char[] prefix = patterns[0];
 					if (Arrays.equals(prefix, mapping.normalized(matchedPrefix))) {
-						while (iPatterns.hasNext()) {
-							char[] suffix = iPatterns.next();
+						for (int i = 1; i < patterns.length; i++) {
+							char[] suffix = patterns[i];
 							long currentWordEnd = currentWindowEnd + suffix.length;
 							if (!chars.finished((int) (currentWordEnd - currentWindowStart - 1))) {
 								char[] matchedSuffix = chars.between(currentWindowEnd, currentWordEnd);
