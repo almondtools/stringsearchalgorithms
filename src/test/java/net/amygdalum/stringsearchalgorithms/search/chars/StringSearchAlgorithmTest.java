@@ -4,8 +4,8 @@ import static net.amygdalum.stringsearchalgorithms.search.MatchOption.LONGEST_MA
 import static net.amygdalum.stringsearchalgorithms.search.MatchOption.NON_OVERLAP;
 import static net.amygdalum.stringsearchalgorithms.search.chars.StringSearchAlgorithmMatcher.isStringSearchAlgorithm;
 import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.contains;
-import static org.junit.Assert.assertThat;
 
 import java.util.List;
 

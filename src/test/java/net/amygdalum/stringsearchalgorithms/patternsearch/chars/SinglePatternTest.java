@@ -3,8 +3,8 @@ package net.amygdalum.stringsearchalgorithms.patternsearch.chars;
 import static net.amygdalum.stringsearchalgorithms.search.MatchOption.LONGEST_MATCH;
 import static net.amygdalum.stringsearchalgorithms.search.MatchOption.NON_EMPTY;
 import static net.amygdalum.stringsearchalgorithms.search.MatchOption.NON_OVERLAP;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.contains;
-import static org.junit.Assert.assertThat;
 
 import org.junit.Rule;
 import org.junit.Test;
