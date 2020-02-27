@@ -28,6 +28,6 @@ Maven Dependency
 <dependency>
     <groupId>net.amygdalum</groupId>
     <artifactId>stringsearchalgorithms</artifactId>
-    <version>0.4.2</version>
+    <version>0.4.3</version>
 </dependency>
 ```
