@@ -1,8 +1,7 @@
 [StringSearchAlgorithms](http://stringsearchalgorithms.amygdalum.net/)
 ===============
-[![Build Status](https://api.travis-ci.org/almondtools/stringsearchalgorithms.svg)](https://travis-ci.org/almondtools/stringsearchalgorithms)
 [![codecov](https://codecov.io/gh/almondtools/stringsearchalgorithms/branch/master/graph/badge.svg)](https://codecov.io/gh/almondtools/stringsearchalgorithms)
-[![Codacy Badge](https://api.codacy.com/project/badge/Grade/f95ab1df5ced4bffa229ec656f9e6358)](https://www.codacy.com/project/almondtools/stringsearchalgorithms/dashboard?utm_source=github.com&utm_medium=referral&utm_content=almondtools/stringsearchalgorithms&utm_campaign=Badge_Grade_Dashboard)
+[![Codacy Badge](https://app.codacy.com/project/badge/Grade/f95ab1df5ced4bffa229ec656f9e6358)](https://app.codacy.com/gh/almondtools/stringsearchalgorithms/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade)
 
 
 StringSearchAlgorithms (formerly StringAndChars) is a library for exact string matching algorithms (or string search algorithms). All algorithms are tested on the same corpus and return the same results. 
