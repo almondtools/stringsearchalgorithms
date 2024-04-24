@@ -1,4 +1,6 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>net.amygdalum</groupId>
 	<artifactId>stringsearchalgorithms</artifactId>
@@ -39,17 +41,17 @@
 		<dependency>
 			<groupId>net.amygdalum</groupId>
 			<artifactId>regexparser</artifactId>
-			<version>0.2.3</version>
+			<version>0.2.5</version>
 		</dependency>
 		<dependency>
 			<groupId>net.amygdalum</groupId>
 			<artifactId>compilerutils</artifactId>
-			<version>0.2.3</version>
+			<version>0.2.5</version>
 		</dependency>
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
-			<version>4.13.1</version>
+			<version>4.13.2</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
@@ -58,18 +60,18 @@
 			<version>1.3</version>
 			<scope>test</scope>
 		</dependency>
-        <dependency>
-            <groupId>net.amygdalum</groupId>
-            <artifactId>hamcrest-extensions</artifactId>
-            <version>0.1.19</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>net.amygdalum</groupId>
-            <artifactId>xrayinterface</artifactId>
-            <version>0.3.3</version>
-            <scope>test</scope>
-        </dependency>
+		<dependency>
+			<groupId>net.amygdalum</groupId>
+			<artifactId>hamcrest-extensions</artifactId>
+			<version>0.1.20</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>net.amygdalum</groupId>
+			<artifactId>xrayinterface</artifactId>
+			<version>0.3.4</version>
+			<scope>test</scope>
+		</dependency>
 		<dependency>
 			<groupId>org.mockito</groupId>
 			<artifactId>mockito-core</artifactId>
@@ -156,6 +158,22 @@
 					</plugin>
 					<plugin>
 						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-jar-plugin</artifactId>
+						<version>3.2.0</version>
+						<configuration>
+							<archive>
+								<manifest>
+									<addDefaultImplementationEntries>true</addDefaultImplementationEntries>
+									<addDefaultSpecificationEntries>true</addDefaultSpecificationEntries>
+								</manifest>
+								<manifestEntries>
+									<Automatic-Module-Name>net.amygdalum.stringsearchalgorithms</Automatic-Module-Name>
+								</manifestEntries>
+							</archive>
+						</configuration>
+					</plugin>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
 						<artifactId>maven-javadoc-plugin</artifactId>
 						<version>2.9.1</version>
 						<executions>
@@ -186,14 +204,14 @@
 		</profile>
 	</profiles>
 	<description>Searching and Matching Strings with efficient algorithms:
-- Knuth-Morris-Pratt
-- Shift-And/Or
-- Boyer-Moore-Horspool
-- Sunday (QuickSearch)
-- BNDM
-- BOM
-- Aho-Corasick
-- Set-Horspool
-- Wu-Manber
-- Set-BOM</description>
+		- Knuth-Morris-Pratt
+		- Shift-And/Or
+		- Boyer-Moore-Horspool
+		- Sunday (QuickSearch)
+		- BNDM
+		- BOM
+		- Aho-Corasick
+		- Set-Horspool
+		- Wu-Manber
+		- Set-BOM</description>
 </project>
