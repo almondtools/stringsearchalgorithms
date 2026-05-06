@@ -2,7 +2,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>net.amygdalum</groupId>
 	<artifactId>stringsearchalgorithms</artifactId>
-	<version>0.4.5</version>
+	<version>0.4.6-SNAPSHOT</version>
 	<name>${project.groupId}:${project.artifactId}</name>
 	<url>http://stringsearchalgorithms.amygdalum.net/</url>
 	<licenses>
