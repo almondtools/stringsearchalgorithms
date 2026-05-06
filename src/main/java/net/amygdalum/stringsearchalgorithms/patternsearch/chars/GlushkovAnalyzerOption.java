@@ -1,6 +1,5 @@
 package net.amygdalum.stringsearchalgorithms.patternsearch.chars;
 
-
 public enum GlushkovAnalyzerOption {
 
 	SELF_LOOP, FACTORS;

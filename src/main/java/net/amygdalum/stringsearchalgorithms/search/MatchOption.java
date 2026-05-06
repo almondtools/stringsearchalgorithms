@@ -1,6 +1,5 @@
 package net.amygdalum.stringsearchalgorithms.search;
 
-
 public enum MatchOption implements StringFinderOption {
 
 	LONGEST_MATCH, NON_OVERLAP, NON_EMPTY;
@@ -13,5 +12,5 @@ public enum MatchOption implements StringFinderOption {
 		}
 		return false;
 	}
-	
+
 }

@@ -22,7 +22,7 @@ public class DualGlushkovAutomaton implements BitParallelAutomaton {
 		this.emittingChar = emittingChar;
 		this.reachableByState = reachableByState;
 	}
-	
+
 	@Override
 	public char[] supportedChars() {
 		return emittingChar.keys();
@@ -62,7 +62,7 @@ public class DualGlushkovAutomaton implements BitParallelAutomaton {
 		while (!next.isEmpty()) {
 			Queue<BitSet> states = next;
 			next = new LinkedList<>();
-			while(!states.isEmpty()) {
+			while (!states.isEmpty()) {
 				BitSet current = states.remove();
 				if (isFinal(current)) {
 					return length;

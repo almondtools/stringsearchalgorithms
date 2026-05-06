@@ -15,7 +15,6 @@ import org.junit.Test;
 import net.amygdalum.stringsearchalgorithms.search.SearchFor;
 import net.amygdalum.stringsearchalgorithms.search.StringMatch;
 
-
 public class StringSearchAlgorithmTest {
 
 	@Rule
@@ -33,7 +32,7 @@ public class StringSearchAlgorithmTest {
 	public void testAlgorithmDesign() throws Exception {
 		assertThat(searcher.getAlgorithm().getClass(), isByteStringSearchAlgorithm());
 	}
-	
+
 	@Test
 	@SearchFor("a")
 	public void testPattern1() throws Exception {
@@ -53,7 +52,7 @@ public class StringSearchAlgorithmTest {
 			new StringMatch(0, 6, "abc"),
 			new StringMatch(10, 16, "abc")));
 	}
-	
+
 	@Test
 	@SearchFor("abcabd")
 	public void testPattern3() throws Exception {
@@ -62,7 +61,7 @@ public class StringSearchAlgorithmTest {
 			new StringMatch(12, 24, "abcabd"),
 			new StringMatch(30, 42, "abcabd")));
 	}
-	
+
 	@Test
 	@SearchFor("abcab")
 	public void testPattern4() throws Exception {
@@ -71,7 +70,7 @@ public class StringSearchAlgorithmTest {
 			new StringMatch(6, 16, "abcab"),
 			new StringMatch(12, 22, "abcab")));
 	}
-	
+
 	@Test
 	@SearchFor("abcab")
 	public void testPattern5() throws Exception {
@@ -81,7 +80,7 @@ public class StringSearchAlgorithmTest {
 			new StringMatch(12, 22, "abcab"),
 			new StringMatch(18, 28, "abcab")));
 	}
-	
+
 	@Test
 	@SearchFor("ab")
 	public void testPattern6() throws Exception {
@@ -90,7 +89,7 @@ public class StringSearchAlgorithmTest {
 			new StringMatch(12, 16, "ab"),
 			new StringMatch(16, 20, "ab")));
 	}
-	
+
 	@Test
 	@SearchFor("a\u0262ba")
 	public void testPatternLargeAlphabet() throws Exception {
@@ -99,7 +98,7 @@ public class StringSearchAlgorithmTest {
 			new StringMatch(12, 20, "a\u0262ba"),
 			new StringMatch(18, 26, "a\u0262ba")));
 	}
-	
+
 	@Test
 	@SearchFor("aaaa aaaa bbbb bbbb aaaa aaaa bbbb bbbb aaaa aaaa bbbb bbbb aaaa aaaa bbbb bbbb")
 	public void testPatternLargeSize1() throws Exception {
@@ -107,7 +106,7 @@ public class StringSearchAlgorithmTest {
 		assertThat(matches, contains(
 			new StringMatch(8, 166, "aaaa aaaa bbbb bbbb aaaa aaaa bbbb bbbb aaaa aaaa bbbb bbbb aaaa aaaa bbbb bbbb")));
 	}
-	
+
 	@Test
 	@SearchFor("10011100000010010000001011010111000110111011100011011100101101101110100011101001110000001011110111000010011110111110110000011111")
 	public void testPatternLargeSize2() throws Exception {
@@ -125,7 +124,7 @@ public class StringSearchAlgorithmTest {
 		assertThat(matches, contains(
 			new StringMatch(8, 166, "axxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\u0262xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxb")));
 	}
-	
+
 	@Test
 	@SearchFor("a")
 	public void testNonOverlappingPattern1() throws Exception {
@@ -145,7 +144,7 @@ public class StringSearchAlgorithmTest {
 			new StringMatch(0, 6, "abc"),
 			new StringMatch(10, 16, "abc")));
 	}
-	
+
 	@Test
 	@SearchFor("abcabd")
 	public void testNonOverlappingPattern3() throws Exception {
@@ -154,7 +153,7 @@ public class StringSearchAlgorithmTest {
 			new StringMatch(12, 24, "abcabd"),
 			new StringMatch(30, 42, "abcabd")));
 	}
-	
+
 	@Test
 	@SearchFor("abcab")
 	public void testNonOverlappingPattern4() throws Exception {
@@ -162,7 +161,7 @@ public class StringSearchAlgorithmTest {
 		assertThat(matches, contains(
 			new StringMatch(6, 16, "abcab")));
 	}
-	
+
 	@Test
 	@SearchFor("abcab")
 	public void testNonOverlappingPattern5() throws Exception {
@@ -171,7 +170,7 @@ public class StringSearchAlgorithmTest {
 			new StringMatch(6, 16, "abcab"),
 			new StringMatch(18, 28, "abcab")));
 	}
-	
+
 	@Test
 	@SearchFor("ab")
 	public void testNonOverlappingPattern6() throws Exception {
@@ -180,19 +179,19 @@ public class StringSearchAlgorithmTest {
 			new StringMatch(12, 16, "ab"),
 			new StringMatch(16, 20, "ab")));
 	}
-	
+
 	@Test
 	@SearchFor("a")
 	public void testPatternLength1() throws Exception {
 		assertThat(searcher.getAlgorithm().getPatternLength(), equalTo(2));
 	}
-	
+
 	@Test
 	@SearchFor("ab")
 	public void testPatternLength2() throws Exception {
 		assertThat(searcher.getAlgorithm().getPatternLength(), equalTo(4));
 	}
-	
+
 	@Test
 	@SearchFor("abcab")
 	public void testPatternLength5() throws Exception {

@@ -29,7 +29,7 @@ public class GlushkovFactorExtender implements FactorExtender {
 	private int factorLength;
 	private BitSet factorInitial;
 
-	public GlushkovFactorExtender(String pattern, RegexParserOption ...options) {
+	public GlushkovFactorExtender(String pattern, RegexParserOption... options) {
 		RegexNode root = parseAndNormalizeRegex(pattern, options);
 		BestFactorAnalyzer bestFactorAnalyzer = new BestFactorAnalyzer(root).analyze();
 		GlushkovAnalyzer analyzer = new GlushkovAnalyzer(root).analyze();
@@ -49,7 +49,7 @@ public class GlushkovFactorExtender implements FactorExtender {
 		this.factorInitial = factorInitial;
 	}
 
-	private static RegexNode parseAndNormalizeRegex(String pattern, RegexParserOption ...options) {
+	private static RegexNode parseAndNormalizeRegex(String pattern, RegexParserOption... options) {
 		RegexParser parser = new RegexParser(pattern, options);
 		RegexNode root = parser.parse();
 		return root.accept(new GlushkovNormalizer());

@@ -23,11 +23,11 @@ public class MultiPatternSearchRule implements TestRule {
 
 	private StringSearchAlgorithm algorithm;
 	private List<MultiStringSearchAlgorithmFactory> algorithmFactories;
-	
+
 	public MultiPatternSearchRule(MultiStringSearchAlgorithmFactory... algorithmFactories) {
 		this.algorithmFactories = asList(algorithmFactories);
 	}
-	
+
 	private List<StringSearchAlgorithm> getAlgorithms(String[] patterns) {
 		List<StringSearchAlgorithm> algorithms = new ArrayList<>();
 		for (MultiStringSearchAlgorithmFactory algorithmFactory : algorithmFactories) {
@@ -93,9 +93,9 @@ public class MultiPatternSearchRule implements TestRule {
 	public StringFinder createSearcher(CharProvider chars, StringFinderOption... options) {
 		return algorithm.createFinder(chars, options);
 	}
-	
+
 	public StringSearchAlgorithm getAlgorithm() {
 		return algorithm;
 	}
-	
+
 }

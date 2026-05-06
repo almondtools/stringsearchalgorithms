@@ -224,7 +224,7 @@ public class BNDM implements StringSearchAlgorithm {
 		}
 
 	}
-	
+
 	public static class Factory implements StringSearchAlgorithmFactory {
 
 		private Charset charset;
@@ -284,7 +284,7 @@ public class BNDM implements StringSearchAlgorithm {
 			for (int i = 0; i < pattern.length; i++) {
 				int j = pattern.length - i - 1;
 				byte b = pattern[i];
-					characters[b & 0xff] |= 1l << j;
+				characters[b & 0xff] |= 1l << j;
 			}
 			return characters;
 		}

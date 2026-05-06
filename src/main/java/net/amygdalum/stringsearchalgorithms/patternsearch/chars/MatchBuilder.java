@@ -10,7 +10,7 @@ import net.amygdalum.stringsearchalgorithms.search.StringMatch;
 import net.amygdalum.util.io.CharProvider;
 
 public class MatchBuilder implements MatchListener {
-	
+
 	private boolean longest;
 	private SortedSet<StringMatch> matches;
 
@@ -24,7 +24,7 @@ public class MatchBuilder implements MatchListener {
 		String s = chars.slice(start, end);
 		matches.add(new StringMatch(start, end, s));
 	}
-	
+
 	public SortedSet<StringMatch> getMatches() {
 		if (longest && !matches.isEmpty()) {
 			List<StringMatch> toRemove = new ArrayList<>();

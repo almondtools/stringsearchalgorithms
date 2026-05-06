@@ -96,7 +96,7 @@ public class StringSearchRule implements TestRule {
 	public StringFinder createSearcher(String chars, StringFinderOption... options) {
 		return createSearcher(new StringCharProvider(chars, 0), options);
 	}
-	
+
 	public StringFinder createSearcher(CharProvider chars, StringFinderOption... options) {
 		return algorithm.createFinder(chars, options);
 	}

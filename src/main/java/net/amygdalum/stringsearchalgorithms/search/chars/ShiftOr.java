@@ -70,7 +70,7 @@ public class ShiftOr implements StringSearchAlgorithm {
 	}
 
 	private abstract class Finder extends AbstractStringFinder {
-		
+
 		protected final long finalstate;
 		protected CharProvider chars;
 
@@ -208,7 +208,7 @@ public class ShiftOr implements StringSearchAlgorithm {
 
 		@Override
 		public long[] all(char c) {
-			return new long[] { single(c) };
+			return new long[] {single(c)};
 		}
 
 	}

@@ -19,11 +19,10 @@ public class MultiPatternTest {
 	@Rule
 	public MultiPatternSearchRule searcher = new MultiPatternSearchRule(
 		new MultiFactorRE.Factory(new AhoCorasick.Factory(), new GlushkovPrefixExtender.Factory(), 2),
-		new MultiFactorRE.Factory(new AhoCorasick.Factory(), new GlushkovFactorExtender.Factory(), 2)
-		);
+		new MultiFactorRE.Factory(new AhoCorasick.Factory(), new GlushkovFactorExtender.Factory(), 2));
 
 	@Test
-	@SearchFor({ "a+", "b+", "c+", "d+" })
+	@SearchFor({"a+", "b+", "c+", "d+"})
 	public void testRegexComplex1() throws Exception {
 		StringFinder finder = searcher.createSearcher("xxxccaaxbdddccccdxaaxbbaaaxxd", LONGEST_MATCH, NON_OVERLAP);
 		assertThat(finder.findAll(), contains(
@@ -40,7 +39,7 @@ public class MultiPatternTest {
 	}
 
 	@Test
-	@SearchFor({ "c{1,2}(a|d)+", "d+c{3}?", "(b|d)+c" })
+	@SearchFor({"c{1,2}(a|d)+", "d+c{3}?", "(b|d)+c"})
 	public void testRegexComplex2() throws Exception {
 		StringFinder finder = searcher.createSearcher("xxxccaaxbdddccccdxaaxbbaaaxxd", LONGEST_MATCH, NON_OVERLAP);
 		assertThat(finder.findAll(), contains(
@@ -51,7 +50,7 @@ public class MultiPatternTest {
 	}
 
 	@Test
-	@SearchFor({ "[a-b]*", "[c-d]{3,}" })
+	@SearchFor({"[a-b]*", "[c-d]{3,}"})
 	public void testRegexComplex3() throws Exception {
 		StringFinder finder = searcher.createSearcher("xxxccaaxbdddccccdxaaxbbaaaxxd", LONGEST_MATCH, NON_OVERLAP, NON_EMPTY);
 		assertThat(finder.findAll(), contains(
@@ -63,7 +62,7 @@ public class MultiPatternTest {
 	}
 
 	@Test
-	@SearchFor({ "d*", "ddd*c" })
+	@SearchFor({"d*", "ddd*c"})
 	public void testRegexComplex4() throws Exception {
 		StringFinder finder = searcher.createSearcher("xxxccaaxbdddccccdxaaxbbaaaxxd", LONGEST_MATCH, NON_OVERLAP, NON_EMPTY);
 		assertThat(finder.findAll(), contains(
@@ -73,7 +72,7 @@ public class MultiPatternTest {
 	}
 
 	@Test
-	@SearchFor({ "(b|d)*(c|a){3}", "cd" })
+	@SearchFor({"(b|d)*(c|a){3}", "cd"})
 	public void testRegexComplex5() throws Exception {
 		StringFinder finder = searcher.createSearcher("xxxccaaxbdddccccdxaaxbbaaaxxd", LONGEST_MATCH, NON_OVERLAP);
 		assertThat(finder.findAll(), contains(
@@ -84,7 +83,7 @@ public class MultiPatternTest {
 	}
 
 	@Test
-	@SearchFor({ "d", "d*cc" })
+	@SearchFor({"d", "d*cc"})
 	public void testRegexComplex6() throws Exception {
 		StringFinder finder = searcher.createSearcher("xxxccaaxbdddccccdxaaxbbaaaxxd", LONGEST_MATCH, NON_OVERLAP);
 		assertThat(finder.findAll(), contains(
@@ -96,7 +95,7 @@ public class MultiPatternTest {
 	}
 
 	@Test
-	@SearchFor({ "gacatagacattttagacataaaagacatagacaa", "atagacaacatagacatagacatagacatagacatagacataga" })
+	@SearchFor({"gacatagacattttagacataaaagacatagacaa", "atagacaacatagacatagacatagacatagacatagacataga"})
 	public void testLongPatterns() throws Exception {
 		StringFinder finder = searcher.createSearcher("gcgcgcgcgacatagacattttagacataaaagacatagacaagcgcgcgcatagacaacatagacatagacatagacatagacatagacatagagcgcgcgcgc", LONGEST_MATCH, NON_OVERLAP);
 

@@ -56,18 +56,18 @@ public class QGramShiftOr implements StringSearchAlgorithm {
 		List<char[]> charpatterns = toCharArray(patterns);
 		char minChar = computeMinChar(charpatterns);
 		char maxChar = computeMaxChar(charpatterns);
-		int range = maxChar - minChar + 1; 
+		int range = maxChar - minChar + 1;
 
 		int bits = 1;
 		for (int i = range; i > 0; i >>= 2) {
 			bits++;
 		}
-		
+
 		int q = minLength(charpatterns);
 		if (q > 3) {
 			q = 3;
 		}
-		
+
 		return new QGramMapping(q, bits);
 	}
 
@@ -457,7 +457,7 @@ public class QGramShiftOr implements StringSearchAlgorithm {
 
 		@Override
 		public long[] all(int qc) {
-			return new long[] { single(qc) };
+			return new long[] {single(qc)};
 		}
 
 	}

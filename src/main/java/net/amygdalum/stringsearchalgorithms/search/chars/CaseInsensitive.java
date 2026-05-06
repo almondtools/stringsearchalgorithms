@@ -22,12 +22,12 @@ public class CaseInsensitive implements StringSearchAlgorithm, StringSearchAlgor
 			char lc = toLowerCase(c);
 			char uc = toUpperCase(c);
 			if (lc != uc) {
-				return new char[] { lc, uc };
+				return new char[] {lc, uc};
 			} else {
-				return new char[] { lc };
+				return new char[] {lc};
 			}
 		}
-		
+
 		public char[] normalized(char[] chars) {
 			char[] normalized = new char[chars.length];
 			for (int i = 0; i < normalized.length; i++) {
@@ -42,7 +42,7 @@ public class CaseInsensitive implements StringSearchAlgorithm, StringSearchAlgor
 	private CaseInsensitive(StringSearchAlgorithm algorithm) {
 		this.algorithm = algorithm;
 	}
-	
+
 	@Override
 	public StringSearchAlgorithm getAlgorithm() {
 		return algorithm;

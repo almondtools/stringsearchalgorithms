@@ -61,7 +61,7 @@ public class GlushkovAutomaton implements BitParallelAutomaton {
 			Queue<BitSet> states = next;
 			states.removeAll(done);
 			next = new LinkedList<>();
-			while(!states.isEmpty()) {
+			while (!states.isEmpty()) {
 				BitSet current = states.remove();
 				if (isFinal(current)) {
 					return length;

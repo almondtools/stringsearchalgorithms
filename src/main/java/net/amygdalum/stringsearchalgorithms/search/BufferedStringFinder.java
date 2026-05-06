@@ -17,11 +17,11 @@ public abstract class BufferedStringFinder extends AbstractStringFinder {
 	protected void push(StringMatch match) {
 		buffer.add(match);
 	}
-	
+
 	protected void push(Collection<StringMatch> matches) {
 		buffer.addAll(matches);
 	}
-	
+
 	protected void clear() {
 		buffer.clear();
 	}
@@ -69,7 +69,7 @@ public abstract class BufferedStringFinder extends AbstractStringFinder {
 			StringMatch nextMatch = buffer.peek();
 			if (nextMatch.start() == match.start()) {
 				match = buffer.remove();
-			} else if (nextMatch.end() <= match.end()){
+			} else if (nextMatch.end() <= match.end()) {
 				buffer.remove();
 			} else {
 				break;
@@ -95,4 +95,3 @@ public abstract class BufferedStringFinder extends AbstractStringFinder {
 	}
 
 }
-

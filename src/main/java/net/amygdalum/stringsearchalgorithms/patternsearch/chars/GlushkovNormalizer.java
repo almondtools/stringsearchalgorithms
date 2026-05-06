@@ -22,10 +22,10 @@ import net.amygdalum.regexparser.StringNode;
 import net.amygdalum.regexparser.UnboundedLoopNode;
 
 public class GlushkovNormalizer implements RegexNodeVisitor<RegexNode> {
-	
+
 	public GlushkovNormalizer() {
 	}
-	
+
 	@Override
 	public RegexNode visitAlternatives(AlternativesNode node) {
 		List<RegexNode> subNodes = node.getSubNodes();

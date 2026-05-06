@@ -56,7 +56,7 @@ public class CaseInsensitiveStringSearchAlgorithmTest {
 			new StringMatch(0, 3, "Abc"),
 			new StringMatch(5, 8, "abc")));
 	}
-	
+
 	@Test
 	@SearchFor("aBc")
 	public void testPattern4() throws Exception {
@@ -65,7 +65,7 @@ public class CaseInsensitiveStringSearchAlgorithmTest {
 			new StringMatch(0, 3, "Abc"),
 			new StringMatch(5, 8, "aBC")));
 	}
-	
+
 	@Test
 	@SearchFor("abcaB")
 	public void testPattern5() throws Exception {
@@ -75,7 +75,7 @@ public class CaseInsensitiveStringSearchAlgorithmTest {
 			new StringMatch(6, 11, "abcAb"),
 			new StringMatch(9, 14, "Abcab")));
 	}
-	
+
 	@Test
 	@SearchFor("a\u0262bA")
 	public void testPatternLargeAlphabet() throws Exception {
@@ -84,7 +84,7 @@ public class CaseInsensitiveStringSearchAlgorithmTest {
 			new StringMatch(6, 10, "a\u0262Ba"),
 			new StringMatch(9, 13, "a\u0262ba")));
 	}
-	
+
 	@Test
 	@SearchFor("aaaa aaaa bbbb bbbb aaaa aaaa bbbb bbbb aaaa aaaa bbbb bbbb aaaa aaaa BBBB bbbb")
 	public void testPatternLargeSize() throws Exception {
@@ -92,7 +92,7 @@ public class CaseInsensitiveStringSearchAlgorithmTest {
 		assertThat(matches, contains(
 			new StringMatch(4, 83, "aaaa aaaa bbbb bbbb AAAA aaaa bbbb bbbb aaaa aaaa bbbb bbbb aaaa aaaa bbbb bbbb")));
 	}
-	
+
 	@Test
 	@SearchFor("axxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\u0262xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxXxxxb")
 	public void testPatternLargeSizeAndAlphabet() throws Exception {
@@ -100,7 +100,7 @@ public class CaseInsensitiveStringSearchAlgorithmTest {
 		assertThat(matches, contains(
 			new StringMatch(4, 83, "axxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\u0262xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxb")));
 	}
-	
+
 	@Test
 	@SearchFor("a")
 	public void testNonOverlappingPattern1() throws Exception {
@@ -120,7 +120,7 @@ public class CaseInsensitiveStringSearchAlgorithmTest {
 			new StringMatch(0, 3, "ABC"),
 			new StringMatch(5, 8, "abc")));
 	}
-	
+
 	@Test
 	@SearchFor("abCabd")
 	public void testNonOverlappingPattern3() throws Exception {
@@ -129,7 +129,7 @@ public class CaseInsensitiveStringSearchAlgorithmTest {
 			new StringMatch(6, 12, "abcabD"),
 			new StringMatch(15, 21, "abcabd")));
 	}
-	
+
 	@Test
 	@SearchFor("abcab")
 	public void testNonOverlappingPattern4() throws Exception {
@@ -137,7 +137,7 @@ public class CaseInsensitiveStringSearchAlgorithmTest {
 		assertThat(matches, contains(
 			new StringMatch(3, 8, "abcab")));
 	}
-	
+
 	@Test
 	@SearchFor("Abcab")
 	public void testNonOverlappingPattern5() throws Exception {
@@ -146,7 +146,7 @@ public class CaseInsensitiveStringSearchAlgorithmTest {
 			new StringMatch(3, 8, "aBcab"),
 			new StringMatch(9, 14, "abcab")));
 	}
-	
+
 	@Test
 	@SearchFor("ab")
 	public void testNonOverlappingPattern6() throws Exception {
@@ -155,19 +155,19 @@ public class CaseInsensitiveStringSearchAlgorithmTest {
 			new StringMatch(6, 8, "AB"),
 			new StringMatch(8, 10, "ab")));
 	}
-	
+
 	@Test
 	@SearchFor("a")
 	public void testPatternLength1() throws Exception {
 		assertThat(searcher.getAlgorithm().getPatternLength(), equalTo(1));
 	}
-	
+
 	@Test
 	@SearchFor("A")
 	public void testPatternLength2() throws Exception {
 		assertThat(searcher.getAlgorithm().getPatternLength(), equalTo(1));
 	}
-	
+
 	@Test
 	@SearchFor("ab")
 	public void testPatternLength3() throws Exception {

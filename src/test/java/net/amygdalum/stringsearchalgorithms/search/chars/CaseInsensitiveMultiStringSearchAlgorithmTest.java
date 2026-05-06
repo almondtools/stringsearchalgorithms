@@ -26,7 +26,7 @@ public class CaseInsensitiveMultiStringSearchAlgorithmTest {
 		caseInsensitive(new SetBackwardOracleMatching.Factory()));
 
 	@Test
-	@SearchFor({ "a", "B" })
+	@SearchFor({"a", "B"})
 	public void testPattern1() throws Exception {
 		List<StringMatch> matches = searcher.createSearcher("abacacab").findAll();
 		assertThat(matches, contains(
@@ -39,7 +39,7 @@ public class CaseInsensitiveMultiStringSearchAlgorithmTest {
 	}
 
 	@Test
-	@SearchFor({ "ab", "Ac" })
+	@SearchFor({"ab", "Ac"})
 	public void testPattern2() throws Exception {
 		List<StringMatch> matches = searcher.createSearcher("aBAcacab").findAll();
 		assertThat(matches, contains(
@@ -50,7 +50,7 @@ public class CaseInsensitiveMultiStringSearchAlgorithmTest {
 	}
 
 	@Test
-	@SearchFor({ "abC", "Bcd" })
+	@SearchFor({"abC", "Bcd"})
 	public void testPattern3() throws Exception {
 		List<StringMatch> matches = searcher.createSearcher("abcacbcdacabcdaabc").findAll();
 		assertThat(matches, contains(
@@ -62,7 +62,7 @@ public class CaseInsensitiveMultiStringSearchAlgorithmTest {
 	}
 
 	@Test
-	@SearchFor({ "bbcc", "ccbb" })
+	@SearchFor({"bbcc", "ccbb"})
 	public void testPattern4() throws Exception {
 		List<StringMatch> matches = searcher.createSearcher("bbCCBBccbb").findAll();
 		assertThat(matches, contains(
@@ -73,7 +73,7 @@ public class CaseInsensitiveMultiStringSearchAlgorithmTest {
 	}
 
 	@Test
-	@SearchFor({ "bBCc", "cCbB" })
+	@SearchFor({"bBCc", "cCbB"})
 	public void testPattern5() throws Exception {
 		List<StringMatch> matches = searcher.createSearcher("abccbbccbb").findAll();
 		assertThat(matches, contains(
@@ -83,7 +83,7 @@ public class CaseInsensitiveMultiStringSearchAlgorithmTest {
 	}
 
 	@Test
-	@SearchFor({ "abc", "cd", "Defghi", "gh" })
+	@SearchFor({"abc", "cd", "Defghi", "gh"})
 	public void testPatternDifferentLengthSubsumingAndOverlapping() throws Exception {
 		List<StringMatch> matches = searcher.createSearcher("abcdghcdefcdefGhiabcd").findAll();
 		assertThat(matches, containsInAnyOrder(
@@ -99,7 +99,7 @@ public class CaseInsensitiveMultiStringSearchAlgorithmTest {
 	}
 
 	@Test
-	@SearchFor({ "aBcd", "ab", "bc", "cd" })
+	@SearchFor({"aBcd", "ab", "bc", "cd"})
 	public void testSubsumingPatterns1() throws Exception {
 		List<StringMatch> matches = searcher.createSearcher("abcd").findAll();
 		assertThat(matches, containsInAnyOrder(
@@ -110,7 +110,7 @@ public class CaseInsensitiveMultiStringSearchAlgorithmTest {
 	}
 
 	@Test
-	@SearchFor({ "aaa", "aa", "a" })
+	@SearchFor({"aaa", "aa", "a"})
 	public void testSubsumingPatterns2() throws Exception {
 		List<StringMatch> matches = searcher.createSearcher("aaaA").findAll();
 		assertThat(matches, containsInAnyOrder(
@@ -126,7 +126,7 @@ public class CaseInsensitiveMultiStringSearchAlgorithmTest {
 	}
 
 	@Test
-	@SearchFor({ "a", "b" })
+	@SearchFor({"a", "b"})
 	public void testOverlappingPattern1() throws Exception {
 		List<StringMatch> matches = searcher.createSearcher("abacacab", LONGEST_MATCH, NON_OVERLAP).findAll();
 		assertThat(matches, contains(
@@ -139,7 +139,7 @@ public class CaseInsensitiveMultiStringSearchAlgorithmTest {
 	}
 
 	@Test
-	@SearchFor({ "ab", "ac" })
+	@SearchFor({"ab", "ac"})
 	public void testOverlappingPattern2() throws Exception {
 		List<StringMatch> matches = searcher.createSearcher("abacacab", LONGEST_MATCH, NON_OVERLAP).findAll();
 		assertThat(matches, contains(
@@ -150,7 +150,7 @@ public class CaseInsensitiveMultiStringSearchAlgorithmTest {
 	}
 
 	@Test
-	@SearchFor({ "abc", "bcd" })
+	@SearchFor({"abc", "bcd"})
 	public void testOverlappingPattern3() throws Exception {
 		List<StringMatch> matches = searcher.createSearcher("abcacbcdacabcdaabc", LONGEST_MATCH, NON_OVERLAP).findAll();
 		assertThat(matches, contains(
@@ -161,7 +161,7 @@ public class CaseInsensitiveMultiStringSearchAlgorithmTest {
 	}
 
 	@Test
-	@SearchFor({ "bbcc", "ccbb" })
+	@SearchFor({"bbcc", "ccbb"})
 	public void testOverlappingPattern4() throws Exception {
 		List<StringMatch> matches = searcher.createSearcher("bbccbbccbb", LONGEST_MATCH, NON_OVERLAP).findAll();
 		assertThat(matches, contains(
@@ -170,7 +170,7 @@ public class CaseInsensitiveMultiStringSearchAlgorithmTest {
 	}
 
 	@Test
-	@SearchFor({ "bbcc", "ccbb" })
+	@SearchFor({"bbcc", "ccbb"})
 	public void testOverlappingPattern5() throws Exception {
 		List<StringMatch> matches = searcher.createSearcher("abccbbccbb", LONGEST_MATCH, NON_OVERLAP).findAll();
 		assertThat(matches, contains(
@@ -179,7 +179,7 @@ public class CaseInsensitiveMultiStringSearchAlgorithmTest {
 	}
 
 	@Test
-	@SearchFor({ "abc", "cd", "defghi", "gh" })
+	@SearchFor({"abc", "cd", "defghi", "gh"})
 	public void testOverlappingPatternDifferentLengthSubsumingAndOverlapping() throws Exception {
 		List<StringMatch> matches = searcher.createSearcher("abcdghcdefcdefghiabcd", LONGEST_MATCH, NON_OVERLAP).findAll();
 		assertThat(matches, containsInAnyOrder(
@@ -192,7 +192,7 @@ public class CaseInsensitiveMultiStringSearchAlgorithmTest {
 	}
 
 	@Test
-	@SearchFor({ "abcd", "ab", "bc", "cd" })
+	@SearchFor({"abcd", "ab", "bc", "cd"})
 	public void testOverlappingSubsumingPatterns1() throws Exception {
 		List<StringMatch> matches = searcher.createSearcher("abcd", LONGEST_MATCH, NON_OVERLAP).findAll();
 		assertThat(matches, containsInAnyOrder(
@@ -200,7 +200,7 @@ public class CaseInsensitiveMultiStringSearchAlgorithmTest {
 	}
 
 	@Test
-	@SearchFor({ "aaa", "aa", "a" })
+	@SearchFor({"aaa", "aa", "a"})
 	public void testOverlappingSubsumingPatterns2() throws Exception {
 		List<StringMatch> matches = searcher.createSearcher("aaaa", LONGEST_MATCH, NON_OVERLAP).findAll();
 		assertThat(matches, containsInAnyOrder(
@@ -209,7 +209,7 @@ public class CaseInsensitiveMultiStringSearchAlgorithmTest {
 	}
 
 	@Test
-	@SearchFor({ "aa\u0262ba", "a\u0262baA" })
+	@SearchFor({"aa\u0262ba", "a\u0262baA"})
 	public void testPatternLargeAlphabet() throws Exception {
 		List<StringMatch> matches = searcher.createSearcher("xxxaaaa\u0262ba\u0262baaxxx").findAll();
 		assertThat(matches, contains(

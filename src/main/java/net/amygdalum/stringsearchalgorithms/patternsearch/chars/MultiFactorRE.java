@@ -47,7 +47,6 @@ public class MultiFactorRE implements StringSearchAlgorithm {
 	private StringSearchAlgorithm searchAlgorithm;
 	private Map<String, List<FactorExtender>> extenders;
 
-
 	public MultiFactorRE(MultiStringSearchAlgorithmFactory factorSearcher, FactorExtenderFactory factorExtender, String... patterns) {
 		this(factorSearcher, factorExtender, DEFAULT_MAX_LENGTH, asList(patterns));
 	}
@@ -147,7 +146,7 @@ public class MultiFactorRE implements StringSearchAlgorithm {
 				factors.add(matchExtender.toString());
 			}
 		}
-		return getClass().getSimpleName() + "<" + searchAlgorithm.toString() + ", " + factors + ", "+ maxLength +">";
+		return getClass().getSimpleName() + "<" + searchAlgorithm.toString() + ", " + factors + ", " + maxLength + ">";
 	}
 
 	private class Finder extends BufferedStringFinder {

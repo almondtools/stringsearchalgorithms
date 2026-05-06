@@ -8,11 +8,11 @@ import java.util.List;
 public abstract class AbstractStringFinder implements StringFinder {
 
 	private boolean nonOverlap;
-	
+
 	public AbstractStringFinder(StringFinderOption... options) {
 		nonOverlap = NON_OVERLAP.in(options);
 	}
-	
+
 	public abstract StringMatch findNext();
 
 	public abstract void skipTo(long pos);
@@ -28,11 +28,11 @@ public abstract class AbstractStringFinder implements StringFinder {
 			} else {
 				matches.add(match);
 				if (nonOverlap && match.end() > last) {
-					last = match.end(); 
+					last = match.end();
 					skipTo(last);
 				}
 			}
 		}
 	}
-	
+
 }

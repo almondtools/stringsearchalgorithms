@@ -21,11 +21,11 @@ public class MultiStringSearchRule implements TestRule {
 
 	private StringSearchAlgorithm algorithm;
 	private List<MultiStringSearchAlgorithmFactory> algorithmFactories;
-	
+
 	public MultiStringSearchRule(MultiStringSearchAlgorithmFactory... algorithmFactories) {
 		this.algorithmFactories = asList(algorithmFactories);
 	}
-	
+
 	private List<StringSearchAlgorithm> getAlgorithms(String[] patterns) {
 		List<StringSearchAlgorithm> algorithms = new ArrayList<>();
 		for (MultiStringSearchAlgorithmFactory algorithmFactory : algorithmFactories) {
@@ -91,11 +91,11 @@ public class MultiStringSearchRule implements TestRule {
 	public StringFinder createSearcher(String chars, StringFinderOption... options) {
 		return createSearcher(new StringByteProvider(chars, 0), options);
 	}
-	
+
 	public StringFinder createSearcher(ByteProvider bytes, StringFinderOption... options) {
 		return algorithm.createFinder(bytes, options);
 	}
-	
+
 	public StringSearchAlgorithm getAlgorithm() {
 		return algorithm;
 	}

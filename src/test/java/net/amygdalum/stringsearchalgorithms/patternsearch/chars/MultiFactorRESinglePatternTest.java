@@ -11,7 +11,6 @@ import net.amygdalum.stringsearchalgorithms.search.StringMatch;
 import net.amygdalum.stringsearchalgorithms.search.chars.AhoCorasick;
 import net.amygdalum.util.io.StringCharProvider;
 
-
 public class MultiFactorRESinglePatternTest {
 
 	@Test

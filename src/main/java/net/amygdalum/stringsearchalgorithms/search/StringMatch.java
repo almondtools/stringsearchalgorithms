@@ -1,6 +1,5 @@
 package net.amygdalum.stringsearchalgorithms.search;
 
-
 /**
  * a string match, that means a textual subsequence of a document matching a specific pattern
  */

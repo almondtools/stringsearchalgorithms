@@ -194,7 +194,7 @@ public class ShiftOr implements StringSearchAlgorithm {
 
 		@Override
 		public long[] all(byte b) {
-			return new long[] { single(b) };
+			return new long[] {single(b)};
 		}
 
 	}

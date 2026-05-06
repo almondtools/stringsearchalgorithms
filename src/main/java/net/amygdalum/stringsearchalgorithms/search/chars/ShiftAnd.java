@@ -205,7 +205,7 @@ public class ShiftAnd implements StringSearchAlgorithm {
 
 		@Override
 		public long[] all(char c) {
-			return new long[] { single(c) };
+			return new long[] {single(c)};
 		}
 
 	}

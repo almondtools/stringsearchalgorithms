@@ -5,7 +5,7 @@ import net.amygdalum.util.bits.BitSet;
 public interface BitParallelAutomaton {
 
 	char[] supportedChars();
-	
+
 	BitSet getInitial();
 
 	boolean isInitial(BitSet state);

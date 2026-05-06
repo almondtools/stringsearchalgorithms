@@ -115,7 +115,7 @@ public class WuManber implements StringSearchAlgorithm {
 			ByteWordSetBuilder<ByteString, ByteTrie<ByteString>> builder = builders[hashKey];
 			if (builder == null) {
 				builder = new ByteWordSetBuilder<>(new DoubleArrayByteCompactTrieCompiler<ByteString>());
-				
+
 				builders[hashKey] = builder;
 			}
 			builder.extend(revert(pattern), new ByteString(pattern, charset));
